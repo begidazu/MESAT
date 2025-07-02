@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  dash-web:
+    build:
+      context: ./dash_app
+    ports:
+      - '8050:8050'
+    depends_on:
+      - model-a
+      - model-b
+
+  model-a:
+    build:
+      context: ./models/model_a
+    ports:
+      - '5001:5000'
+
+  model-b:
+    build:
+      context: ./models/model_b
+    ports:
+      - '5002:5000'
