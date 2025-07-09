@@ -1,4 +1,3 @@
-# app/layout.py
 from dash import html, dcc
 import dash_leaflet as dl
 
@@ -65,6 +64,7 @@ def create_layout():
                     dcc.Tab(label='Management Scenarios', value='tab-management', style=TAB_STYLE, selected_style=TAB_SELECTED_STYLE)
                 ]
             ),
+            # Contenedor dinámico para cada pestaña
             html.Div(id='tab-content', style={'marginTop': '20px'})
         ], style=SIDEBAR_STYLE)
     ], style={'display': 'flex', 'height': '100vh', 'margin': '0'})
