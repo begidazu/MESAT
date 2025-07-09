@@ -20,7 +20,7 @@ def register_tab_callbacks(app: dash.Dash):
                         {"label": "Cadiz Bay", "value": "area3"},
                     ],
                     placeholder="Select Study Area",
-                    style={"marginBottom": "10px", "width": "80%"}
+                    style={"marginBottom": "10px", "width": "80%", 'fontSize': '22px'}
                 ),
                 dcc.Dropdown(
                     id="scenario-dropdown",
@@ -30,7 +30,7 @@ def register_tab_callbacks(app: dash.Dash):
                         {"label": "Global RCP4.5", "value": "C"},
                     ],
                     placeholder="Select Climate Change Scenario",
-                    style={"marginBottom": "10px", "width": "80%"}
+                    style={"marginBottom": "10px", "width": "80%", 'fontSize': '22px'}
                 ),
                 dcc.Dropdown(
                     id="year-dropdown",
@@ -40,7 +40,7 @@ def register_tab_callbacks(app: dash.Dash):
                         {"label": "2040", "value": 2040},
                     ],
                     placeholder="Prediction Year",
-                    style={"marginBottom": "20px", "width": "80%"}
+                    style={"marginBottom": "20px", "width": "80%", 'fontSize': '22px'}
                 ),
                 # Aquí iría después tu gráfica, etc.
                 html.Div(id="saltmarsh-chart")

@@ -11,7 +11,8 @@ SIDEBAR_STYLE = {
     'height': '100vh',
     'overflowY': 'auto',          # Scroll interno si el contenido excede
     'boxSizing': 'border-box',     # Incluye padding/borde en la altura
-    'borderLeft': '1px solid black'
+    'borderLeft': '1px solid black',
+    'position': 'relative'
 }
 # Contenedor para las tabs con padding interno
 TAB_CONTAINER_STYLE = {
@@ -34,13 +35,14 @@ TAB_STYLE = {
     'backgroundColor': '#669FE4',
     'color': 'white',
     'fontWeight': 'bold',
+    'fontSize': '24px',
     'border': '1px solid #274274',
     'borderRadius': '4px 4px 0 0',
     'marginRight': '2px'
 }
 TAB_SELECTED_STYLE = {
     **TAB_STYLE,
-    'backgroundColor': '#1557B4'
+    'backgroundColor': "#255392"
 }
 
 # Layout general de la aplicación
@@ -91,7 +93,18 @@ def create_layout():
                 style=TAB_CONTAINER_STYLE
             ),
             # Contenedor dinámico de contenido de pestaña
-            html.Div(id='tab-content', style=CONTENT_STYLE)
+            html.Div(id='tab-content', style=CONTENT_STYLE),
+             # Enlaces al final del sidebar
+            html.Div([
+                html.A([
+                    html.Span('📄', style={'fontSize': '40px', 'marginRight': '8px'}),  # Icono documento grande
+                    "Access the methodology"
+                ], href='https://doi.org/10.1016/j.scitotenv.2024.178164', target='_blank', style={'display': 'flex', 'alignItems': 'center', 'color': 'black', 'textDecoration': 'none', 'marginTop': '20px'}),
+                html.A([
+                    html.Img(src='/assets/logos/github-mark.png', style={'width': '40px', 'height': '40px', 'marginRight': '14px', 'marginLeft': '8px'}),
+                    "Access the code"
+                ], href='https://github.com/begidazu/PhD_Web_App', target='_blank', style={'display': 'flex', 'alignItems': 'center', 'color': 'black', 'textDecoration': 'none', 'marginTop': '10px'})
+            ], style={'position': 'absolute', 'bottom': '30px', 'left': '30px', 'right': '20px', 'fontSize': '22px'})
         ], style=SIDEBAR_STYLE)
     ], style={
         'display': 'flex',
