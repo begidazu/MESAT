@@ -15,22 +15,22 @@ def register_tab_callbacks(app: dash.Dash):
                 dcc.Dropdown(
                     id="study-area-dropdown",
                     options=[
-                        {"label": "Area 1", "value": "area1"},
-                        {"label": "Area 2", "value": "area2"},
-                        {"label": "Area 3", "value": "area3"},
+                        {"label": "Urdaibai Estuary", "value": "area1"},
+                        {"label": "Bay of Santander", "value": "area2"},
+                        {"label": "Cadiz Bay", "value": "area3"},
                     ],
                     placeholder="Select Study Area",
-                    style={"marginBottom": "10px", "width": "100%"}
+                    style={"marginBottom": "10px", "width": "80%"}
                 ),
                 dcc.Dropdown(
                     id="scenario-dropdown",
                     options=[
-                        {"label": "Scenario A", "value": "A"},
-                        {"label": "Scenario B", "value": "B"},
-                        {"label": "Scenario C", "value": "C"},
+                        {"label": "Regional RCP4.5", "value": "A"},
+                        {"label": "Regional RCP8.5", "value": "B"},
+                        {"label": "Global RCP4.5", "value": "C"},
                     ],
                     placeholder="Select Climate Change Scenario",
-                    style={"marginBottom": "10px", "width": "100%"}
+                    style={"marginBottom": "10px", "width": "80%"}
                 ),
                 dcc.Dropdown(
                     id="year-dropdown",
@@ -40,7 +40,7 @@ def register_tab_callbacks(app: dash.Dash):
                         {"label": "2040", "value": 2040},
                     ],
                     placeholder="Prediction Year",
-                    style={"marginBottom": "20px", "width": "100%"}
+                    style={"marginBottom": "20px", "width": "80%"}
                 ),
                 # Aquí iría después tu gráfica, etc.
                 html.Div(id="saltmarsh-chart")
@@ -48,7 +48,23 @@ def register_tab_callbacks(app: dash.Dash):
         else:
             # Para otras pestañas, pones tu contenido actual
             return html.Div(f"Contenido de {tab}")
-
+    @app.callback(
+            Output("year-dropdown", "options"),
+            Output("year-dropdown", "disabled"),
+            Input("study-area-dropdown", "value")
+        )
+    def update_year_options(area):
+        if area == "area1":
+            years = [2017, 2067, 2117]
+        elif area == "area2":
+            years = [2012, 2062, 2112]
+        elif area == "area3":
+            years = [2022, 2072, 2122]
+        else:
+            return [], True
+        opts = [{"label": str(y), "value": y} for y in years]
+        return opts, False
+    
 # Luego, en el create_app():
 # from .callbacks.tab_callbacks import register_tab_callbacks
 # register_tab_callbacks(app)
