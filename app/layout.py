@@ -70,7 +70,9 @@ def create_layout():
                             },
                             edit={'remove': True}
                         )
-                    ])
+                    ]),
+                    dl.FeatureGroup(id='raster-layer', children=[]),
+                    dl.FeatureGroup(id='popup-layer', children=[]),
                 ]
             ),
             style={'flex': '1', 'position': 'relative', 'boxSizing': 'border-box'}
