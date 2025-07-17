@@ -120,4 +120,3 @@ def create_layout():
         'boxSizing': 'border-box',   # incluye borde en la altura total
         'overflow': 'hidden'          # sin scroll global
     })
-
