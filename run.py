@@ -8,6 +8,8 @@ os.environ["PROJ_LIB"] = datadir.get_data_dir()
 import rasterio
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from flask import send_file, abort
