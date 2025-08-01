@@ -107,15 +107,16 @@ def register_tab_callbacks(app: dash.Dash):
         return not (area and scen and year)
 
     @app.callback(
-        Output("raster-layer","children"),
+        Output("raster-layer","children", allow_duplicate=True),
         Input("run-button","n_clicks"),
         State("study-area-dropdown","value"),
         State("scenario-dropdown","value"),
-        State("year-dropdown","value")
+        State("year-dropdown","value"),
+        prevent_initial_call=True
     )
     def update_map(n,area,scen,year):
         
-        if not (n and area and scen and year): return [] #, bounds
+        if not (n and area and scen and year): return [] 
         tif_dir=os.path.join(os.getcwd(),"results","saltmarshes",area,scen)
         m=glob.glob(os.path.join(tif_dir,f"*{year}*.tif"))[0]
         with rasterio.open(m) as src, WarpedVRT(src,crs="EPSG:4326",resampling=Resampling.nearest) as vrt:
@@ -136,6 +137,7 @@ def register_tab_callbacks(app: dash.Dash):
         overlay=dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)
         return [overlay]
 
+    # This is not working right now
     @app.callback(
         Output("popup-layer","children"),
         Input("map","click_lat_lng"),
@@ -155,3 +157,15 @@ def register_tab_callbacks(app: dash.Dash):
         names={0:"Mudflat",1:"Saltmarsh",2:"Upland Areas",3:"Channel"}
         marker=dl.Marker(position=(lat,lon),children=dl.Popup(names.get(val,f"Val:{val}")))
         return pops+[marker]
+    
+    # Here we will place the capabilities of the reset-button:
+    @app.callback(
+        Output("study-area-dropdown", "value"),
+        Output("scenario-dropdown", "value"),
+        Output("year-dropdown", "value"),
+        Output("raster-layer", "children"),
+        Input("reset-button", "n_clicks"),
+    )
+    def reset(n):
+        if n:
+            return ["Select Study Area", "Select Scenario", "Year", []]
