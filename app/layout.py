@@ -52,31 +52,31 @@ def create_layout():
         # Mapa
         html.Div(
             dl.Map(
-                id='map',
-                center=[40, -3],
-                zoom=6,
-                style={'width': '100%', 'height': '100%'},
-                children=[
-                    dl.TileLayer(),
-                    dl.FeatureGroup(id='draw-layer', children=[
-                        dl.EditControl(
-                            id='edit-control',
-                            position='topright',
-                            draw={
-                                'polygon': True,
-                                'polyline': False,
-                                'rectangle': False,
-                                'circle': False,
-                                'marker': False
-                            },
-                            edit={'remove': True}
-                        )
-                    ]),
-                    dl.FeatureGroup(id='raster-layer', children=[]), 
-                    dl.FeatureGroup(id='popup-layer', children=[])
+            id='map',
+            center=[40, -3],
+            zoom=6,
+            style={'width': '100%', 'height': '100%'},
+            children=[
+                dl.TileLayer(),
+                dl.FeatureGroup(id='draw-layer', children=[
+                    dl.EditControl(
+                        id='edit-control',
+                        position='topright',
+                        draw={
+                            'polygon': True,
+                            'polyline': False,
+                            'rectangle': False,
+                            'circle': False,
+                            'marker': False
+                        },
+                        edit={'remove': True}
+                    )
+                ]),
+                dl.FeatureGroup(id='raster-layer', children=[]), 
+                dl.FeatureGroup(id='popup-layer', children=[])
                 ]
             ),
-            style={'flex': '1', 'position': 'relative', 'boxSizing': 'border-box'}
+            style={'flex': '1', 'position': 'relative', 'boxSizing': 'border-box'}         
         ),
         # Sidebar con Tabs y contenido
         html.Div([

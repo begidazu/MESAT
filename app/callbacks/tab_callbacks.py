@@ -7,6 +7,7 @@ from rasterio.transform import rowcol
 from dash import Input, Output, State, html, dcc
 import dash
 from dash.exceptions import PreventUpdate
+import dash_bootstrap_components as dbc
 from matplotlib.colors import ListedColormap,BoundaryNorm
 import plotly.express as px
 import numpy as np
@@ -67,7 +68,7 @@ def register_tab_callbacks(app: dash.Dash):
                         ])
                     ]
                 ),
-                html.Div(id="saltmarsh-chart", style={'marginTop':'30px'})
+                dcc.Loading(html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}), id="loading", type="circle")
             ], style={'padding':'20px'})
         else:
             return html.Div(f"Contenido de {tab}")
@@ -94,9 +95,9 @@ def register_tab_callbacks(app: dash.Dash):
             raise PreventUpdate
         # Coordenadas y nivel de zoom dedicados para cada área
         mapping = {
-            "Urdaibai_Estuary":   ([43.354580815052316, -2.6957208131426804], 12),
-            "Bay_of_Santander":   ([43.42984351219931,  -3.7626739449807447], 12),
-            "Cadiz_Bay":          ([36.519874060327226, -6.205490800462997],  14)
+            "Urdaibai_Estuary":   ([43.364580815052316, -2.67957208131426804], 14),
+            "Bay_of_Santander":   ([43.43984351219931,  -3.7526739449807447], 15),
+            "Cadiz_Bay":          ([36.520874060327226, -6.203490800462997],  15)
         }
         center, zoom = mapping[area]
         return {"center": center, "zoom": zoom}
@@ -176,12 +177,13 @@ def register_tab_callbacks(app: dash.Dash):
         Output("year-dropdown", "value", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
         Output("raster-layer", "children", allow_duplicate=True),
+        Output("saltmarsh-chart", "children", allow_duplicate=True),
         Input("reset-button", "n_clicks"),
         prevent_initial_call = True
     )
     def reset(n):
         if n:
-            return ["Select Study Area", False, "Select Scenario", False, "Year", False, []]
+            return ["Select Study Area", False, "Select Scenario", False, "Year", False, [], []]
     
     @app.callback(
         Output("saltmarsh-chart", "children"),         # dónde metemos la gráfica
@@ -203,6 +205,8 @@ def register_tab_callbacks(app: dash.Dash):
         # 3) Leer datos de la banda
         with rasterio.open(tif_path) as src:
             arr = src.read(1)
+            resolution = src.res
+            pixel_area = resolution[0] * resolution[1]  # area of each pixel
 
         # 4) Contar valores únicos
         unique_vals, counts = np.unique(arr, return_counts=True)
@@ -213,7 +217,7 @@ def register_tab_callbacks(app: dash.Dash):
         # 6) filtrar solo los valores que tenemos en 'names'
         datos = [(v, c) for v, c in zip(unique_vals, counts) if v in names]
         valores_filtrados = [v for v, _ in datos]                 
-        cuentas_filtradas = [int(c) for _, c in datos]             
+        cuentas_filtradas = [float(c * pixel_area / 10000) for _, c in datos]      # Converted to acres
 
         # 7) generar etiquetas en el mismo orden del filtrado
         etiquetas = [names[v] for v in valores_filtrados]        
@@ -222,14 +226,21 @@ def register_tab_callbacks(app: dash.Dash):
         fig = px.bar(
             x=etiquetas,
             y=cuentas_filtradas,
-            title="Habitat Areas",
+            title="<b>Habitat Areas<b>",
             color=etiquetas,
             color_discrete_sequence=["#8B4513", "#006400", "#BBC0C2", "#34C3F3"]
         )
-        fig.update_layout(showlegend=False, xaxis_title = "Habitat", yaxis_title = "Area (ha)", title_x = 0.5)
+        fig.update_layout(showlegend=False, xaxis_title = "<b>Habitat<b>", yaxis_title = "<b>Area (ha)<b>", title_x = 0.5, title_font_family="Garamond", title_font_size = 25)
 
-        # 7) Devolver componente gráfico
-        return dcc.Graph(figure=fig, config= {"modeBarButtonsToRemove": ["zoom2d", "pan2d", "zoomIn2d", "zoomOut2d", "lasso2d", "resetScale2d", "selectbox"]}) #https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js, https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
+        # 9) Devolver componente gráfico
+        return dcc.Graph(figure=fig, config= {"modeBarButtonsToRemove": ["zoom2d", "pan2d", "zoomIn2d", "zoomOut2d", "lasso2d", "resetScale2d"]}) #https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js, https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
+
+    @app.callback(
+        Output("loading", "display"),
+        Input("run-button", "n_clicks")
+    )
+    def update_display(loading):
+        return loading
 
     # Click on map pop-up event:
     # @app.callback(
