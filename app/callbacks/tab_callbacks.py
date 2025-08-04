@@ -58,6 +58,7 @@ def register_tab_callbacks(app: dash.Dash):
                                 html.Span("⟳", style={'fontSize':'24px'}),
                                 id="reset-button",
                                 n_clicks=0,
+                                disabled=True,
                                 style={'display':'none','width':'60px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}
                             )
                         ])
@@ -98,16 +99,22 @@ def register_tab_callbacks(app: dash.Dash):
         return {"center": center, "zoom": zoom}
 
     @app.callback(
-        Output("run-button","disabled"),
+        Output("run-button","disabled", allow_duplicate=True),
         Input("study-area-dropdown","value"),
         Input("scenario-dropdown","value"),
-        Input("year-dropdown","value")
+        Input("year-dropdown","value"),
+        prevent_initial_call=True
     )
     def toggle_run(area,scen,year):
         return not (area and scen and year)
 
     @app.callback(
         Output("raster-layer","children", allow_duplicate=True),
+        Output("reset-button", "disabled"),
+        Output("study-area-dropdown", "disabled", allow_duplicate=True),
+        Output("scenario-dropdown", "disabled", allow_duplicate=True),
+        Output("year-dropdown", "disabled", allow_duplicate=True),
+        Output("run-button", "disabled"),
         Input("run-button","n_clicks"),
         State("study-area-dropdown","value"),
         State("scenario-dropdown","value"),
@@ -135,7 +142,20 @@ def register_tab_callbacks(app: dash.Dash):
         buf=BytesIO(); fig.savefig(buf,dpi=100,transparent=True,pad_inches=0); plt.close(fig); buf.seek(0)
         url=f"/raster/{area}/{scen}/{year}.png"
         overlay=dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)
-        return [overlay]
+        return [overlay, False, True, True, True, True]
+    
+    # We will try to add a callback that is used to disable dropdowns and run-button when the map has data
+    #@app.callback(
+    #    Output("study-area-dropdown", "disabled", allow_duplicate=True),
+    #    Output("scenario-dropdown", "disabled", allow_duplicate=True),
+    #    Output("year-dropdown", "disabled", allow_duplicate=True),
+    #    Output("run-button", "disabled"),
+    #    State("raster-layer", "children"),
+    #    prevent_initial_call=True
+    #)
+    #def block_dropdowns_run(marsh):
+    #    if marsh:
+    #        return [True, True, True, True]
 
     # This is not working right now
     @app.callback(
@@ -160,15 +180,19 @@ def register_tab_callbacks(app: dash.Dash):
     
     # Here we will place the capabilities of the reset-button:
     @app.callback(
-        Output("study-area-dropdown", "value"),
-        Output("scenario-dropdown", "value"),
-        Output("year-dropdown", "value"),
-        Output("raster-layer", "children"),
+        Output("study-area-dropdown", "value", allow_duplicate=True),
+        Output("study-area-dropdown", "disabled", allow_duplicate=True),
+        Output("scenario-dropdown", "value", allow_duplicate=True),
+        Output("scenario-dropdown", "disabled", allow_duplicate=True),
+        Output("year-dropdown", "value", allow_duplicate=True),
+        Output("year-dropdown", "disabled", allow_duplicate=True),
+        Output("raster-layer", "children", allow_duplicate=True),
         Input("reset-button", "n_clicks"),
+        prevent_initial_call = True
     )
     def reset(n):
         if n:
-            return ["Select Study Area", "Select Scenario", "Year", []]
+            return ["Select Study Area", False, "Select Scenario", False, "Year", False, []]
         
     # Click on map pop-up event:
     # @app.callback(
