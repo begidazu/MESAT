@@ -68,7 +68,16 @@ def register_tab_callbacks(app: dash.Dash):
                         ])
                     ]
                 ),
-                dcc.Loading(html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}), id="loading", type="circle")
+                dcc.Loading(
+                        html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}), id="loading", type="circle"),
+                        html.Button([
+                            html.Span([
+                                html.Img(src='/assets/logos/layers.png', style={'width': '20px', 'height': '20px'}),
+                                html.Div("Texto del botón", style={'display': 'inline-block', 'verticalAlign': 'middle'})
+                            ], style={'display': 'inline-block', 'verticalAlign': 'middle'})
+                        ], id='info-button', style={'padding': '10px'}, hidden= True)
+                    
+                            
             ], style={'padding':'20px'})
         else:
             return html.Div(f"Contenido de {tab}")
@@ -187,6 +196,7 @@ def register_tab_callbacks(app: dash.Dash):
     
     @app.callback(
         Output("saltmarsh-chart", "children"),         # dónde metemos la gráfica
+        Output('info-button', "hidden"),
         Input("run-button", "n_clicks"),              # disparador: mismo que el mapa
         State("study-area-dropdown", "value"),        
         State("scenario-dropdown", "value"),
@@ -233,7 +243,7 @@ def register_tab_callbacks(app: dash.Dash):
         fig.update_layout(showlegend=False, xaxis_title = "<b>Habitat<b>", yaxis_title = "<b>Area (ha)<b>", title_x = 0.5, title_font_family="Garamond", title_font_size = 25)
 
         # 9) Devolver componente gráfico
-        return dcc.Graph(figure=fig, config= {"modeBarButtonsToRemove": ["zoom2d", "pan2d", "zoomIn2d", "zoomOut2d", "lasso2d", "resetScale2d"]}) #https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js, https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
+        return [dcc.Graph(figure=fig, config= {"modeBarButtonsToRemove": ["zoom2d", "pan2d", "zoomIn2d", "zoomOut2d", "lasso2d", "resetScale2d"]}), False] #https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js, https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 
     @app.callback(
         Output("loading", "display"),
