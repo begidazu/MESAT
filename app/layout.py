@@ -1,6 +1,7 @@
 # app/layout.py
 from dash import html, dcc
 import dash_leaflet as dl
+from dash_extensions.javascript import assign
 
 # Styles comunes
 SIDEBAR_STYLE = {
@@ -71,8 +72,8 @@ def create_layout():
                             edit={'remove': True}
                         )
                     ]),
-                    dl.FeatureGroup(id='raster-layer', children=[]),
-                    dl.FeatureGroup(id='popup-layer', children=[]),
+                    dl.FeatureGroup(id='raster-layer', children=[]), 
+                    dl.FeatureGroup(id='popup-layer', children=[])
                 ]
             ),
             style={'flex': '1', 'position': 'relative', 'boxSizing': 'border-box'}
@@ -86,7 +87,7 @@ def create_layout():
                     value='tab-saltmarsh',
                     children=[
                         dcc.Tab(label='Saltmarsh evolution', value='tab-saltmarsh', style=TAB_STYLE, selected_style=TAB_SELECTED_STYLE),
-                        dcc.Tab(label='Fish Stock Evolution', value='tab-fishstock', style=TAB_STYLE, selected_style=TAB_SELECTED_STYLE),
+                        dcc.Tab(label='Fish Stocks', value='tab-fishstock', style=TAB_STYLE, selected_style=TAB_SELECTED_STYLE),
                         dcc.Tab(label='Physical Accounts', value='tab-physical', style=TAB_STYLE, selected_style=TAB_SELECTED_STYLE),
                         dcc.Tab(label='Management Scenarios', value='tab-management', style=TAB_STYLE, selected_style=TAB_SELECTED_STYLE)
                     ],

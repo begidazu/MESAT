@@ -169,3 +169,12 @@ def register_tab_callbacks(app: dash.Dash):
     def reset(n):
         if n:
             return ["Select Study Area", "Select Scenario", "Year", []]
+        
+    # Click on map pop-up event:
+    # @app.callback(
+    #     Output("popup", "children"),
+    #     Output("popup", "position")
+    # )
+    # def popup(click):
+    #     if click:
+    #         return ["Hola", [40, -3]]

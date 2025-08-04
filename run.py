@@ -62,7 +62,7 @@ def serve_reprojected_raster(area, scenario, year):
     cmap  = ListedColormap(colors)
     norm  = BoundaryNorm([0,1,2,3,4], ncolors=4)
 
-    # figure al tamaño exacto del VRT
+    # figura al tamaño exacto del VRT
     fig = plt.figure(frameon=False)
     fig.set_size_inches(w/200, h/200)  # asumiendo dpi=200
     ax = fig.add_axes([0,0,1,1])
