@@ -7,6 +7,9 @@ from rasterio.transform import rowcol
 from dash import Input, Output, State, html, dcc
 import dash
 from dash.exceptions import PreventUpdate
+from matplotlib.colors import ListedColormap,BoundaryNorm
+import plotly.express as px
+import numpy as np
 
 def register_tab_callbacks(app: dash.Dash):
     @app.callback(
@@ -131,7 +134,6 @@ def register_tab_callbacks(app: dash.Dash):
             # mask nodata=0
             import numpy as np; data=np.ma.masked_where(data.data==0,data)
             b=vrt.bounds; w,h=vrt.width,vrt.height
-        from matplotlib.colors import ListedColormap,BoundaryNorm
         cmap=ListedColormap(["#8B4513","#006400","#BBC0C2","#34C3F3"])
         norm=BoundaryNorm([0,1,2,3,4],4)
         from io import BytesIO; import matplotlib.pyplot as plt
@@ -143,40 +145,27 @@ def register_tab_callbacks(app: dash.Dash):
         url=f"/raster/{area}/{scen}/{year}.png"
         overlay=dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)
         return [overlay, False, True, True, True, True]
-    
-    # We will try to add a callback that is used to disable dropdowns and run-button when the map has data
-    #@app.callback(
-    #    Output("study-area-dropdown", "disabled", allow_duplicate=True),
-    #    Output("scenario-dropdown", "disabled", allow_duplicate=True),
-    #    Output("year-dropdown", "disabled", allow_duplicate=True),
-    #    Output("run-button", "disabled"),
-    #    State("raster-layer", "children"),
-    #    prevent_initial_call=True
-    #)
-    #def block_dropdowns_run(marsh):
-    #    if marsh:
-    #        return [True, True, True, True]
 
     # This is not working right now
-    @app.callback(
-        Output("popup-layer","children"),
-        Input("map","click_lat_lng"),
-        State("popup-layer","children"),
-        State("study-area-dropdown","value"),
-        State("scenario-dropdown","value"),
-        State("year-dropdown","value")
-    )
-    def display_popup(click, pops,area,scen,year):
-        if not click or not (area and scen and year): return pops
-        lat,lon=click
-        tif_dir=os.path.join(os.getcwd(),"results","saltmarshes",area,scen)
-        tif=glob.glob(os.path.join(tif_dir,f"*{year}*.tif"))[0]
-        with rasterio.open(tif) as src, WarpedVRT(src,crs="EPSG:4326",resampling=Resampling.nearest) as vrt:
-            row,col=rowcol(vrt.transform,lon,lat)
-            val=int(vrt.read(1,masked=False)[row,col])
-        names={0:"Mudflat",1:"Saltmarsh",2:"Upland Areas",3:"Channel"}
-        marker=dl.Marker(position=(lat,lon),children=dl.Popup(names.get(val,f"Val:{val}")))
-        return pops+[marker]
+    #@app.callback(
+    #    Output("popup-layer","children"),
+    #    Input("map","click_lat_lng"),
+    #    State("popup-layer","children"),
+    #    State("study-area-dropdown","value"),
+    #    State("scenario-dropdown","value"),
+    #    State("year-dropdown","value")
+    #)
+    #def display_popup(click, pops,area,scen,year):
+    #    if not click or not (area and scen and year): return pops
+    #    lat,lon=click
+    #    tif_dir=os.path.join(os.getcwd(),"results","saltmarshes",area,scen)
+    #    tif=glob.glob(os.path.join(tif_dir,f"*{year}*.tif"))[0]
+    #    with rasterio.open(tif) as src, WarpedVRT(src,crs="EPSG:4326",resampling=Resampling.nearest) as vrt:
+    #        row,col=rowcol(vrt.transform,lon,lat)
+    #        val=int(vrt.read(1,masked=False)[row,col])
+    #    names={0:"Mudflat",1:"Saltmarsh",2:"Upland Areas",3:"Channel"}
+    #   marker=dl.Marker(position=(lat,lon),children=dl.Popup(names.get(val,f"Val:{val}")))
+    #    return pops+[marker]
     
     # Here we will place the capabilities of the reset-button:
     @app.callback(
@@ -193,7 +182,55 @@ def register_tab_callbacks(app: dash.Dash):
     def reset(n):
         if n:
             return ["Select Study Area", False, "Select Scenario", False, "Year", False, []]
-        
+    
+    @app.callback(
+        Output("saltmarsh-chart", "children"),         # dónde metemos la gráfica
+        Input("run-button", "n_clicks"),              # disparador: mismo que el mapa
+        State("study-area-dropdown", "value"),        
+        State("scenario-dropdown", "value"),
+        State("year-dropdown", "value"),
+        prevent_initial_call=True
+    )
+    def update_saltmarsh_chart(n, area, scen, year):
+    # 1) Validar parámetros
+        if not (n and area and scen and year):
+            raise PreventUpdate
+
+        # 2) Buscar fichero tif
+        tif_dir = os.path.join(os.getcwd(), "results", "saltmarshes", area, scen)
+        tif_path = glob.glob(os.path.join(tif_dir, f"*{year}*.tif"))[0]
+
+        # 3) Leer datos de la banda
+        with rasterio.open(tif_path) as src:
+            arr = src.read(1)
+
+        # 4) Contar valores únicos
+        unique_vals, counts = np.unique(arr, return_counts=True)
+
+        # 5) Mapear valores a nombres
+        names = {0: "Mudflat", 1: "Saltmarsh", 2: "Upland Areas", 3: "Channel"}
+
+        # 6) filtrar solo los valores que tenemos en 'names'
+        datos = [(v, c) for v, c in zip(unique_vals, counts) if v in names]
+        valores_filtrados = [v for v, _ in datos]                 
+        cuentas_filtradas = [int(c) for _, c in datos]             
+
+        # 7) generar etiquetas en el mismo orden del filtrado
+        etiquetas = [names[v] for v in valores_filtrados]        
+
+        # 8) crear gráfica de barras con colores personalizados
+        fig = px.bar(
+            x=etiquetas,
+            y=cuentas_filtradas,
+            title="Habitat Areas",
+            color=etiquetas,
+            color_discrete_sequence=["#8B4513", "#006400", "#BBC0C2", "#34C3F3"]
+        )
+        fig.update_layout(showlegend=False, xaxis_title = "Habitat", yaxis_title = "Area (ha)", title_x = 0.5)
+
+        # 7) Devolver componente gráfico
+        return dcc.Graph(figure=fig, config= {"modeBarButtonsToRemove": ["zoom2d", "pan2d", "zoomIn2d", "zoomOut2d", "lasso2d", "resetScale2d", "selectbox"]}) #https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js, https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
+
     # Click on map pop-up event:
     # @app.callback(
     #     Output("popup", "children"),
