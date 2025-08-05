@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 def create_app():
     app = Dash(
         __name__, 
-        external_stylesheets=[dbc.themes.BOOTSTRAP],
+        external_stylesheets=[dbc.themes.FLATLY],
         suppress_callback_exceptions=True,
         title = "PhD Web Application"
         )

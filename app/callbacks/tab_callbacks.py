@@ -8,7 +8,7 @@ from dash import Input, Output, State, html, dcc, callback_context
 import dash
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-from dash_bootstrap_components import Spinner, Button
+from dash_bootstrap_components import Spinner, Button, ButtonGroup
 from matplotlib.colors import ListedColormap,BoundaryNorm
 import plotly.express as px
 import numpy as np
@@ -73,13 +73,57 @@ def register_tab_callbacks(app: dash.Dash):
                 dcc.Loading(
                     children = [
                             html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),
-                            html.Button([
-                                html.Span([
-                                    html.Img(src='/assets/logos/info.png', style={'width': '30px', 'height': '30px', 'margin-right': '5px'}),
-                                    html.Div("Get habitat info", style={'display': 'inline-block', 'verticalAlign': 'middle', 'font-size' : '14px', 'font-style' : 'italic'})   #'font-weight' : 'bold'
-                                ], style={'display':'flex','justifyContent':'center','alignItems':'center', 'verticalAlign': 'middle'})
-                        ], id='info-button', style={'padding': '10px', 'margin-top': '20px', 'border-radius' : '5px'}, hidden= True, n_clicks=0)
+                            html.Div(id='button-bar', style= {'display':'flex','justifyContent':'center','alignItems':'center', 'verticalAlign': 'middle'}, children=[
+                                html.Button([
+                                    html.Span([
+                                        html.Img(src='/assets/logos/info.png', style={'width': '30px', 'height': '30px', 'margin-right': '5px'}),
+                                        html.Div("Get habitat info", style={'display': 'inline-block', 'verticalAlign': 'middle', 'font-size' : '14px', 'font-style' : 'italic'})   #'font-weight' : 'bold'
+                                    ], style={'display':'flex','justifyContent':'center','alignItems':'center', 'verticalAlign': 'middle'})
+                                ], id='info-button', style={'padding': '10px', 'margin-top': '20px', 'border-radius' : '5px'}, hidden= True, n_clicks=0),
+                                html.Div([
+                                    html.Button("Results", id='marsh-results', hidden=True, n_clicks=0),
+                                    dcc.Download(id='saltmarsh-download')
+                                ])
+                                            
+                            ]),
+                            
                     ], id="loading", type="circle"),
+
+
+                # ButtonGroup(
+                #     [
+                #         Button(
+                #             [html.I(className="bi-graph-up"), " Statistics"],
+                #             id="stats-button",
+                #             color="primary",
+                #             outline=True,
+                #             n_clicks=0
+                #         ),
+                #         Button(
+                #             [html.I(className="bi-camera"), " Pictures"],
+                #             id="pics-button",
+                #             color="primary",
+                #             outline=True,
+                #             n_clicks=0
+                #         ),
+                #         Button(
+                #             [html.I(className="bi-stack"), " Data"],
+                #             id="data-button",
+                #             color="primary",
+                #             outline=True,
+                #             n_clicks=0
+                #         ),
+                #         Button(
+                #             [html.I(className="bi-info-circle"), " Info"],
+                #             id="info-button",
+                #             color="primary",
+                #             outline=True,
+                #             n_clicks=0
+                #         )
+                #     ],
+                #     size="sm",               # small
+                #     className="mt-3 mb-2"    # margen superior/inferior
+                # ),
 
                 dbc.Modal(
                     [
@@ -153,6 +197,7 @@ def register_tab_callbacks(app: dash.Dash):
         Output("scenario-dropdown", "disabled", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
         Output("run-button", "disabled"),
+        Output('marsh-results', 'hidden'),
         Input("run-button","n_clicks"),
         State("study-area-dropdown","value"),
         State("scenario-dropdown","value"),
@@ -179,7 +224,7 @@ def register_tab_callbacks(app: dash.Dash):
         buf=BytesIO(); fig.savefig(buf,dpi=100,transparent=True,pad_inches=0); plt.close(fig); buf.seek(0)
         url=f"/raster/{area}/{scen}/{year}.png"
         overlay=dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)
-        return [overlay, False, True, True, True, True]
+        return [overlay, False, True, True, True, True, False]
     
     # Here we will place the capabilities of the reset-button:
     @app.callback(

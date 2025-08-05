@@ -190,7 +190,7 @@ def create_layout():
                                         dcc.Tab(label='Fish Stocks',          value='tab-fishstock'),
                                         dcc.Tab(label='Physical Accounts',    value='tab-physical'),
                                         dcc.Tab(label='Management Scenarios', value='tab-management'),
-                                    ]
+                                    ], style= {'font-size': '20px', 'font-weight': 'bold'}
                                 ),
                                 # Contenido dinámico de pestaña
                                 html.Div(
