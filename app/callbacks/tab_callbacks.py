@@ -68,16 +68,30 @@ def register_tab_callbacks(app: dash.Dash):
                         ])
                     ]
                 ),
+                # dcc.Loading(
+                #         html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}), id="loading", type="circle"),
+                #         html.Button([
+                #             html.Span([
+                #                 html.Img(src='/assets/logos/info.png', style={'width': '30px', 'height': '30px', 'margin-right': '5px'}),
+                #                 html.Div("Get habitat info", style={'display': 'inline-block', 'verticalAlign': 'middle', 'font-size' : '14px', 'font-style' : 'italic'})   #'font-weight' : 'bold'
+                #             ], style={'display':'flex','justifyContent':'center','alignItems':'center', 'verticalAlign': 'middle'})
+                #         ], id='info-button', style={'padding': '10px', 'margin-top': '20px', 'border-radius' : '5px'}, hidden= True)
+
                 dcc.Loading(
-                        html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}), id="loading", type="circle"),
-                        html.Button([
-                            html.Span([
-                                html.Img(src='/assets/logos/layers.png', style={'width': '20px', 'height': '20px'}),
-                                html.Div("Texto del botón", style={'display': 'inline-block', 'verticalAlign': 'middle'})
-                            ], style={'display': 'inline-block', 'verticalAlign': 'middle'})
-                        ], id='info-button', style={'padding': '10px'}, hidden= True)
+                    children = [
+                            html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),
+                            html.Button([
+                                html.Span([
+                                    html.Img(src='/assets/logos/info.png', style={'width': '30px', 'height': '30px', 'margin-right': '5px'}),
+                                    html.Div("Get habitat info", style={'display': 'inline-block', 'verticalAlign': 'middle', 'font-size' : '14px', 'font-style' : 'italic'})   #'font-weight' : 'bold'
+                                ], style={'display':'flex','justifyContent':'center','alignItems':'center', 'verticalAlign': 'middle'})
+                        ], id='info-button', style={'padding': '10px', 'margin-top': '20px', 'border-radius' : '5px'}, hidden= True)
+
+                    ], id="loading", type="circle")
+                        
+                        
+
                     
-                            
             ], style={'padding':'20px'})
         else:
             return html.Div(f"Contenido de {tab}")
@@ -187,12 +201,13 @@ def register_tab_callbacks(app: dash.Dash):
         Output("year-dropdown", "disabled", allow_duplicate=True),
         Output("raster-layer", "children", allow_duplicate=True),
         Output("saltmarsh-chart", "children", allow_duplicate=True),
+        Output('info-button', 'hidden', allow_duplicate=True),
         Input("reset-button", "n_clicks"),
         prevent_initial_call = True
     )
     def reset(n):
         if n:
-            return ["Select Study Area", False, "Select Scenario", False, "Year", False, [], []]
+            return ["Select Study Area", False, "Select Scenario", False, "Year", False, [], [], True]
     
     @app.callback(
         Output("saltmarsh-chart", "children"),         # dónde metemos la gráfica

@@ -5,7 +5,7 @@ from dash_extensions.javascript import assign
 
 # Styles comunes
 SIDEBAR_STYLE = {
-    'width': '25%',               # Ocupa 25% del ancho
+    'width': '30%',               # Ocupa 25% del ancho
     'backgroundColor': '#C0D4EA',
     'padding': '0px',             # Sin padding para alinear al mapa
     'boxShadow': '0 0 10px rgba(0,0,0,0.2)',
