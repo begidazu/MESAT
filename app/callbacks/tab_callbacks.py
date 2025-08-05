@@ -4,10 +4,11 @@ import rasterio
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling
 from rasterio.transform import rowcol
-from dash import Input, Output, State, html, dcc
+from dash import Input, Output, State, html, dcc, callback_context
 import dash
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
+from dash_bootstrap_components import Spinner, Button
 from matplotlib.colors import ListedColormap,BoundaryNorm
 import plotly.express as px
 import numpy as np
@@ -52,30 +53,22 @@ def register_tab_callbacks(app: dash.Dash):
                         ),
                         html.Div(style={'display':'flex','gap':'10px','alignItems':'center'}, children=[
                             html.Button(
-                                html.Span("▶", style={'fontSize':'24px'}),
+                                html.Span("Run", style={'fontSize':'24px'}),
                                 id="run-button",
                                 n_clicks=0,
                                 disabled=True,
-                                style={'width':'60px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}
+                                style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}
                             ),
                             html.Button(
-                                html.Span("⟳", style={'fontSize':'24px'}),
+                                html.Span("Restart", style={'fontSize':'24px'}),
                                 id="reset-button",
                                 n_clicks=0,
                                 disabled=True,
-                                style={'display':'none','width':'60px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}
+                                style={'display':'none','width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}
                             )
                         ])
                     ]
                 ),
-                # dcc.Loading(
-                #         html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}), id="loading", type="circle"),
-                #         html.Button([
-                #             html.Span([
-                #                 html.Img(src='/assets/logos/info.png', style={'width': '30px', 'height': '30px', 'margin-right': '5px'}),
-                #                 html.Div("Get habitat info", style={'display': 'inline-block', 'verticalAlign': 'middle', 'font-size' : '14px', 'font-style' : 'italic'})   #'font-weight' : 'bold'
-                #             ], style={'display':'flex','justifyContent':'center','alignItems':'center', 'verticalAlign': 'middle'})
-                #         ], id='info-button', style={'padding': '10px', 'margin-top': '20px', 'border-radius' : '5px'}, hidden= True)
 
                 dcc.Loading(
                     children = [
@@ -85,12 +78,30 @@ def register_tab_callbacks(app: dash.Dash):
                                     html.Img(src='/assets/logos/info.png', style={'width': '30px', 'height': '30px', 'margin-right': '5px'}),
                                     html.Div("Get habitat info", style={'display': 'inline-block', 'verticalAlign': 'middle', 'font-size' : '14px', 'font-style' : 'italic'})   #'font-weight' : 'bold'
                                 ], style={'display':'flex','justifyContent':'center','alignItems':'center', 'verticalAlign': 'middle'})
-                        ], id='info-button', style={'padding': '10px', 'margin-top': '20px', 'border-radius' : '5px'}, hidden= True)
+                        ], id='info-button', style={'padding': '10px', 'margin-top': '20px', 'border-radius' : '5px'}, hidden= True, n_clicks=0)
+                    ], id="loading", type="circle"),
 
-                    ], id="loading", type="circle")
-                        
-                        
-
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader(dbc.ModalTitle("Habitat information")),
+                        dbc.ModalBody(
+                            html.Ul([
+                                html.Li([html.B("Mudflat: "), html.I("Mudflats")," represent an important part of coastal wetlands, which, like marshes, provide a wide range of ecosystem services such as coastal defence and carbon sequestration."]),
+                                html.Li([html.B("Saltmarsh: "), html.I("Saltmarshes"), " are coastal wetlands characterized by its low-lying, flat, and poorly drained soil that is regularly or occasionally flooded by salty or brackish water. Like Mudflats, saltmarshes provide a wide range of ecosystem services such as coastal defence, carbon sequestration and food provisioning."]),
+                                html.Li([html.B("Upland Areas: "), html.I("Upland Areas"), " represent non-flooded areas where marshes can migrate during sea level rise conditions."]),
+                                html.Li([html.B("Channel: "), html.I("Channels"), " are key features of wetlands that control fundamental dynamics like sediment availability, nutrient circulation and hydrodynamics."])
+                            ])
+                        ),
+                        dbc.ModalFooter(
+                            dbc.Button("Close", id="info-close", className="ml-auto", n_clicks=0)
+                        )
+                    ],
+                    id="info-modal",
+                    is_open=False,    # **siempre** arranca cerrado
+                    size="lg",
+                    centered=True,
+                    backdrop=True
+                )
                     
             ], style={'padding':'20px'})
         else:
@@ -169,27 +180,6 @@ def register_tab_callbacks(app: dash.Dash):
         url=f"/raster/{area}/{scen}/{year}.png"
         overlay=dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)
         return [overlay, False, True, True, True, True]
-
-    # This is not working right now
-    #@app.callback(
-    #    Output("popup-layer","children"),
-    #    Input("map","click_lat_lng"),
-    #    State("popup-layer","children"),
-    #    State("study-area-dropdown","value"),
-    #    State("scenario-dropdown","value"),
-    #    State("year-dropdown","value")
-    #)
-    #def display_popup(click, pops,area,scen,year):
-    #    if not click or not (area and scen and year): return pops
-    #    lat,lon=click
-    #    tif_dir=os.path.join(os.getcwd(),"results","saltmarshes",area,scen)
-    #    tif=glob.glob(os.path.join(tif_dir,f"*{year}*.tif"))[0]
-    #    with rasterio.open(tif) as src, WarpedVRT(src,crs="EPSG:4326",resampling=Resampling.nearest) as vrt:
-    #        row,col=rowcol(vrt.transform,lon,lat)
-    #        val=int(vrt.read(1,masked=False)[row,col])
-    #    names={0:"Mudflat",1:"Saltmarsh",2:"Upland Areas",3:"Channel"}
-    #   marker=dl.Marker(position=(lat,lon),children=dl.Popup(names.get(val,f"Val:{val}")))
-    #    return pops+[marker]
     
     # Here we will place the capabilities of the reset-button:
     @app.callback(
@@ -208,7 +198,8 @@ def register_tab_callbacks(app: dash.Dash):
     def reset(n):
         if n:
             return ["Select Study Area", False, "Select Scenario", False, "Year", False, [], [], True]
-    
+
+    # This is the callback to add the graph of the marsh area summary in the right tab:
     @app.callback(
         Output("saltmarsh-chart", "children"),         # dónde metemos la gráfica
         Output('info-button', "hidden"),
@@ -260,6 +251,7 @@ def register_tab_callbacks(app: dash.Dash):
         # 9) Devolver componente gráfico
         return [dcc.Graph(figure=fig, config= {"modeBarButtonsToRemove": ["zoom2d", "pan2d", "zoomIn2d", "zoomOut2d", "lasso2d", "resetScale2d"]}), False] #https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js, https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 
+    # Callback to show the loadin when the graph and button of info are displayed
     @app.callback(
         Output("loading", "display"),
         Input("run-button", "n_clicks")
@@ -267,11 +259,22 @@ def register_tab_callbacks(app: dash.Dash):
     def update_display(loading):
         return loading
 
-    # Click on map pop-up event:
-    # @app.callback(
-    #     Output("popup", "children"),
-    #     Output("popup", "position")
-    # )
-    # def popup(click):
-    #     if click:
-    #         return ["Hola", [40, -3]]
+    # Callback to show habitat info
+    @app.callback(
+        Output("info-modal", "is_open"),
+        Input("info-button", "n_clicks"),
+        Input("info-close",  "n_clicks"),
+        State("info-modal",  "is_open"),
+        prevent_initial_call=True
+    )
+    def toggle_info_modal(open_clicks, close_clicks, is_open):
+        # ¿qué botón disparó la llamada?
+        ctx = callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+        trigger = ctx.triggered[0]["prop_id"].split(".")[0]
+        # si pulsaste info-button o info-close, alternamos is_open
+        if trigger in ["info-button", "info-close"]:
+            return not is_open
+        return is_open
+
