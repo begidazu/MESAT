@@ -1,0 +1,64 @@
+/* Reset global: ocultar sólo scroll horizontal, permitir vertical en tab-content */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;   /* solo ocultar scroll horizontal */
+  overflow-y: visible;  /* permitir overflow vertical interno */
+}
+
+/* Tabs: ajustar tamaño de fuente y quitar espacio excesivo */
+.tabs {
+  font-size: 16px;
+}
+
+.dropdown-text {
+  font-size: 14px;
+}
+
+/* Flex child fix: permitir que el contenido tab se encoja para scrolling */
+.d-flex.flex-column .flex-grow-1 {
+  min-height: 0;
+}
+
+/* Sidebar full height */
+.bg-light {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Contenedor de contenido de pestaña: scroll vertical solo cuando sea necesario */
+#tab-content {
+  flex: 1 1 auto;      /* crecer y encoger en flex container */
+  min-height: 0;       /* permitir scroll interno */
+  overflow-y: auto;    /* scroll vertical interno */
+  overflow-x: hidden;
+}
+
+/* Media query para pantallas medianas (<992px): pestañas y padding */
+@media (max-width: 991.98px) {
+  .tabs {
+    font-size: 14px !important;
+  }
+  .dropdown-text {
+    font-size: 12px;
+  }
+  #tab-content {
+    padding: 1rem !important;
+  }
+}
+
+/* Media query para pantallas pequeñas (<768px) */
+@media (max-width: 767.98px) {
+  .tabs {
+    font-size: 12px !important;
+  }
+  .dropdown-text {
+    font-size: 10px;
+  }
+  #tab-content {
+    padding: 0.5rem !important;
+  }
+}

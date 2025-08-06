@@ -32,7 +32,7 @@ def register_tab_callbacks(app: dash.Dash):
                                 {"label":"Cadiz Bay","value":"Cadiz_Bay"},
                             ],
                             placeholder="Select Study Area",
-                            style={'fontSize':'18px'}
+                            className='dropdown-text'
                         ),
                         dcc.Dropdown(
                             id="scenario-dropdown",
@@ -42,27 +42,29 @@ def register_tab_callbacks(app: dash.Dash):
                                 {"label":"Global RCP4.5","value":"global_rcp45"},
                             ],
                             placeholder="Select Scenario",
-                            style={'fontSize':'18px'}
+                            className="dropdown-text"
                         ),
                         dcc.Dropdown(
                             id="year-dropdown",
                             options=[],
                             placeholder="Year",
-                            disabled=True,
-                            style={'fontSize':'18px'}
+                            className="dropdown-text",
+                            disabled=True
                         ),
                         html.Div(style={'display':'flex','gap':'10px','alignItems':'center'}, children=[
                             html.Button(
-                                html.Span("Run", style={'fontSize':'24px'}),
+                                html.Span("Run"),
                                 id="run-button",
                                 n_clicks=0,
                                 disabled=True,
+                                className='dropdown-text',
                                 style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}
                             ),
                             html.Button(
-                                html.Span("Restart", style={'fontSize':'24px'}),
+                                html.Span("Restart"),
                                 id="reset-button",
                                 n_clicks=0,
+                                className= 'dropdown-text',
                                 disabled=True,
                                 style={'display':'none','width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}
                             )
