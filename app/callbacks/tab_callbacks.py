@@ -16,7 +16,7 @@ from matplotlib.colors import ListedColormap,BoundaryNorm
 import matplotlib.pyplot as plt
 import plotly.express as px
 import numpy as np
-
+ 
 
 # =============================
 # Constantes y utilidades
