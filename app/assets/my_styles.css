@@ -10,11 +10,11 @@ html, body, #root {
 
 /* Tabs: ajustar tamaño de fuente y quitar espacio excesivo */
 .tabs {
-  font-size: 16px;
+  font-size: 20px;
 }
 
 .dropdown-text {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* Flex child fix: permitir que el contenido tab se encoja para scrolling */
@@ -40,10 +40,10 @@ html, body, #root {
 /* Media query para pantallas medianas (<992px): pestañas y padding */
 @media (max-width: 991.98px) {
   .tabs {
-    font-size: 14px !important;
+    font-size: 16px !important;
   }
   .dropdown-text {
-    font-size: 12px;
+    font-size: 14px;
   }
   #tab-content {
     padding: 1rem !important;
