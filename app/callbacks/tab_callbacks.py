@@ -13,6 +13,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm  # colores matplotlib
 import matplotlib.pyplot as plt  # dibujar PNGs
 import plotly.express as px  # gráficas interactivas
 import numpy as np  # numérico
+import time
 
 # =============================
 # Constantes y utilidades
@@ -186,15 +187,22 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         style=BTN_STYLE,
                         hidden = True,
                         children=[
-                            dcc.Checklist(
+                            dcc.RadioItems(
+                                id='scenario-radio',
                                 options=[
-                                        {'label': 'Regional RCP4.5', 'value': 'reg45'},
-                                        {'label': 'Regional RCP8.5', 'value': 'reg85'},
-                                        {'label': 'Global RCP4.5', 'value': 'glo45'},
-                                ], value=['reg45'], inline= True, style=BTN_STYLE, id= 'scenario-checklist'
+                                    {'label': 'Regional RCP4.5', 'value': 'reg45'},
+                                    {'label': 'Regional RCP8.5', 'value': 'reg85'},
+                                    {'label': 'Global RCP4.5',  'value': 'glo45'},
+                                ],
+                                value='reg45',
+                                inline=True,
+                                style=BTN_STYLE
+                                
                             )
                         ]
                     )
+
+                    
 
                     
 
@@ -325,30 +333,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             b = vrt.bounds  # extraer límites geográficos
         url = f"/raster/{area}/{scen}/{year}.png"  # construir URL del PNG servido por Flask
         overlay = dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)  # crear capa de imagen
-
-        # def make_overlay_for(scen):  # helper por escenario
-        #     base_dir = os.path.join(os.getcwd(),"results","saltmarshes",area,scen)  # carpeta de escenario
-        #     candidates = glob.glob(os.path.join(base_dir, f"*{year}*.tif")) + glob.glob(os.path.join(base_dir, f"*{year}*.tiff"))  # lista
-        #     candidates = [p for p in candidates if "accretion" not in os.path.basename(p).lower()]  # filtrar acreción
-        #     if not candidates:  # si no hay tif de clases
-        #         return []  # no añadir nada
-        #     candidates.sort()  # orden determinista
-        #     tif_path = candidates[0]  # primer válido
-        #     with rasterio.open(tif_path) as src, WarpedVRT(src, crs="EPSG:4326", resampling=Resampling.nearest) as vrt:  # VRT a 4326
-        #         _ = vrt.read(1, masked=False)  # lectura ligera
-        #         b = vrt.bounds  # bounds lon/lat
-        #     url = f"/raster/{area}/{scen}/{year}.png"  # url del PNG servido por Flask
-        #     overlay = dl.ImageOverlay(  # crear overlay
-        #         url=url,  # url de imagen
-        #         bounds=[[b.bottom, b.left], [b.top, b.right]],  # [[S,W],[N,E]]
-        #         opacity=1  # opacidad
-        #     )
-        #     return [overlay]  # devolver lista con overlay
-
-        # ov_reg45 = make_overlay_for("regional_rcp45")  # overlay rcp45 regional
-        # ov_reg85 = make_overlay_for("regional_rcp85")  # overlay rcp85 regional
-        # ov_glo45 = make_overlay_for("global_rcp45")   # overlay rcp45 global
-
         return overlay, False, True, True, True, False  # estados de UI
 
     @app.callback(  # reset total
@@ -357,19 +341,19 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output("year-dropdown", "value", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
         Output("reg-rcp45", "children", allow_duplicate=True),
-        Output("reg-rcp85", "children", allow_duplicate=True),
-        Output("glo-rcp45",  "children", allow_duplicate=True),
         Output("saltmarsh-chart", "children", allow_duplicate=True),
         Output('info-button', 'hidden', allow_duplicate=True),
         Output('marsh-results', 'hidden', allow_duplicate=True),
         Output('reset-button', 'disabled', allow_duplicate=True),
         Output('scenario-checklist-div', 'hidden', allow_duplicate=True),
+        # Output('scenario-checklist', 'value'),
+        Output('scenario-radio', 'value'),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], [], [], True, True, True, True]
+            return [None, False, None, True, [], [], True, True, True, True, 'reg45']
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario
@@ -523,5 +507,26 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return not is_open  # alternar
         return is_open  # mantener
 
-
     
+    # Callback para dar funcionalidad al scenario checklist:
+    @app.callback(
+        Output('reg-rcp45','children', allow_duplicate=True),  # tu contenedor de capas
+        Input('scenario-radio','value'),
+        State('study-area-dropdown','value'),
+        State('year-dropdown','value'),
+        prevent_initial_call=True
+    )
+    def scenario_overlay(selected, area, year):
+        if not (area and year and selected):
+            raise PreventUpdate
+        scen_map = {'reg45':'regional_rcp45','reg85':'regional_rcp85','glo45':'global_rcp45'}
+        scen = scen_map[selected]
+        base = os.path.join(os.getcwd(), "results", "saltmarshes", area, scen)
+        matches = sorted(glob.glob(os.path.join(base, f"*{year}*.tif")))
+        if not matches:
+            return []
+        with rasterio.open(matches[0]) as src, WarpedVRT(src, crs="EPSG:4326", resampling=Resampling.nearest) as vrt:
+            b = vrt.bounds
+        url = f"/raster/{area}/{scen}/{year}.png?ts={int(time.time())}"
+        return [dl.ImageOverlay(id=f"overlay-{scen}", url=url,
+                                bounds=[[b.bottom,b.left],[b.top,b.right]], opacity=1)]

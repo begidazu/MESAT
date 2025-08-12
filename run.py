@@ -57,7 +57,7 @@ def serve_reprojected_raster(area, scenario, year):  # servir PNG desde tif de c
     ax.axis("off")  # ocultar ejes
 
     buf = BytesIO()  # buffer
-    fig.savefig(buf, dpi=200, transparent=True, pad_inches=0)  # exportar PNG
+    fig.savefig(buf, dpi=100, transparent=True, pad_inches=0)  # exportar PNG
     plt.close(fig)  # cerrar figura
     buf.seek(0)  # rebobinar
 
