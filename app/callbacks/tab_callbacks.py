@@ -298,7 +298,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output("raster-layer-regional_rcp45","children", allow_duplicate=True),
         Output("raster-layer-regional_rcp85","children", allow_duplicate=True),
         Output("raster-layer-global_rcp45","children",  allow_duplicate=True),
-        Output("reset-button", "disabled"),
+        Output("reset-button", "disabled", allow_duplicate=True),
         Output("study-area-dropdown", "disabled", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
         Output("run-button", "disabled"),
@@ -342,9 +342,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output("study-area-dropdown", "disabled", allow_duplicate=True),
         Output("year-dropdown", "value", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
-        Output("raster-layer-regional_rcp45", "children", allow_duplicate=True),
-        Output("raster-layer-regional_rcp85", "children", allow_duplicate=True),
-        Output("raster-layer-global_rcp45",  "children", allow_duplicate=True),
+        Output("reg-rcp45", "children", allow_duplicate=True),
+        Output("reg-rcp85", "children", allow_duplicate=True),
+        Output("glo-rcp45",  "children", allow_duplicate=True),
         Output("saltmarsh-chart", "children", allow_duplicate=True),
         Output('info-button', 'hidden', allow_duplicate=True),
         Output('marsh-results', 'hidden', allow_duplicate=True),
@@ -360,6 +360,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output("saltmarsh-chart", "children"),
         Output('info-button', "hidden"),
         Output('marsh-results', 'hidden', allow_duplicate=True),
+        Output("reset-button", "disabled"),
         Input("run-button", "n_clicks"),
         State("study-area-dropdown", "value"),
         State("year-dropdown", "value"),
@@ -445,7 +446,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                 )
             ]
         )
-        return [charts, False, False]  # devolver UI y mostrar botón info
+        return [charts, False, False, False]  # devolver UI y mostrar botón info
 
     @app.callback(  # descarga ZIP por escenario
         Output('saltmarsh-download', 'data'),
