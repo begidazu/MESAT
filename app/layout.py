@@ -1,98 +1,127 @@
-#app\layout.py
-
-from dash import html, dcc
-import dash_leaflet as dl
-import dash_bootstrap_components as dbc
+from dash import html, dcc  # importar componentes básicos de Dash
+import dash_leaflet as dl  # importar integración Leaflet
+import dash_bootstrap_components as dbc  # importar Bootstrap para layout
 
 # Layout completamente flexible y responsive usando utilidades de Bootstrap
-def create_layout():
-    return html.Div(
-        className="d-flex flex-column vh-100 p-0",
-        children=[
-            # Fila principal que ocupa todo el espacio disponible
-            dbc.Row(
-                className="flex-grow-1 g-0",
-                children=[
-                    # Columna del mapa: 8/12 en LG, 12/12 en MD/SM
-                    dbc.Col(
-                        lg=8, md=12, sm=12,
-                        className="d-flex flex-column p-0",
-                        children=[
-                            # Mapa ocupa todo el espacio restante de la columna
-                            dl.Map(
-                                id='map',
-                                center=[40, -3],
-                                zoom=6,
-                                style={'width': '100%', 'height': '100%'},
-                                children=[
-                                    dl.TileLayer(),
-                                    dl.FeatureGroup(
-                                        id='draw-layer',
-                                        children=[
-                                            dl.EditControl(
-                                                id='edit-control',
-                                                position='topright',
-                                                draw={
-                                                    'polygon': True,
-                                                    'polyline': False,
-                                                    'rectangle': False,
-                                                    'circle': False,
-                                                    'marker': False
+def create_layout():  # definir función que construye el layout
+    return html.Div(  # contenedor raíz
+        className="d-flex flex-column vh-100 p-0",  # hacer columna a pantalla completa
+        children=[  # hijos del contenedor raíz
+            dbc.Row(  # fila principal
+                className="flex-grow-1 g-0",  # ocupar todo y sin gutters
+                children=[  # hijos de la fila
+                    dbc.Col(  # columna del mapa
+                        lg=8, md=12, sm=12,  # tamaños por breakpoint
+                        className="d-flex flex-column p-0",  # sin padding interno
+                        children=[  # hijos de la columna de mapa
+                            dl.Map(  # crear mapa Leaflet
+                                id='map',  # id del mapa
+                                center=[40, -3],  # centro por defecto
+                                zoom=6,  # zoom por defecto
+                                style={'width': '100%', 'height': '100%'},  # ocupar 100%
+                                children=[  # hijos del mapa
+                                    dl.TileLayer(),  # capa base OSM
+                                    dl.FeatureGroup(  # grupo de dibujo
+                                        id='draw-layer',  # id del grupo de dibujo
+                                        children=[  # hijos del grupo de dibujo
+                                            dl.EditControl(  # control de edición
+                                                id='edit-control',  # id del control
+                                                position='topleft',  # ubicación del control
+                                                draw={  # herramientas activas
+                                                    'polygon': True,  # permitir polígonos
+                                                    'polyline': False,  # desactivar polilíneas
+                                                    'rectangle': False,  # desactivar rectángulo
+                                                    'circle': False,  # desactivar círculo
+                                                    'marker': False  # desactivar marcador
                                                 },
-                                                edit={'remove': True}
+                                                edit={'remove': True}  # permitir borrar
                                             )
                                         ]
                                     ),
-                                    dl.FeatureGroup(id='raster-layer', children=[]),
-                                    dl.FeatureGroup(id='popup-layer', children=[])
+                                    dl.LayersControl(  # control de capas
+                                        id='layers-control',  # id del control
+                                        position='topright',  # posición del panel
+                                        collapsed=False,  # mostrar desplegado
+                                        children=[  # overlays del control
+                                            dl.Overlay(  # overlay para regional rcp45
+                                                name="Regional RCP4.5",  # nombre visible
+                                                checked=False,  # no activado por defecto
+                                                children=dl.FeatureGroup(  # grupo contenedor
+                                                    id='raster-layer-regional_rcp45',  # id del grupo
+                                                    children=[]  # sin hijos hasta pulsar Run
+                                                )
+                                            ),
+                                            dl.Overlay(  # overlay para regional rcp85
+                                                name="Regional RCP8.5",  # nombre visible
+                                                checked=False,  # no activado por defecto
+                                                children=dl.FeatureGroup(  # grupo contenedor
+                                                    id='raster-layer-regional_rcp85',  # id del grupo
+                                                    children=[]  # sin hijos hasta Run
+                                                )
+                                            ),
+                                            dl.Overlay(  # overlay para global rcp45
+                                                name="Global RCP4.5",  # nombre visible
+                                                checked=False,  # no activado por defecto
+                                                children=dl.FeatureGroup(  # grupo contenedor
+                                                    id='raster-layer-global_rcp45',  # id del grupo
+                                                    children=[]  # sin hijos hasta Run
+                                                )
+                                            ),
+                                            dl.Overlay(  # overlay para popups opcionales
+                                                name="Popups",  # nombre visible
+                                                checked=False,  # desactivado por defecto
+                                                children=dl.FeatureGroup(  # grupo de popups
+                                                    id='popup-layer',  # id del grupo
+                                                    children=[]  # vacío
+                                                )
+                                            ),
+                                        ]
+                                    ),
                                 ]
                             )
                         ]
                     ),
-                    # Sidebar: 4/12 en LG, 12/12 en MD/SM
-                    dbc.Col(
-                        lg=4, md=12, sm=12,
-                        className="d-flex flex-column bg-light",
-                        children=[
-                            # Pestañas
-                            dcc.Tabs(
-                                id='tabs',
-                                value='tab-saltmarsh',
-                                className="tabs mb-2",
-                                children=[
-                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),
-                                    dcc.Tab(label='Fish Stocks',          value='tab-fishstock'),
-                                    dcc.Tab(label='Physical Accounts',    value='tab-physical'),
-                                    dcc.Tab(label='Management Scenarios', value='tab-management'),
+                    dbc.Col(  # columna de la barra lateral
+                        lg=4, md=12, sm=12,  # tamaños por breakpoint
+                        className="d-flex flex-column bg-light",  # fondo claro
+                        children=[  # hijos de la barra lateral
+                            dcc.Tabs(  # tabs principales
+                                id='tabs',  # id de tabs
+                                value='tab-saltmarsh',  # tab seleccionada por defecto
+                                className="tabs mb-2",  # clases CSS
+                                children=[  # pestañas
+                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),  # tab 1
+                                    dcc.Tab(label='Fish Stocks',          value='tab-fishstock'),  # tab 2
+                                    dcc.Tab(label='Physical Accounts',    value='tab-physical'),  # tab 3
+                                    dcc.Tab(label='Management Scenarios', value='tab-management'),  # tab 4
                                 ],
-                                style={'fontWeight': 'bold'}
+                                style={'fontWeight': 'bold'}  # estilo de fuente
                             ),
-                            # Contenido de pestaña ocupa resto y puede scrollearse
-                            html.Div(
-                                id='tab-content',
-                                className="flex-grow-1 overflow-auto p-2 bg-white rounded shadow-sm"
+                            html.Div(  # contenedor del contenido de la pestaña
+                                id='tab-content',  # id del contenedor
+                                className="flex-grow-1 overflow-auto p-2 bg-white rounded shadow-sm"  # estilos
                             ),
-                            # Enlaces fijos abajo
-                            html.Div(
-                                className="p-2 mt-auto",
-                                children=[
-                                    html.A(
-                                        [html.Span('📄', className="me-1"), "Access the methodology"],
-                                        href='https://doi.org/10.1016/j.scitotenv.2024.178164',
-                                        target='_blank',
-                                        className="d-flex align-items-center text-decoration-none text-dark mb-1"
+                            html.Div(  # pie con enlaces
+                                className="p-2 mt-auto",  # padding y empujar abajo
+                                children=[  # enlaces
+                                    html.A(  # enlace a paper
+                                        [html.Span('📄', className="me-1"), "Access the methodology"],  # texto
+                                        href='https://doi.org/10.1016/j.scitotenv.2024.178164',  # url
+                                        target='_blank',  # nueva pestaña
+                                        className="d-flex align-items-center text-decoration-none text-dark mb-1"  # estilos
                                     ),
-                                    html.A(
-                                        [html.Img(src='/assets/logos/github-mark.png', height="24", className="me-1"), "Access the code"],
-                                        href='https://github.com/begidazu/PhD_Web_App',
-                                        target='_blank',
-                                        className="d-flex align-items-center text-decoration-none text-dark"
+                                    html.A(  # enlace a repo
+                                        [html.Img(src='/assets/logos/github-mark.png', height="24", className="me-1"), "Access the code"],  # texto
+                                        href='https://github.com/begidazu/PhD_Web_App',  # url
+                                        target='_blank',  # nueva pestaña
+                                        className="d-flex align-items-center text-decoration-none text-dark"  # estilos
                                     )
                                 ]
                             )
                         ]
                     )
-                ] 
+                ]
             )
         ]
     )
+
