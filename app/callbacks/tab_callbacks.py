@@ -191,7 +191,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         {'label': 'Regional RCP4.5', 'value': 'reg45'},
                                         {'label': 'Regional RCP8.5', 'value': 'reg85'},
                                         {'label': 'Global RCP4.5', 'value': 'glo45'},
-                                ], inline= True, style=BTN_STYLE, id= 'scenario-checklist'
+                                ], value=['reg45'], inline= True, style=BTN_STYLE, id= 'scenario-checklist'
                             )
                         ]
                     )
@@ -363,12 +363,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('info-button', 'hidden', allow_duplicate=True),
         Output('marsh-results', 'hidden', allow_duplicate=True),
         Output('reset-button', 'disabled', allow_duplicate=True),
+        Output('scenario-checklist-div', 'hidden', allow_duplicate=True),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], [], [], True, True, True]
+            return [None, False, None, True, [], [], [], [], True, True, True, True]
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario
@@ -376,6 +377,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('info-button', "hidden"),
         Output('marsh-results', 'hidden', allow_duplicate=True),
         Output("reset-button", "disabled"),
+        Output('scenario-checklist-div', 'hidden'),
         Input("run-button", "n_clicks"),
         State("study-area-dropdown", "value"),
         State("year-dropdown", "value"),
@@ -461,7 +463,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                 )
             ]
         )
-        return [charts, False, False, False]  # devolver UI y mostrar botón info
+        return [charts, False, False, False, False]  # devolver UI y mostrar botón info
 
     @app.callback(  # descarga ZIP por escenario
         Output('saltmarsh-download', 'data'),
@@ -520,3 +522,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         if trigger in ["info-button", "info-close"]:  # si es abrir/cerrar
             return not is_open  # alternar
         return is_open  # mantener
+
+
+    
