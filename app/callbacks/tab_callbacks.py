@@ -295,9 +295,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         return not (area and year)
 
     @app.callback(  # pintar overlays para 3 escenarios
-        Output("raster-layer-regional_rcp45","children", allow_duplicate=True),
-        Output("raster-layer-regional_rcp85","children", allow_duplicate=True),
-        Output("raster-layer-global_rcp45","children",  allow_duplicate=True),
+        Output("reg-rcp45","children", allow_duplicate=True),
+        #Output("raster-layer-regional_rcp85","children", allow_duplicate=True),
+        #Output("raster-layer-global_rcp45","children",  allow_duplicate=True),
         Output("reset-button", "disabled", allow_duplicate=True),
         Output("study-area-dropdown", "disabled", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
@@ -311,31 +311,45 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
     def update_map(n, area, year):  # añadir overlays
         if not (n and area and year):
             return [], [], [], True, False, False, True, True
+        
+        scen = 'regional_rcp45'
+        tif_dir = os.path.join(os.getcwd(),"results","saltmarshes",area,scen)  # construir ruta al directorio de TIFs
+        matches = glob.glob(os.path.join(tif_dir,f"*{year}*.tif"))  # buscar el TIF del año
+        if not matches:  # comprobar que existe el TIF
+            raise PreventUpdate  # no actualizar si no hay datos
+        m = matches[0]  # tomar el primer TIF disponible
+        with rasterio.open(m) as src, WarpedVRT(src,crs="EPSG:4326",resampling=Resampling.nearest) as vrt:  # abrir y reproyectar a WGS84 para bounds
+            data = vrt.read(1,masked=True)  # leer banda como masked
+            import numpy as np  # importar numpy localmente para enmascarado
+            data = np.ma.masked_where(data.data==0,data)  # enmascarar clase 0 como nodata por coherencia visual
+            b = vrt.bounds  # extraer límites geográficos
+        url = f"/raster/{area}/{scen}/{year}.png"  # construir URL del PNG servido por Flask
+        overlay = dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)  # crear capa de imagen
 
-        def make_overlay_for(scen):  # helper por escenario
-            base_dir = os.path.join(os.getcwd(),"results","saltmarshes",area,scen)  # carpeta de escenario
-            candidates = glob.glob(os.path.join(base_dir, f"*{year}*.tif")) + glob.glob(os.path.join(base_dir, f"*{year}*.tiff"))  # lista
-            candidates = [p for p in candidates if "accretion" not in os.path.basename(p).lower()]  # filtrar acreción
-            if not candidates:  # si no hay tif de clases
-                return []  # no añadir nada
-            candidates.sort()  # orden determinista
-            tif_path = candidates[0]  # primer válido
-            with rasterio.open(tif_path) as src, WarpedVRT(src, crs="EPSG:4326", resampling=Resampling.nearest) as vrt:  # VRT a 4326
-                _ = vrt.read(1, masked=False)  # lectura ligera
-                b = vrt.bounds  # bounds lon/lat
-            url = f"/raster/{area}/{scen}/{year}.png"  # url del PNG servido por Flask
-            overlay = dl.ImageOverlay(  # crear overlay
-                url=url,  # url de imagen
-                bounds=[[b.bottom, b.left], [b.top, b.right]],  # [[S,W],[N,E]]
-                opacity=1  # opacidad
-            )
-            return [overlay]  # devolver lista con overlay
+        # def make_overlay_for(scen):  # helper por escenario
+        #     base_dir = os.path.join(os.getcwd(),"results","saltmarshes",area,scen)  # carpeta de escenario
+        #     candidates = glob.glob(os.path.join(base_dir, f"*{year}*.tif")) + glob.glob(os.path.join(base_dir, f"*{year}*.tiff"))  # lista
+        #     candidates = [p for p in candidates if "accretion" not in os.path.basename(p).lower()]  # filtrar acreción
+        #     if not candidates:  # si no hay tif de clases
+        #         return []  # no añadir nada
+        #     candidates.sort()  # orden determinista
+        #     tif_path = candidates[0]  # primer válido
+        #     with rasterio.open(tif_path) as src, WarpedVRT(src, crs="EPSG:4326", resampling=Resampling.nearest) as vrt:  # VRT a 4326
+        #         _ = vrt.read(1, masked=False)  # lectura ligera
+        #         b = vrt.bounds  # bounds lon/lat
+        #     url = f"/raster/{area}/{scen}/{year}.png"  # url del PNG servido por Flask
+        #     overlay = dl.ImageOverlay(  # crear overlay
+        #         url=url,  # url de imagen
+        #         bounds=[[b.bottom, b.left], [b.top, b.right]],  # [[S,W],[N,E]]
+        #         opacity=1  # opacidad
+        #     )
+        #     return [overlay]  # devolver lista con overlay
 
-        ov_reg45 = make_overlay_for("regional_rcp45")  # overlay rcp45 regional
-        ov_reg85 = make_overlay_for("regional_rcp85")  # overlay rcp85 regional
-        ov_glo45 = make_overlay_for("global_rcp45")   # overlay rcp45 global
+        # ov_reg45 = make_overlay_for("regional_rcp45")  # overlay rcp45 regional
+        # ov_reg85 = make_overlay_for("regional_rcp85")  # overlay rcp85 regional
+        # ov_glo45 = make_overlay_for("global_rcp45")   # overlay rcp45 global
 
-        return ov_reg45, ov_reg85, ov_glo45, False, True, True, True, False  # estados de UI
+        return overlay, False, True, True, True, False  # estados de UI
 
     @app.callback(  # reset total
         Output("study-area-dropdown", "value", allow_duplicate=True),
@@ -348,12 +362,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output("saltmarsh-chart", "children", allow_duplicate=True),
         Output('info-button', 'hidden', allow_duplicate=True),
         Output('marsh-results', 'hidden', allow_duplicate=True),
+        Output('reset-button', 'disabled', allow_duplicate=True),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], [], [], True, True]
+            return [None, False, None, True, [], [], [], [], True, True, True]
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario

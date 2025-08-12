@@ -36,7 +36,7 @@ def serve_reprojected_raster(area, scenario, year):  # servir PNG desde tif de c
     print(f"DEBUG ➔ serving PNG for area={area} scenario={scenario} year={year} tif={os.path.basename(tif_path)}")  # traza
 
     with rasterio.open(tif_path) as src, WarpedVRT(src, crs="EPSG:4326", resampling=Resampling.nearest) as vrt:  # VRT a 4326
-        data = vrt.read(1, masked=False)  # leer banda (sin máscara para no esconder clase 0)
+        data = vrt.read(1, masked=True)  # leer banda (sin máscara para no esconder clase 0)
         b = vrt.bounds  # bounds
         lon_min, lon_max = b.left, b.right  # longitudes
         lat_min, lat_max = b.bottom, b.top  # latitudes
@@ -60,6 +60,7 @@ def serve_reprojected_raster(area, scenario, year):  # servir PNG desde tif de c
     fig.savefig(buf, dpi=200, transparent=True, pad_inches=0)  # exportar PNG
     plt.close(fig)  # cerrar figura
     buf.seek(0)  # rebobinar
+
     return send_file(buf, mimetype="image/png")  # devolver PNG
 
 if __name__ == "__main__":  # arrancar servidor
