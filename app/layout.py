@@ -38,45 +38,9 @@ def create_layout():  # definir función que construye el layout
                                             )
                                         ]
                                     ),
-                                    dl.LayersControl(  # control de capas
-                                        id='layers-control',  # id del control
-                                        position='topright',  # posición del panel
-                                        collapsed=False,  # mostrar desplegado
-                                        children=[  # overlays del control
-                                            dl.Overlay(  # overlay para regional rcp45
-                                                name="Regional RCP4.5",  # nombre visible
-                                                checked=False,  # no activado por defecto
-                                                children=dl.FeatureGroup(  # grupo contenedor
-                                                    id='raster-layer-regional_rcp45',  # id del grupo
-                                                    children=[]  # sin hijos hasta pulsar Run
-                                                )
-                                            ),
-                                            dl.Overlay(  # overlay para regional rcp85
-                                                name="Regional RCP8.5",  # nombre visible
-                                                checked=False,  # no activado por defecto
-                                                children=dl.FeatureGroup(  # grupo contenedor
-                                                    id='raster-layer-regional_rcp85',  # id del grupo
-                                                    children=[]  # sin hijos hasta Run
-                                                )
-                                            ),
-                                            dl.Overlay(  # overlay para global rcp45
-                                                name="Global RCP4.5",  # nombre visible
-                                                checked=False,  # no activado por defecto
-                                                children=dl.FeatureGroup(  # grupo contenedor
-                                                    id='raster-layer-global_rcp45',  # id del grupo
-                                                    children=[]  # sin hijos hasta Run
-                                                )
-                                            ),
-                                            dl.Overlay(  # overlay para popups opcionales
-                                                name="Popups",  # nombre visible
-                                                checked=False,  # desactivado por defecto
-                                                children=dl.FeatureGroup(  # grupo de popups
-                                                    id='popup-layer',  # id del grupo
-                                                    children=[]  # vacío
-                                                )
-                                            ),
-                                        ]
-                                    ),
+                                    dl.FeatureGroup(id='reg-rcp45', children=[]),
+                                    dl.FeatureGroup(id='reg-rcp85', children=[]),
+                                    dl.FeatureGroup(id='glo-rcp45', children=[])
                                 ]
                             )
                         ]
