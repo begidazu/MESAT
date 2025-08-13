@@ -157,13 +157,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 placeholder= 'Select Study Area',
                                 className='dropdown-text'
                             ),
-                            dcc.Dropdown(
-                                id='ec-dropdown',
-                                options=[],
-                                placeholder= 'Ecosystem Component',
-                                className='dropdown-text',
-                                disabled=True
-                            )
+                            html.Div(
+                                id='ec',
+                                hidden= True,
+                                children=[
+                                    html.B("Select Ecosystem Components", className='form-check-label'),
+                                    dcc.Checklist(id= 'ec-dropdown', options=[], value=[], labelClassName='form-check-label', inputClassName='form-check-input', className='form-check')
+                                ]                             
+                            ) 
                         ]
                     )
                 ], style={'padding':'20px'})
@@ -502,6 +503,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
         charts = dcc.Tabs(  # tabs principales
             id="saltmarsh-inner-tabs",  # id de tabs
+            className='form-check',
             value="areas",  # seleccionar áreas
             children=[  # dos pestañas principales
                 dcc.Tab(  # pestaña de áreas

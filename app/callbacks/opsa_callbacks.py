@@ -23,6 +23,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):
             Output("map", "viewport", allow_duplicate=True),
             Output("ec-dropdown", "options"),
             Output("ec-dropdown", "disabled"),
+            Output('ec', 'hidden'),
             Input("opsa-study-area", "value"),
             prevent_initial_call=True
         )
@@ -30,7 +31,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):
             DEFAULT_VIEWPORT = {"center": [48.912724, -1.141208], "zoom": 6}
 
             if not area:
-                return DEFAULT_VIEWPORT, [], True 
+                return DEFAULT_VIEWPORT, [], True, True
 
             mapping = {
                 "Santander": ([43.553269, -3.71836], 11),
@@ -48,4 +49,4 @@ def register_opsa_tab_callbacks(app: dash.Dash):
             else:
                 ec = []
 
-            return {"center": center, "zoom": zoom}, ([{"label": str(y), "value": y} for y in ec]), False 
+            return {"center": center, "zoom": zoom}, ([{"label": str(y), "value": y} for y in ec]), False, False 
