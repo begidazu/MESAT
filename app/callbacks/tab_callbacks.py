@@ -28,12 +28,6 @@ CLASS_INFO = {  # mapa valor->(etiqueta,color)
 LABEL_TO_COLOR = {name: color for _, (name, color) in CLASS_INFO.items()}  # etiqueta->color
 CATEGORY_ORDER = [CLASS_INFO[k][0] for k in sorted(CLASS_INFO.keys())]  # orden fijo de categorías
 
-BTN_STYLE = {  # estilo común de botones
-    'padding': '10px', 'marginTop': '20px', 'borderRadius': '6px',
-    'display': 'flex', 'alignItems': 'center', 'gap': '8px',
-    'fontSize': '14px', 'fontWeight': '600'
-}
-
 def _acc_tif_from_class_tif(class_tif):  # localizar tif de acreción emparejado
     base, ext = os.path.splitext(class_tif)  # separar base y extensión
     acc_path = f"{base}_accretion{ext}"  # ruta esperada exacta
@@ -107,7 +101,7 @@ def _png_grafico_accretion(titulo, etiquetas, valores):  # crear PNG de acreció
     bars = ax.bar(etiquetas, valores, color=colores)  # barras
     ax.set_title(titulo)  # título
     ax.set_xlabel("Habitat")  # eje X
-    ax.set_ylabel("Accretion volume (m³)")  # eje Y
+    ax.set_ylabel("Accretion volume (m³/year)")  # eje Y
     ax.grid(True, alpha=0.3)  # rejilla
     ymax = max(valores) if valores else 0  # máximo
     ax.set_ylim(0, ymax*1.15 if ymax else 1)  # margen
@@ -210,7 +204,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             ),
             dcc.Loading(  # contenedor con spinner
                 id="loading",  # id
-                type="circle",  # tipo de spinner
+                type="dot",  # tipo de spinner
+                color='#103e95',
                 children=[  # hijos
                     html.Legend("Habitat distribution and accretion statistics", className='mt-4', id='saltmarsh-legend', hidden=True),
                     html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),  # contenedor de gráficas
@@ -397,7 +392,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             )
             y_max = max(valores_acc)  # máximo
             fig.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', textfont_size=14, cliponaxis=False)  # etiquetas
-            fig.update_layout(showlegend=False, xaxis_title="<b>Habitat</b>", yaxis_title="<b>Accretion volume (m³)</b>",
+            fig.update_layout(showlegend=False, xaxis_title="<b>Habitat</b>", yaxis_title="<b>Accretion volume (m³/year)</b>",
                               title_x=0.5, title_font_family="Garamond", title_font_size=25,
                               uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0, y_max_acc])  # layout
             fig.update_xaxes(categoryorder='array', categoryarray=CATEGORY_ORDER)  # orden

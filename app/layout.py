@@ -16,8 +16,8 @@ def create_layout():  # definir función que construye el layout
                         children=[  # hijos de la columna de mapa
                             dl.Map(  # crear mapa Leaflet
                                 id='map',  # id del mapa
-                                center=[40, -3],  # centro por defecto
-                                zoom=6,  # zoom por defecto
+                                center=[40, -3.5],  # centro por defecto
+                                zoom=7,  # zoom por defecto
                                 style={'width': '100%', 'height': '100%'},  # ocupar 100%
                                 children=[  # hijos del mapa
                                     dl.TileLayer(),  # capa base OSM
@@ -38,9 +38,12 @@ def create_layout():  # definir función que construye el layout
                                             )
                                         ]
                                     ),
-                                    dl.FeatureGroup(id='reg-rcp45', children=[]),
-                                    dl.FeatureGroup(id='reg-rcp85', children=[]),
-                                    dl.FeatureGroup(id='glo-rcp45', children=[])
+                                    html.Div(
+                                        [
+                                            dcc.Loading(type='circle',  parent_style={"position": "relative", "z-index": "100", "width": "100%", "height": "100%"}), 
+                                            dl.FeatureGroup(id='reg-rcp45', children=[])
+                                        ]
+                                    )
                                 ]
                             )
                         ]
