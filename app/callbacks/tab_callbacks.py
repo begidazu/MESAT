@@ -168,25 +168,27 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 id="run-button",  # id
                                 n_clicks=0,  # contador
                                 disabled=True,  # deshabilitado al inicio
-                                className='dropdown-text',  # clase css
-                                style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
+                                className='btn btn-outline-primary'  # clase css
+                                #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
                             ),
                             html.Button(  # botón Reset
                                 html.Span("Restart"),  # texto
                                 id="reset-button",  # id
                                 n_clicks=0,  # contador
-                                className='dropdown-text',  # clase css
-                                disabled=True,  # deshabilitado al inicio
-                                style={'display':'none','width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
+                                className='btn btn-outline-primary',  # clase css
+                                disabled=True  # deshabilitado al inicio
                             )
                         ]
                     ),
 
                     html.Div(
                         id='scenario-checklist-div',
-                        style=BTN_STYLE,
                         hidden = True,
                         children=[
+                            html.Legend(
+                                "Select Climate Change Scenario Map",
+                                className="mt-4"  # aquí la clase que quieras (Bootstrap o CSS propio)
+                            ),
                             dcc.RadioItems(
                                 id='scenario-radio',
                                 options=[
@@ -195,31 +197,22 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     {'label': 'Global RCP4.5',  'value': 'glo45'},
                                 ],
                                 value='reg45',
-                                inline=True,
-                                style=BTN_STYLE
+                                inline=False,
+                                inputClassName= 'form-check-input',
+                                className= 'form-check',
+                                labelClassName= 'form-check-label'
+
                                 
                             )
                         ]
                     )
-
-                    
-
-                    
-
-
-
-
-
-
-
-
-
                 ]
             ),
             dcc.Loading(  # contenedor con spinner
                 id="loading",  # id
                 type="circle",  # tipo de spinner
                 children=[  # hijos
+                    html.Legend("Habitat distribution and accretion statistics", className='mt-4', id='saltmarsh-legend', hidden=True),
                     html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),  # contenedor de gráficas
                     html.Div(  # barra inferior
                         id='button-bar',  # id
@@ -228,7 +221,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             html.Button(  # botón info
                                 [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Habitat and accretion info")],  # contenido
                                 id='info-button',  # id
-                                style=BTN_STYLE,  # estilo
+                                className='btn btn-outline-primary',
                                 hidden=True,  # oculto al inicio
                                 n_clicks=0  # contador
                             ),
@@ -239,7 +232,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         id='marsh-results',  # id
                                         hidden=True,  # oculto al inicio
                                         n_clicks=0,  # contador
-                                        style=BTN_STYLE  # estilo
+                                        className='btn btn-outline-primary'
                                     ),
                                     dcc.Download(id='saltmarsh-download')  # componente de descarga
                                 ]
@@ -346,6 +339,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('marsh-results', 'hidden', allow_duplicate=True),
         Output('reset-button', 'disabled', allow_duplicate=True),
         Output('scenario-checklist-div', 'hidden', allow_duplicate=True),
+        Output('saltmarsh-legend', 'hidden', allow_duplicate=True),
         # Output('scenario-checklist', 'value'),
         Output('scenario-radio', 'value'),
         Input("reset-button", "n_clicks"),
@@ -353,7 +347,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], True, True, True, True, 'reg45']
+            return [None, False, None, True, [], [], True, True, True, True, 'reg45', True]
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario
@@ -362,6 +356,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('marsh-results', 'hidden', allow_duplicate=True),
         Output("reset-button", "disabled"),
         Output('scenario-checklist-div', 'hidden'),
+        Output('saltmarsh-legend','hidden'),
         Input("run-button", "n_clicks"),
         State("study-area-dropdown", "value"),
         State("year-dropdown", "value"),
@@ -447,7 +442,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                 )
             ]
         )
-        return [charts, False, False, False, False]  # devolver UI y mostrar botón info
+        return [charts, False, False, False, False, False]  # devolver UI y mostrar botón info
 
     @app.callback(  # descarga ZIP por escenario
         Output('saltmarsh-download', 'data'),
