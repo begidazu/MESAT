@@ -347,7 +347,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], True, True, True, True, 'reg45', True]
+            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45']
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario
@@ -372,7 +372,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             hits = [p for p in hits if "accretion" not in os.path.basename(p).lower()]  # excluir acreción
             return sorted(hits)[0] if hits else None  # devolver primero o None
 
-        def fig_areas_from_tif(tif_path):  # figura de áreas
+        def fig_areas_from_tif(tif_path, y_max_area):  # figura de áreas
             etiquetas, areas_ha, _ = _areas_por_habitat(tif_path)  # sumar áreas
             fig = px.bar(  # barplot
                 x=etiquetas, y=areas_ha, title="<b>Habitat Areas (ha)</b>",
@@ -381,11 +381,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             fig.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', cliponaxis=False)  # etiquetas
             fig.update_layout(showlegend=False, xaxis_title="<b>Habitat</b>", yaxis_title="<b>Area (ha)</b>",
                               title_x=0.5, title_font_family="Garamond", title_font_size=25,
-                              uniformtext_minsize=10, uniformtext_mode='show')  # layout
+                              uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0, y_max_area])  # layout
             fig.update_xaxes(categoryorder='array', categoryarray=CATEGORY_ORDER)  # orden
             return fig  # devolver figura
 
-        def fig_acc_from_pair(class_tif_path):  # figura de acreción
+        def fig_acc_from_pair(class_tif_path, y_max_acc):  # figura de acreción
             acc_tif = _acc_tif_from_class_tif(class_tif_path)  # localizar accretion
             if not acc_tif:  # si no existe
                 return html.Div("No accretion raster found in this scenario folder.", style={"color":"#555","fontStyle":"italic"})  # mensaje
@@ -400,10 +400,35 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             fig.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', textfont_size=14, cliponaxis=False)  # etiquetas
             fig.update_layout(showlegend=False, xaxis_title="<b>Habitat</b>", yaxis_title="<b>Accretion volume (m³)</b>",
                               title_x=0.5, title_font_family="Garamond", title_font_size=25,
-                              yaxis_range=[0, y_max*1.2 if y_max else 1],
-                              uniformtext_minsize=10, uniformtext_mode='show')  # layout
+                              uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0, y_max_acc])  # layout
             fig.update_xaxes(categoryorder='array', categoryarray=CATEGORY_ORDER)  # orden
             return dcc.Graph(figure=fig, config={"modeBarButtonsToRemove": ["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]})  # componente Graph
+
+
+        # Scan all scenarios to find the maximum area and accretion to fix the y-axis of the graphs:
+        global_area_max = 0.0
+        global_acc_max  = 0.0
+        for scen, _ in SCENARIOS:
+            t = class_tif(area, scen, year)
+            if not t:
+                continue
+            # áreas
+            _, areas_ha, _ = _areas_por_habitat(t)
+            if areas_ha:
+                global_area_max = max(global_area_max, max(areas_ha))
+            # acreción
+            acc_t = _acc_tif_from_class_tif(t)
+            if acc_t:
+                try:
+                    _, vals = _accretion_volume_by_class(t, acc_t)
+                    if vals:
+                        global_acc_max = max(global_acc_max, max(vals))
+                except Exception:
+                    pass
+
+        # Give a 20% of margin:
+        global_area_max = global_area_max * 1.20 if global_area_max else 1.0
+        global_acc_max  = global_acc_max  * 1.20 if global_acc_max  else 1.0
 
         area_tabs_children, acc_tabs_children = [], []  # listas de tabs
         first_value = None  # valor inicial seleccionado
@@ -415,9 +440,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                 acc_tabs_children.append(dcc.Tab(label=scen_label, value=scen, children=[html.Div("No accretion raster found for this scenario/year.", style={"color":"#555","fontStyle":"italic"})]))  # tab vacío
                 continue  # siguiente escenario
 
-            fig_areas = fig_areas_from_tif(tif_path)  # construir figura
+            fig_areas = fig_areas_from_tif(tif_path, global_area_max)  # construir figura
             area_tabs_children.append(dcc.Tab(label=scen_label, value=scen, children=[dcc.Graph(figure=fig_areas, config={"modeBarButtonsToRemove": ["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]})]))  # tab con figura
-            acc_content = fig_acc_from_pair(tif_path)  # contenido de acreción
+            acc_content = fig_acc_from_pair(tif_path, global_acc_max)  # contenido de acreción
             acc_tabs_children.append(dcc.Tab(label=scen_label, value=scen, children=[acc_content]))  # tab de acreción
 
             if first_value is None:  # fijar tab inicial
