@@ -38,13 +38,13 @@ def _acc_tif_from_class_tif(class_tif):  # localizar tif de acreción emparejado
     hits = glob.glob(os.path.join(folder, f"{stem}*_accretion{ext}"))  # buscar variantes
     return hits[0] if hits else None  # devolver primera coincidencia o None
 
-def _find_class_tif(area, scen, year):  # localizar tif de clases por área/escenario/año
-    base = os.path.join(os.getcwd(), "results", "saltmarshes", area, scen)  # ruta base
-    if not os.path.isdir(base):  # comprobar existencia de carpeta
-        return None  # no hay datos
-    hits = glob.glob(os.path.join(base, f"*{year}*.tif")) + glob.glob(os.path.join(base, f"*{year}*.tiff"))  # candidatos por año
-    hits = [p for p in hits if "accretion" not in os.path.basename(p).lower()]  # excluir *_accretion.*
-    return sorted(hits)[0] if hits else None  # devolver primero o None
+# def _find_class_tif(area, scen, year):  # localizar tif de clases por área/escenario/año
+#     base = os.path.join(os.getcwd(), "results", "saltmarshes", area, scen)  # ruta base
+#     if not os.path.isdir(base):  # comprobar existencia de carpeta
+#         return None  # no hay datos
+#     hits = glob.glob(os.path.join(base, f"*{year}*.tif")) + glob.glob(os.path.join(base, f"*{year}*.tiff"))  # candidatos por año
+#     hits = [p for p in hits if "accretion" not in os.path.basename(p).lower()]  # excluir *_accretion.*
+#     return sorted(hits)[0] if hits else None  # devolver primero o None
 
 def _areas_por_habitat(tif_path):  # sumar áreas (ha) por clase
     with rasterio.open(tif_path) as src:  # abrir tif
@@ -267,8 +267,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         return ([{"label":str(y),"value":y} for y in years], False)
 
     @app.callback(  # centrar/zoom por área
-        Output("map", "viewport"),
-        Input("study-area-dropdown", "value")
+        Output("map", "viewport", allow_duplicate=True),
+        Input("study-area-dropdown", "value"),
+        prevent_initial_call=True
     )
     def center_and_zoom(area):  # cambiar viewport
         if not area:
@@ -336,12 +337,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('scenario-checklist-div', 'hidden', allow_duplicate=True),
         Output('saltmarsh-legend', 'hidden', allow_duplicate=True),
         Output('scenario-radio', 'value'),
+        Output('map', 'viewport'),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45']
+            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45', {"center": [40, -3.5], "zoom": 7}]
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario

@@ -2,7 +2,8 @@ from dash import Dash
 from .layout import create_layout
 from .callbacks.models_callbacks import register_model_callbacks
 from .callbacks.draw_callbacks import register_draw_callbacks
-from .callbacks.tab_callbacks import register_tab_callbacks
+from .callbacks.marsh_callbacks import register_tab_callbacks
+from .callbacks.opsa_callbacks import register_opsa_tab_callbacks
 import dash_bootstrap_components as dbc
 
 def create_app():
@@ -16,4 +17,5 @@ def create_app():
     register_model_callbacks(app)
     register_draw_callbacks(app)
     register_tab_callbacks(app)
+    register_opsa_tab_callbacks(app)
     return app

@@ -1,7 +1,7 @@
 import dash_leaflet as dl
 from dash import Input, Output
 import app  # sólo si necesitas acceso al app aquí
-from .tab_callbacks import BOUNDS  # asume que has cargado allí tu JSON de bounds
+from .marsh_callbacks import BOUNDS  # asume que has cargado allí tu JSON de bounds
 
 @app.callback(
     Output("map", "children"),
