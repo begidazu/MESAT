@@ -141,7 +141,32 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         
         elif tab == "tab-physical":
             # return physical_layout(key)
-            return html.Div("Physical Accounts — coming soon", key=key, style={'padding':'20px'})
+            return html.Div(
+                key=key,
+                children=[
+                    html.Div(
+                        style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
+                        children=[
+                            dcc.Dropdown(
+                                id='opsa-study-area',
+                                options=[
+                                    {'label': 'Santander Coast', 'value': 'Santander'},
+                                    {'label': 'North Sea', 'value': 'North_Sea'},
+                                    {'label': 'Irish Sea', 'value': 'Irish_Sea'}
+                                ],
+                                placeholder= 'Select Study Area',
+                                className='dropdown-text'
+                            ),
+                            dcc.Dropdown(
+                                id='ec-dropdown',
+                                options=[],
+                                placeholder= 'Ecosystem Component',
+                                className='dropdown-text',
+                                disabled=True
+                            )
+                        ]
+                    )
+                ], style={'padding':'20px'})
         
         elif tab == "tab-management":
             # return management_layout(key)

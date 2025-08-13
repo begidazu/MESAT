@@ -18,4 +18,34 @@ import time
 
 
 def register_opsa_tab_callbacks(app: dash.Dash):
-    return
+
+        @app.callback(
+            Output("map", "viewport", allow_duplicate=True),
+            Output("ec-dropdown", "options"),
+            Output("ec-dropdown", "disabled"),
+            Input("opsa-study-area", "value"),
+            prevent_initial_call=True
+        )
+        def center_and_zoom(area):
+            DEFAULT_VIEWPORT = {"center": [48.912724, -1.141208], "zoom": 6}
+
+            if not area:
+                return DEFAULT_VIEWPORT, [], True 
+
+            mapping = {
+                "Santander": ([43.553269, -3.71836], 11),
+                "North_Sea": ([51.824025,  2.627373], 9),
+                "Irish_Sea": ([53.741164, -4.608093], 9),
+            }
+            center, zoom = mapping.get(area, (DEFAULT_VIEWPORT["center"], DEFAULT_VIEWPORT["zoom"]))
+
+            if area == "Santander":
+                ec = ['Angiosperms','Benthic macroinvertebrates','Intertidal macroalgae','Subtidal macroalgae','Benthic habitats']
+            elif area == "North_Sea":
+                ec = ['Benthic habitats','Macrozoobenthos']
+            elif area == "Irish_Sea":
+                ec = ['Benthic habitats','Macrozoobenthos','Demersal fish']
+            else:
+                ec = []
+
+            return {"center": center, "zoom": zoom}, ([{"label": str(y), "value": y} for y in ec]), False 
