@@ -148,126 +148,128 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div("Management Scenarios — coming soon", key=key, style={'padding':'20px'})
 
         elif tab == 'tab-saltmarsh':
-            return html.Div([  # UI del tab
-                html.Div(  # panel de selects y botones
-                    style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
-                    children=[  # hijos del panel
-                        dcc.Dropdown(  # selector de área
-                            id="study-area-dropdown",  # id
-                            options=[  # opciones
-                                {"label":"Urdaibai Estuary","value":"Urdaibai_Estuary"},
-                                {"label":"Bay of Santander","value":"Bay_of_Santander"},
-                                {"label":"Cadiz Bay","value":"Cadiz_Bay"},
-                            ],
-                            placeholder="Select Study Area",  # ayuda
-                            className='dropdown-text'  # clase css
-                        ),
-                        dcc.Dropdown(  # selector de año
-                            id="year-dropdown",  # id
-                            options=[],  # sin opciones hasta elegir área
-                            placeholder="Year",  # ayuda
-                            className="dropdown-text",  # clase css
-                            disabled=True  # deshabilitado hasta elegir área
-                        ),
-                        html.Div(  # fila de botones
-                            style={'display':'flex','gap':'10px','alignItems':'center'},  # estilos
-                            children=[  # hijos
-                                html.Button(  # botón Run
-                                    html.Span("Run"),  # texto
-                                    id="run-button",  # id
-                                    n_clicks=0,  # contador
-                                    disabled=True,  # deshabilitado al inicio
-                                    className='btn btn-outline-primary'  # clase css
-                                    #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
-                                ),
-                                html.Button(  # botón Reset
-                                    html.Span("Restart"),  # texto
-                                    id="reset-button",  # id
-                                    n_clicks=0,  # contador
-                                    className='btn btn-outline-primary',  # clase css
-                                    disabled=True  # deshabilitado al inicio
-                                )
-                            ]
-                        ),
+            return html.Div(
+                key= key, 
+                children=[  # UI del tab
+                    html.Div(  # panel de selects y botones
+                        style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
+                        children=[  # hijos del panel
+                            dcc.Dropdown(  # selector de área
+                                id="study-area-dropdown",  # id
+                                options=[  # opciones
+                                    {"label":"Urdaibai Estuary","value":"Urdaibai_Estuary"},
+                                    {"label":"Bay of Santander","value":"Bay_of_Santander"},
+                                    {"label":"Cadiz Bay","value":"Cadiz_Bay"},
+                                ],
+                                placeholder="Select Study Area",  # ayuda
+                                className='dropdown-text'  # clase css
+                            ),
+                            dcc.Dropdown(  # selector de año
+                                id="year-dropdown",  # id
+                                options=[],  # sin opciones hasta elegir área
+                                placeholder="Year",  # ayuda
+                                className="dropdown-text",  # clase css
+                                disabled=True  # deshabilitado hasta elegir área
+                            ),
+                            html.Div(  # fila de botones
+                                style={'display':'flex','gap':'10px','alignItems':'center'},  # estilos
+                                children=[  # hijos
+                                    html.Button(  # botón Run
+                                        html.Span("Run"),  # texto
+                                        id="run-button",  # id
+                                        n_clicks=0,  # contador
+                                        disabled=True,  # deshabilitado al inicio
+                                        className='btn btn-outline-primary'  # clase css
+                                        #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
+                                    ),
+                                    html.Button(  # botón Reset
+                                        html.Span("Restart"),  # texto
+                                        id="reset-button",  # id
+                                        n_clicks=0,  # contador
+                                        className='btn btn-outline-primary',  # clase css
+                                        disabled=True  # deshabilitado al inicio
+                                    )
+                                ]
+                            ),
 
-                        html.Div(
-                            id='scenario-checklist-div',
-                            hidden = True,
-                            children=[
-                                html.Legend(
-                                    "Select Climate Change Scenario Map",
-                                    className="mt-4"  # aquí la clase que quieras (Bootstrap o CSS propio)
-                                ),
-                                dcc.RadioItems(
-                                    id='scenario-radio',
-                                    options=[
-                                        {'label': 'Regional RCP4.5', 'value': 'reg45'},
-                                        {'label': 'Regional RCP8.5', 'value': 'reg85'},
-                                        {'label': 'Global RCP4.5',  'value': 'glo45'},
-                                    ],
-                                    value='reg45',
-                                    inline=False,
-                                    inputClassName= 'form-check-input',
-                                    className= 'form-check',
-                                    labelClassName= 'form-check-label'
+                            html.Div(
+                                id='scenario-checklist-div',
+                                hidden = True,
+                                children=[
+                                    html.Legend(
+                                        "Select Climate Change Scenario Map",
+                                        className="mt-4"  # aquí la clase que quieras (Bootstrap o CSS propio)
+                                    ),
+                                    dcc.RadioItems(
+                                        id='scenario-radio',
+                                        options=[
+                                            {'label': 'Regional RCP4.5', 'value': 'reg45'},
+                                            {'label': 'Regional RCP8.5', 'value': 'reg85'},
+                                            {'label': 'Global RCP4.5',  'value': 'glo45'},
+                                        ],
+                                        value='reg45',
+                                        inline=False,
+                                        inputClassName= 'form-check-input',
+                                        className= 'form-check',
+                                        labelClassName= 'form-check-label'
 
-                                    
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                dcc.Loading(  # contenedor con spinner
-                    id="loading",  # id
-                    type="dot",  # tipo de spinner
-                    color='#103e95',
-                    children=[  # hijos
-                        html.Legend("Habitat distribution and accretion statistics", className='mt-4', id='saltmarsh-legend', hidden=True),
-                        html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),  # contenedor de gráficas
-                        html.Div(  # barra inferior
-                            id='button-bar',  # id
-                            style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},  # estilos
-                            children=[  # hijos
-                                html.Button(  # botón info
-                                    [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Habitat and accretion info")],  # contenido
-                                    id='info-button',  # id
-                                    className='btn btn-outline-primary',
-                                    hidden=True,  # oculto al inicio
-                                    n_clicks=0  # contador
-                                ),
-                                html.Div(  # contenedor de descarga
-                                    [
-                                        html.Button(  # botón de descarga
-                                            [html.Img(src='/assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")],  # contenido
-                                            id='marsh-results',  # id
-                                            hidden=True,  # oculto al inicio
-                                            n_clicks=0,  # contador
-                                            className='btn btn-outline-primary'
-                                        ),
-                                        dcc.Download(id='saltmarsh-download')  # componente de descarga
-                                    ]
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                dbc.Modal(  # modal de información
-                    [
-                        dbc.ModalHeader(dbc.ModalTitle("Habitat & accretion information")),  # cabecera
-                        dbc.ModalBody(  # cuerpo
-                            html.Ul([
-                                    html.Li([html.B("Mudflat: "), html.I("Mudflats")," represent an important part of coastal wetlands, which, like marshes, provide a wide range of ecosystem services such as coastal defence and carbon sequestration."]),  # info Mudflat
-                                    html.Li([html.B("Saltmarsh: "), html.I("Saltmarshes"), " are coastal wetlands characterized by its low-lying, flat, and poorly drained soil that is regularly or occasionally flooded by salty or brackish water. Like Mudflats, saltmarshes provide a wide range of ecosystem services such as coastal defence, carbon sequestration and food provisioning."]),  # info Saltmarsh
-                                    html.Li([html.B("Upland Areas: "), html.I("Upland Areas"), " represent non-flooded areas where marshes can migrate during sea level rise conditions."]),  # info Upland
-                                    html.Li([html.B("Channel: "), html.I("Channels"), " are key features of wetlands that control fundamental dynamics like sediment availability, nutrient circulation and hydrodynamics."]),  # info Channel
-                                    html.Li([html.B("Accretion: "), html.I("Accretion"), " is the process where the elevation of a saltmarsh surface increases over time, either by the accumulation of mineral sediments (like silt and clay) or by the buildup of organic matter from decaying plant material. Through ", html.I("accretion"), ", saltmarshes sequester carbon from both accumulation of mineral sediments and organic matter from decaying plant material. "]) # info Accretion
-                            ])
-                        ),
-                        dbc.ModalFooter(dbc.Button("Close", id="info-close", className="ml-auto", n_clicks=0))  # pie
-                    ],
-                    id="info-modal", is_open=False, size="lg", centered=True, backdrop=True  # props
-                )
-            ], style={'padding':'20px'})  # padding general
+                                        
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    dcc.Loading(  # contenedor con spinner
+                        id="loading",  # id
+                        type="dot",  # tipo de spinner
+                        color='#103e95',
+                        children=[  # hijos
+                            html.Legend("Habitat distribution and accretion statistics", className='mt-4', id='saltmarsh-legend', hidden=True),
+                            html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),  # contenedor de gráficas
+                            html.Div(  # barra inferior
+                                id='button-bar',  # id
+                                style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},  # estilos
+                                children=[  # hijos
+                                    html.Button(  # botón info
+                                        [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Habitat and accretion info")],  # contenido
+                                        id='info-button',  # id
+                                        className='btn btn-outline-primary',
+                                        hidden=True,  # oculto al inicio
+                                        n_clicks=0  # contador
+                                    ),
+                                    html.Div(  # contenedor de descarga
+                                        [
+                                            html.Button(  # botón de descarga
+                                                [html.Img(src='/assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")],  # contenido
+                                                id='marsh-results',  # id
+                                                hidden=True,  # oculto al inicio
+                                                n_clicks=0,  # contador
+                                                className='btn btn-outline-primary'
+                                            ),
+                                            dcc.Download(id='saltmarsh-download')  # componente de descarga
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    dbc.Modal(  # modal de información
+                        [
+                            dbc.ModalHeader(dbc.ModalTitle("Habitat & accretion information")),  # cabecera
+                            dbc.ModalBody(  # cuerpo
+                                html.Ul([
+                                        html.Li([html.B("Mudflat: "), html.I("Mudflats")," represent an important part of coastal wetlands, which, like marshes, provide a wide range of ecosystem services such as coastal defence and carbon sequestration."]),  # info Mudflat
+                                        html.Li([html.B("Saltmarsh: "), html.I("Saltmarshes"), " are coastal wetlands characterized by its low-lying, flat, and poorly drained soil that is regularly or occasionally flooded by salty or brackish water. Like Mudflats, saltmarshes provide a wide range of ecosystem services such as coastal defence, carbon sequestration and food provisioning."]),  # info Saltmarsh
+                                        html.Li([html.B("Upland Areas: "), html.I("Upland Areas"), " represent non-flooded areas where marshes can migrate during sea level rise conditions."]),  # info Upland
+                                        html.Li([html.B("Channel: "), html.I("Channels"), " are key features of wetlands that control fundamental dynamics like sediment availability, nutrient circulation and hydrodynamics."]),  # info Channel
+                                        html.Li([html.B("Accretion: "), html.I("Accretion"), " is the process where the elevation of a saltmarsh surface increases over time, either by the accumulation of mineral sediments (like silt and clay) or by the buildup of organic matter from decaying plant material. Through ", html.I("accretion"), ", saltmarshes sequester carbon from both accumulation of mineral sediments and organic matter from decaying plant material. "]) # info Accretion
+                                ])
+                            ),
+                            dbc.ModalFooter(dbc.Button("Close", id="info-close", className="ml-auto", n_clicks=0))  # pie
+                        ],
+                        id="info-modal", is_open=False, size="lg", centered=True, backdrop=True  # props
+                    )
+                ], style={'padding':'20px'})  # padding general
 
     @app.callback(
         Output("reg-rcp45", "children", allow_duplicate=True),
