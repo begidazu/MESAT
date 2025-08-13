@@ -340,7 +340,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('reset-button', 'disabled', allow_duplicate=True),
         Output('scenario-checklist-div', 'hidden', allow_duplicate=True),
         Output('saltmarsh-legend', 'hidden', allow_duplicate=True),
-        # Output('scenario-checklist', 'value'),
         Output('scenario-radio', 'value'),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
