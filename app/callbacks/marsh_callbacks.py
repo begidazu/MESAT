@@ -161,8 +161,28 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 id='ec',
                                 hidden= True,
                                 children=[
-                                    html.B("Select Ecosystem Components", className='form-check-label'),
-                                    dcc.Checklist(id= 'ec-dropdown', options=[], value=[], labelClassName='form-check-label', inputClassName='form-check-input', className='form-check')
+                                    html.B("Select Ecosystem Components to assess ecosystem condition", className='form-check-label'),
+                                    dcc.Checklist(id= 'ec-dropdown', options=[], value=[], labelClassName='form-check-label', inputClassName='form-check-input', className='form-check'),
+                                    html.Div(  # fila de botones
+                                        style={'display':'flex','gap':'10px','alignItems':'center', 'padding-top': '1.5%'},  # estilos
+                                        children=[  # hijos
+                                            html.Button(  # botón Run
+                                                html.Span("Run OPSA"),  # texto
+                                                id="run-eva-button",  # id
+                                                n_clicks=0,  # contador
+                                                disabled=False,  # deshabilitado al inicio
+                                                className='btn btn-outline-primary'  # clase css
+                                                #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
+                                            ),
+                                            html.Button(  # botón Reset
+                                                html.Span("Reset"),  # texto
+                                                id="reset-eva-button",  # id
+                                                n_clicks=0,  # contador
+                                                className='btn btn-outline-primary',  # clase css
+                                                disabled=False  # deshabilitado al inicio
+                                            )
+                                        ]
+                                    )
                                 ]                             
                             ) 
                         ]

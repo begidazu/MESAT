@@ -1,6 +1,6 @@
 from dash.dependencies import Input, Output, State
 from dash import html, dcc
-from app.models.model_a import run as run_model_a
+#from app.models.opsa import run as run_model_a
 from app.models.model_b import run as run_model_b
 
 def register_model_callbacks(app):

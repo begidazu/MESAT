@@ -19,6 +19,7 @@ import time
 
 def register_opsa_tab_callbacks(app: dash.Dash):
 
+        # This is the callback to zoom-in zoom-out, and Ecosystem Component checkbox update:
         @app.callback(
             Output("map", "viewport", allow_duplicate=True),
             Output("ec-dropdown", "options"),
@@ -50,3 +51,14 @@ def register_opsa_tab_callbacks(app: dash.Dash):
                 ec = []
 
             return {"center": center, "zoom": zoom}, ([{"label": str(y), "value": y} for y in ec]), False, False 
+        
+        # This is the callback that filters the selected EC and updates them to a LayerGroup:
+        # @app.callback(
+        #      Output('opsa-layersgroup', ''),
+        #      Input('run-eva-button', 'n_clicks'),
+        #      State('ec-dropdown', 'value')
+        # )
+        # def add_layergroup(n, components):
+        #     if n:
+        #         return 
+        #     raise PreventUpdate
