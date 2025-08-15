@@ -170,7 +170,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                 html.Span("Run OPSA"),  # texto
                                                 id="run-eva-button",  # id
                                                 n_clicks=0,  # contador
-                                                disabled=False,  # deshabilitado al inicio
+                                                disabled=True,  # deshabilitado al inicio
                                                 className='btn btn-outline-primary'  # clase css
                                                 #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
                                             ),

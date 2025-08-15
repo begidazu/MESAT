@@ -38,6 +38,24 @@ def create_layout():  # definir función que construye el layout
                                             )
                                         ]
                                     ),
+                                    dl.FeatureGroup(id='opsa-layer', children=[]),
+                                     # --- Leyenda OPSA (contenedor, el contenido lo rellenan callbacks) ---
+                                    html.Div(  # contenedor de la leyenda flotante
+                                        id='opsa-legend',  # id para actualizar desde callbacks
+                                        style={  # estilos para posicionarla sobre el mapa
+                                            'position': 'absolute',  # posición absoluta dentro del mapa
+                                            'bottom': '10px',  # distancia al borde inferior
+                                            'left': '10px',  # distancia al borde izquierdo
+                                            'zIndex': 1000,  # por encima del mapa
+                                            'background': 'rgba(255,255,255,0.92)',  # fondo semitransparente
+                                            'border': '1px solid #ccc',  # borde sutil
+                                            'borderRadius': '8px',  # esquinas redondeadas
+                                            'padding': '8px 10px',  # espaciado interno
+                                            'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  # sombra suave
+                                            'fontSize': '12px'  # tamaño de fuente
+                                        },
+                                        children=[]  # vacío al inicio; se completa al ejecutar OPSA
+                                    ),
                                     html.Div(
                                         [
                                             dcc.Loading(type='circle',  parent_style={"position": "relative", "z-index": "100", "width": "100%", "height": "100%"}), 
