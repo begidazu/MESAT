@@ -170,7 +170,7 @@ def compute_summary_by_habitat_type(  # calcular resumen por 'habitat type' del 
     if study_area == "": 
         area_ha = pd.to_numeric(gdf["area"], errors="coerce").astype(float)  # km² → km²
     else:  # North_Sea y Santander: 'area' en km²
-        area_ha = pd.to_numeric(gdf["area"], errors="coerce").astype(float) / 1000000.0  # m² → ha
+        area_ha = pd.to_numeric(gdf["area"], errors="coerce").astype(float) / 1000000.0  # m² → km2
 
     # Preparar valores como float
     cond = pd.to_numeric(gdf["condition"], errors="coerce").astype(float)  # condición
@@ -181,7 +181,7 @@ def compute_summary_by_habitat_type(  # calcular resumen por 'habitat type' del 
     # DataFrame auxiliar con columnas necesarias
     df = pd.DataFrame({
         "group": gdf[group_field].astype(str),  # la categoría de 'x' como string legible
-        "area_ha": area_ha,  # área en hectáreas
+        "area_km": area_ha,  # área en hectáreas
         "condition": cond,  # condición filtrada
         "confidence": conf,  # confianza (tal cual; si es NaN, se ignora en promedio)
     })
@@ -198,7 +198,7 @@ def compute_summary_by_habitat_type(  # calcular resumen por 'habitat type' del 
     # Agregar por 'group'
     groups = []  # lista de registros de salida
     for name, sub in df.groupby("group"):  # agrupar por valor de 'x'
-        a = sub["area_ha"]  # pesos (ha)
+        a = sub["area_km"]  # pesos (ha)
         c = sub["condition"]  # condición
         f = sub["confidence"]  # confianza
         wa_c = _wavg(c, a)  # condition ponderada por área
@@ -208,7 +208,7 @@ def compute_summary_by_habitat_type(  # calcular resumen por 'habitat type' del 
             "group": str(name),  # nombre de categoría
             "condition_wavg": wa_c,  # condición media ponderada
             "confidence_wavg": wa_f,  # confianza media ponderada
-            "area_ha": area_sum  # extensión en ha
+            "area_km": area_sum  # extensión en ha
         })
 
     # Construir DataFrame final ordenado por 'group'

@@ -2,7 +2,7 @@
 
 import dash  # framework Dash
 from typing import List  # tipado de listas
-from dash import Input, Output, State, html, dcc  # componentes Dash
+from dash import Input, Output, State, html, dcc, dash_table  # componentes Dash
 from dash.exceptions import PreventUpdate  # controlar no-actualizaciones
 import dash_leaflet as dl  # Leaflet para Dash
 import plotly.express as px
@@ -189,49 +189,46 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         # 4) Construir leyenda
         legend = _build_legend()  # crear leyenda
 
-        # 5) --- NUEVO --- Resumen por 'x' desde el modelo
-        try:
-            summary = compute_summary_by_habitat_type(parquet_path=parquet_path, study_area=area, group_field="AllcombD")
-            # Gráfica 1: Condition (0–5) ponderada por área
-            fig_cond = px.bar(summary, x='group', y='condition_wavg',
-                              title="<b>Condition (0–5) by habitat type</b>",
-                              labels={'group':'Habitat type','condition_wavg':'Condition (0–5)'})
-            fig_cond.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', cliponaxis=False)
-            fig_cond.update_layout(showlegend=False, title_x=0.5, uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0,5])
+        # 5) Resumen por 'x' en tabla (modelo devuelve km² y promedios ponderados)
+        try:  # intentar construir tabla
+            df = compute_summary_by_habitat_type(parquet_path=parquet_path, study_area=area, group_field="AllcombD")  # obtener DF
+            df_disp = df.copy()  # copiar para formateo
+            df_disp["area_km"] = df_disp["area_km"].round(3)  # redondear área a 3 decimales
+            df_disp["condition_wavg"] = df_disp["condition_wavg"].round(2)  # redondear condición a 2 decimales
+            df_disp["confidence_wavg"] = df_disp["confidence_wavg"].round(2)  # redondear confianza a 2 decimales
 
-            # Gráfica 2: Confidence ponderada por área (rango automático)
-            ymax_conf = float(summary['confidence_wavg'].max()) if summary['confidence_wavg'].notna().any() else 1.0
-            fig_conf = px.bar(summary, x='group', y='confidence_wavg',
-                              title="<b>Confidence (0-5) by habitat type</b>",
-                              labels={'group':'Habitat type','confidence_wavg':'Confidence (0-5)'})
-            fig_conf.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', cliponaxis=False)
-            fig_conf.update_layout(showlegend=False, title_x=0.5, uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0, max(1.0, ymax_conf*1.1)])
+            # renombrar columnas para cabecera clara
+            df_disp = df_disp.rename(columns={
+                "habitat_type": "Habitat type",
+                "group": "Habitat type",
+                "area_km": "Area (km²)",
+                "condition_wavg": "Condition",
+                "confidence_wavg": "Confidence"
+            })
 
-            # Gráfica 3: Área (ha) por X
-            fig_area = px.bar(summary, x='group', y='area_ha',
-                              title="<b>Area (square km) by habitat type</b>",
-                              labels={'group':'Habitat type','area_ha':'Area (ha)'})
-            fig_area.update_traces(texttemplate='<b>%{y:.0f}</b>', textposition='outside', cliponaxis=False)
-            fig_area.update_layout(showlegend=False, title_x=0.5, uniformtext_minsize=10, uniformtext_mode='show')
-
-            charts = dcc.Tabs(
-                id="opsa-inner-tabs",
-                value='cond',
-                children=[
-                    dcc.Tab(label='Condition & Confidence', value='cond', children=[
-                        dcc.Graph(figure=fig_cond, config={"modeBarButtonsToRemove":["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]}),
-                        dcc.Graph(figure=fig_conf, config={"modeBarButtonsToRemove":["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]}),
-                    ]),
-                    dcc.Tab(label='Area (square km)', value='area', children=[
-                        dcc.Graph(figure=fig_area, config={"modeBarButtonsToRemove":["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]}),
-                    ])
-                ]
+            # construir DataTable con ordenación y exportación CSV
+            table = dash_table.DataTable(
+                id="opsa-summary-table",  # id de la tabla
+                columns=[{"name": c, "id": c} for c in df_disp.columns],  # columnas
+                data=df_disp.to_dict("records"),  # filas
+                sort_action="native",  # ordenable
+                filter_action="native",  # sin filtro (puedes activar si quieres)
+                page_action="none",  # sin paginación (tabla compacta)
+                export_format="csv",  # permitir exportar
+                export_headers="display",  # usar cabeceras visibles
+                style_table={"maxHeight": "380px", "overflowY": "auto", "border": "1px solid #ddd", "borderRadius": "8px"},  # estilo contenedor
+                style_cell={"padding": "8px", "fontSize": "13px", "textAlign": "center"},  # celdas
+                style_header={"fontWeight": "bold", "backgroundColor": "#f7f7f7", "borderBottom": "1px solid #ccc"},  # cabecera
+                style_data_conditional=[  # mejorar legibilidad
+                    {"if": {"row_index": "odd"}, "backgroundColor": "#fafafa"}  # zebra
+                ],
             )
-        except Exception as e:
-            charts = html.Div(f"Summary error: {e}", style={'color':'#b00020','fontStyle':'italic','padding':'8px'})
+            table_block = html.Div([html.Hr(), html.H4("Summary by Habitat type"), table], style={"marginTop":"8px"})  # bloque con título y tabla
+        except Exception as e:  # si algo falla
+            table_block = html.Div(f"Summary error: {e}", style={'color':'#b00020','fontStyle':'italic','padding':'8px'})  # mensaje de error
 
         # 5) Devolver capas + estado UI + leyenda
-        return layers, False, True, True, True, viewport, legend, charts  # devolver todo preparado
+        return layers, False, True, True, True, viewport, legend, table_block  # devolver todo preparado
 
     @app.callback(  # resetear el tab Physical
         Output("opsa-layer", "children", allow_duplicate=True),  # limpiar capas
@@ -257,10 +254,11 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
     @app.callback(  # limpiar al cambiar de tab
         Output("opsa-legend", "children", allow_duplicate=True),  # limpiar leyenda
         Output("ec", "hidden", allow_duplicate=True),
+        Output("opsa-layer", "children"),
         Input("tabs", "value"),  # tab activo
         prevent_initial_call=True  # evitar disparo inicial
     )
     def clear_on_tab_change(active_tab):  # limpiar si salimos del tab Physical
         if active_tab != "tab-physical":  # si no estamos en Physical
-            return [], True  # dejar leyenda vacía
+            return [], True, [] # dejar leyenda vacía
         raise PreventUpdate  # si seguimos en Physical, no tocar
