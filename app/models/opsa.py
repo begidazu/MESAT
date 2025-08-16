@@ -56,6 +56,7 @@ def _find_existing_column(candidates: List[str], columns: List[str]) -> str:
             return real  # devolver nombre real
     return ""  # devolver vacío si no hay coincidencia
 
+# API 1: calcular la condition media segun las componentes que pasa el usuario:
 def compute_condition_mean(
     study_area: str,  # área elegida en el UI
     components: List[str],  # EC seleccionados
@@ -149,3 +150,67 @@ def compute_condition_mean(
 
     geojson_dict = json.loads(gdf.to_json())  # exportar GeoJSON como dict
     return geojson_dict, parquet_path  # devolver datos y ruta
+
+# API 2: resumen ponderado por tipo de habitat
+
+def compute_summary_by_habitat_type(  # calcular resumen por 'habitat type' del parquet enriquecido
+    parquet_path: str,  # ruta al parquet (el mismo que actualiza compute_condition_mean)
+    study_area: str,  # área (para convertir 'area' a hectáreas correctamente)
+    group_field: str = "AllcombD"  # nombre exacto del campo de agrupación (p.ej. 'x')
+) -> pd.DataFrame:  # devuelve DataFrame con columnas: group, condition_wavg, confidence_wavg, area_ha
+    # Leer el parquet ya enriquecido con 'condition' y 'confidence'
+    gdf = gpd.read_parquet(parquet_path)  # leer GeoParquet
+    # Validar columnas mínimas
+    needed = {group_field, "area", "condition", "confidence"}  # conjunto de columnas imprescindibles
+    missing = [c for c in needed if c not in gdf.columns]  # detectar ausentes
+    if missing:  # si faltan columnas
+        raise KeyError(f"Faltan columnas en el parquet para el resumen: {missing}")  # error claro
+
+    # Convertir área a hectáreas según el área de estudio
+    if study_area == "": 
+        area_ha = pd.to_numeric(gdf["area"], errors="coerce").astype(float)  # km² → km²
+    else:  # North_Sea y Santander: 'area' en km²
+        area_ha = pd.to_numeric(gdf["area"], errors="coerce").astype(float) / 1000000.0  # m² → ha
+
+    # Preparar valores como float
+    cond = pd.to_numeric(gdf["condition"], errors="coerce").astype(float)  # condición
+    conf = pd.to_numeric(gdf["confidence"], errors="coerce").astype(float)  # confianza
+    # Tratamiento de NoData: condición ≤ 0 se ignora (NaN) en el promedio
+    cond = cond.where(cond > 0, np.nan)  # ≤0 → NaN (NoData)
+
+    # DataFrame auxiliar con columnas necesarias
+    df = pd.DataFrame({
+        "group": gdf[group_field].astype(str),  # la categoría de 'x' como string legible
+        "area_ha": area_ha,  # área en hectáreas
+        "condition": cond,  # condición filtrada
+        "confidence": conf,  # confianza (tal cual; si es NaN, se ignora en promedio)
+    })
+
+    # Función interna de media ponderada robusta
+    def _wavg(values: pd.Series, weights: pd.Series) -> float:  # calcular media ponderada ignorando NaN y pesos <=0
+        v = values.to_numpy(dtype="float64")  # a numpy
+        w = weights.to_numpy(dtype="float64")  # a numpy
+        m = np.isfinite(v) & np.isfinite(w) & (w > 0)  # máscara de válidos
+        if not m.any():  # si no hay válidos
+            return float("nan")  # devolver NaN
+        return float(np.average(v[m], weights=w[m]))  # media ponderada
+
+    # Agregar por 'group'
+    groups = []  # lista de registros de salida
+    for name, sub in df.groupby("group"):  # agrupar por valor de 'x'
+        a = sub["area_ha"]  # pesos (ha)
+        c = sub["condition"]  # condición
+        f = sub["confidence"]  # confianza
+        wa_c = _wavg(c, a)  # condition ponderada por área
+        wa_f = _wavg(f, a)  # confidence ponderada por área
+        area_sum = float(np.nansum(a.to_numpy(dtype="float64")))  # suma de áreas (ha)
+        groups.append({  # añadir registro
+            "group": str(name),  # nombre de categoría
+            "condition_wavg": wa_c,  # condición media ponderada
+            "confidence_wavg": wa_f,  # confianza media ponderada
+            "area_ha": area_sum  # extensión en ha
+        })
+
+    # Construir DataFrame final ordenado por 'group'
+    out = pd.DataFrame(groups).sort_values("group").reset_index(drop=True)  # ordenar y reindexar
+    return out  # devolver resumen tabular listo para graficar

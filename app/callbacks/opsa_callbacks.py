@@ -5,8 +5,9 @@ from typing import List  # tipado de listas
 from dash import Input, Output, State, html, dcc  # componentes Dash
 from dash.exceptions import PreventUpdate  # controlar no-actualizaciones
 import dash_leaflet as dl  # Leaflet para Dash
+import plotly.express as px
 
-from app.models.opsa import compute_condition_mean  # función del modelo OPSA
+from app.models.opsa import compute_condition_mean, compute_summary_by_habitat_type  # función del modelo OPSA
 
 
 # ---------------------------
@@ -113,6 +114,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         Output("run-eva-button", "disabled", allow_duplicate=True),  # bloquear Run
         Output("map", "viewport", allow_duplicate=True),  # ajustar viewport
         Output("opsa-legend", "children", allow_duplicate=True),  # poner leyenda
+        Output("opsa-chart", "children", allow_duplicate=True), # agregar grafica/tabla
         Input("run-eva-button", "n_clicks"),  # clics en Run
         State("opsa-study-area", "value"),  # área seleccionada
         State("ec-dropdown", "value"),  # EC seleccionados
@@ -123,7 +125,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
             raise PreventUpdate  # no actualizar
 
         # 1) Ejecutar modelo -> GeoJSON con 'condition', 'confidence' y 'condition_class'
-        geojson, _ = compute_condition_mean(  # llamar a la función del modelo
+        geojson, parquet_path = compute_condition_mean(  # llamar a la función del modelo
             study_area=area,  # área
             components=components,  # lista de EC
             out_field_condition="condition",  # campo condición
@@ -187,8 +189,49 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         # 4) Construir leyenda
         legend = _build_legend()  # crear leyenda
 
+        # 5) --- NUEVO --- Resumen por 'x' desde el modelo
+        try:
+            summary = compute_summary_by_habitat_type(parquet_path=parquet_path, study_area=area, group_field="AllcombD")
+            # Gráfica 1: Condition (0–5) ponderada por área
+            fig_cond = px.bar(summary, x='group', y='condition_wavg',
+                              title="<b>Condition (0–5) by habitat type</b>",
+                              labels={'group':'Habitat type','condition_wavg':'Condition (0–5)'})
+            fig_cond.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', cliponaxis=False)
+            fig_cond.update_layout(showlegend=False, title_x=0.5, uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0,5])
+
+            # Gráfica 2: Confidence ponderada por área (rango automático)
+            ymax_conf = float(summary['confidence_wavg'].max()) if summary['confidence_wavg'].notna().any() else 1.0
+            fig_conf = px.bar(summary, x='group', y='confidence_wavg',
+                              title="<b>Confidence (0-5) by habitat type</b>",
+                              labels={'group':'Habitat type','confidence_wavg':'Confidence (0-5)'})
+            fig_conf.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', cliponaxis=False)
+            fig_conf.update_layout(showlegend=False, title_x=0.5, uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0, max(1.0, ymax_conf*1.1)])
+
+            # Gráfica 3: Área (ha) por X
+            fig_area = px.bar(summary, x='group', y='area_ha',
+                              title="<b>Area (square km) by habitat type</b>",
+                              labels={'group':'Habitat type','area_ha':'Area (ha)'})
+            fig_area.update_traces(texttemplate='<b>%{y:.0f}</b>', textposition='outside', cliponaxis=False)
+            fig_area.update_layout(showlegend=False, title_x=0.5, uniformtext_minsize=10, uniformtext_mode='show')
+
+            charts = dcc.Tabs(
+                id="opsa-inner-tabs",
+                value='cond',
+                children=[
+                    dcc.Tab(label='Condition & Confidence', value='cond', children=[
+                        dcc.Graph(figure=fig_cond, config={"modeBarButtonsToRemove":["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]}),
+                        dcc.Graph(figure=fig_conf, config={"modeBarButtonsToRemove":["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]}),
+                    ]),
+                    dcc.Tab(label='Area (square km)', value='area', children=[
+                        dcc.Graph(figure=fig_area, config={"modeBarButtonsToRemove":["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]}),
+                    ])
+                ]
+            )
+        except Exception as e:
+            charts = html.Div(f"Summary error: {e}", style={'color':'#b00020','fontStyle':'italic','padding':'8px'})
+
         # 5) Devolver capas + estado UI + leyenda
-        return layers, False, True, True, True, viewport, legend  # devolver todo preparado
+        return layers, False, True, True, True, viewport, legend, charts  # devolver todo preparado
 
     @app.callback(  # resetear el tab Physical
         Output("opsa-layer", "children", allow_duplicate=True),  # limpiar capas
@@ -201,6 +244,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         Output("opsa-legend", "children", allow_duplicate=True),  # limpiar leyenda
         Output("ec", "hidden", allow_duplicate=True),
         Output("opsa-study-area", "value"),
+        Output("opsa-chart", "children"),
         Input("reset-eva-button", "n_clicks"),  # clics en Reset
         prevent_initial_call=True  # evitar disparo inicial
     )
@@ -208,7 +252,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         if not n:  # si no hay clic
             raise PreventUpdate  # no actualizar
         default_view = {"center": [48.912724, -1.141208], "zoom": 6}  # viewport por defecto
-        return [], [], False, False, True, True, default_view, [], True, ""  # devolver estado limpio
+        return [], [], False, False, True, True, default_view, [], True, "", []  # devolver estado limpio
 
     @app.callback(  # limpiar al cambiar de tab
         Output("opsa-legend", "children", allow_duplicate=True),  # limpiar leyenda

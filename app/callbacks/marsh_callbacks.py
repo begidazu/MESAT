@@ -186,7 +186,24 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 ]                             
                             ) 
                         ]
+                    ),
+
+
+
+
+
+                    dcc.Loading(  # contenedor con spinner
+                        id="loading-opsa",  # id
+                        type="dot",  # tipo de spinner
+                        color='#103e95',
+                        children=[  # hijos
+                            html.Legend("Ocean Physical Stock Account compilation", className='mt-4', id='opsa-legend', hidden=True),
+                            html.Div(id="opsa-chart", style={'marginTop':'20px'})]  # contenedor de gráficas
                     )
+
+
+
+
                 ], style={'padding':'20px'})
         
         elif tab == "tab-management":
