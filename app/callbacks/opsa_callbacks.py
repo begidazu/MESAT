@@ -216,8 +216,8 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
                 page_action="none",  # sin paginación (tabla compacta)
                 export_format="csv",  # permitir exportar
                 export_headers="display",  # usar cabeceras visibles
-                style_table={"maxHeight": "380px", "overflowY": "auto", "border": "1px solid #ddd", "borderRadius": "8px"},  # estilo contenedor
-                style_cell={"padding": "8px", "fontSize": "13px", "textAlign": "center"},  # celdas
+                style_table={"maxHeight": "720px", "overflowY": "auto", "border": "1px solid #ddd", "borderRadius": "8px"},  # estilo contenedor
+                style_cell= {"padding": "8px", "fontSize": "1.2rem", "textAlign": "center"},  # celdas
                 style_header={"fontWeight": "bold", "backgroundColor": "#f7f7f7", "borderBottom": "1px solid #ccc"},  # cabecera
                 style_data_conditional=[  # mejorar legibilidad
                     {"if": {"row_index": "odd"}, "backgroundColor": "#fafafa"}  # zebra

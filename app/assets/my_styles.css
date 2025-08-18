@@ -1,80 +1,206 @@
-/* Reset global: ocultar sólo scroll horizontal, permitir vertical en tab-content */
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;   /* solo ocultar scroll horizontal */
-  overflow-y: visible;  /* permitir overflow vertical interno */
+
+/* ========================= Tipografía fluida + tokens ========================= */
+/* Establece un tamaño base de fuente que crece con el viewport y tiene límites */
+html { /* nodo raíz del documento */
+  font-size: clamp(13px, 0.35vw + 10px, 20px); /* tamaño base: mínimo 13px, escala con vw, máximo 20px */
 }
 
-/* Tabs: ajustar tamaño de fuente y quitar espacio excesivo */
-.tabs {
-  font-size: 20px;
+/* Mejora de renderizado y legibilidad global */
+body { /* cuerpo del documento */
+  line-height: 1.5; /* altura de línea para mejorar legibilidad */
+  -webkit-font-smoothing: antialiased; /* suavizado fuentes en WebKit */
+  -moz-osx-font-smoothing: grayscale;  /* suavizado fuentes en macOS */
 }
 
-.dropdown-text {
-  font-size: 1.2rem;
+/* Tokens de tamaño para reusar en componentes (escala fluida) */
+:root { /* variables CSS globales */
+  --font-xs: clamp(0.80rem, 0.18vw + 0.75rem, 0.95rem); /* muy pequeño: etiquetas auxiliares */
+  --font-sm: clamp(0.90rem, 0.22vw + 0.80rem, 1.05rem); /* pequeño: detalles UI */
+  --font-md: clamp(1.00rem, 0.26vw + 0.90rem, 1.20rem); /* medio: textos normales */
+  --font-lg: clamp(1.10rem, 0.30vw + 1.00rem, 1.35rem); /* grande: botones/tabs */
+  --font-xl: clamp(1.25rem, 0.40vw + 1.10rem, 1.60rem); /* muy grande: títulos */
 }
 
-/* Flex child fix: permitir que el contenido tab se encoja para scrolling */
-.d-flex.flex-column .flex-grow-1 {
-  min-height: 0;
+/* ========================= Reset/estructura general ========================= */
+/* Reset global: ocultar sólo scroll horizontal, permitir vertical en contenedores */
+html, body, #root { /* elementos raíz de la app */
+  margin: 0; /* quitar márgenes */
+  padding: 0; /* quitar relleno */
+  width: 100%; /* ocupar ancho completo */
+  height: 100%; /* ocupar alto completo */
+  overflow-x: hidden; /* evitar scroll horizontal global */
+  overflow-y: visible; /* permitir overflow vertical según contenedor */
 }
 
-/* Sidebar full height */
-.bg-light {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+/* Las tabs usan fuente fluida basada en token medio/grande */
+.tabs { /* contenedor de pestañas */
+  font-size: var(--font-lg); /* tamaño de fuente fluido para tabs */
 }
 
-.form-label mt-2 {
-  font-size: 1.2rem;
+/* Tamaño de las opciones en dropdowns */
+.dropdown-text { /* clase aplicada a dropdowns */
+  font-size: var(--font-lg); /* texto de dropdown en tamaño medio fluido */
 }
 
-.form-check{
-  font-size: 1.2rem;
+/* Arreglo flex para permitir scroll interno en contenedores crecidos */
+.d-flex.flex-column .flex-grow-1 { /* hijos flex que crecen */
+  min-height: 0; /* permite que el hijo se encoja y habilite scroll */
 }
 
-.form-check-label{
-  font-size: 1.2rem;
+/* Sidebar a altura completa y con layout en columna */
+.bg-light { /* barra lateral */
+  height: 100%; /* altura completa */
+  display: flex; /* activar flexbox */
+  flex-direction: column; /* apilar elementos verticalmente */
 }
 
-.btn {
-    font-size: 1.2em;
+/* (FIX) Selector correcto: clase compuesta .form-label.mt-2 */
+.form-label.mt-2 { /* etiquetas con margen superior */
+  font-size: var(--font-lg); /* tamaño medio fluido */
 }
 
-/* Contenedor de contenido de pestaña: scroll vertical solo cuando sea necesario */
-#tab-content {
-  flex: 1 1 auto;      /* crecer y encoger en flex container */
-  min-height: 0;       /* permitir scroll interno */
-  overflow-y: auto;    /* scroll vertical interno */
-  overflow-x: hidden;
+/* Tamaño del bloque de checklist */
+.form-check { /* contenedor de cada opción */
+  font-size: var(--font-lg); /* tamaño medio fluido */
 }
 
-/* Media query para pantallas medianas (<992px): pestañas y padding */
-@media (max-width: 991.98px) {
-  .tabs {
-    font-size: 16px !important;
+/* Etiqueta de cada opción del checklist */
+.form-check-label { /* texto de la opción */
+  font-size: var(--font-lg); /* tamaño medio fluido */
+}
+
+/* Botones más legibles y consistentes */
+.btn { /* botones bootstrap/dash */
+  font-size: var(--font-lg); /* tamaño grande fluido para mejorar accesibilidad */
+}
+
+/* Contenedor de contenido de pestaña: scroll vertical sólo cuando sea necesario */
+#tab-content { /* panel dinámico de cada tab */
+  flex: 1 1 auto; /* crecer y encoger dentro del flex container */
+  min-height: 0;  /* permitir scroll interno sin forzar crecimiento */
+  overflow-y: auto; /* habilitar scroll vertical interno */
+  overflow-x: hidden; /* evitar desbordamiento horizontal */
+}
+
+/* ========================= Breakpoints (media queries) ========================= */
+/* Pantallas muy grandes (≥1600px): sube levemente el tamaño base y títulos */
+@media (min-width: 1600px) { /* breakpoint para monitores grandes */
+  html { font-size: clamp(14px, 0.30vw + 11px, 21px); } /* base un poco mayor */
+  .tabs       { font-size: var(--font-xl); } /* tabs más destacadas */
+  .btn        { font-size: var(--font-lg); } /* botones más grandes */
+}
+
+/* Pantallas medianas (<992px): reducir ligeramente para tablet */
+@media (max-width: 991.98px) { /* breakpoint tablet */
+  .tabs          { font-size: var(--font-md); } /* tabs más compactas */
+  .dropdown-text { font-size: var(--font-sm); } /* dropdown más pequeño */
+  #tab-content   { padding: 1rem !important; } /* padding cómodo en tablet */
+}
+
+/* Pantallas pequeñas (<768px): priorizar cabida y legibilidad */
+@media (max-width: 767.98px) { /* breakpoint móvil */
+  .tabs          { font-size: var(--font-sm); } /* tabs compactas en móvil */
+  .dropdown-text { font-size: var(--font-xs); } /* dropdown muy compacto */
+  #tab-content   { padding: 0.5rem !important; } /* menos padding en móvil */
+}
+
+/* ========================= Extras opcionales útiles ========================= */
+/* DataTable: respeta el tamaño base si no lo fijas por props en Python */
+.dash-table-container .dash-spreadsheet td, /* celdas del DataTable */
+.dash-table-container .dash-spreadsheet th { /* cabeceras del DataTable */
+  font-size: var(--font-md); /* tamaño medio fluido si no se sobreescribe desde Python */
+}
+
+/* Leyenda flotante del OPSA en el mapa: asegura legibilidad en pantallas grandes */
+#opsa-legend { /* caja flotante de leyenda sobre el mapa */
+  font-size: var(--font-sm); /* tamaño ligeramente menor para caber mejor */
+}
+
+/* Evita que imágenes/overlays rompan el layout en pantallas estrechas */
+img, canvas { /* elementos gráficos */
+  max-width: 100%; /* no exceder el ancho del contenedor */
+  height: auto; /* mantener proporción */
+}
+
+/* Footer: tamaño de texto del link */
+.p-2.mt-auto a {
+  font-size: var(--font-lg);        /* mismo tamaño que botones */
+  display: inline-flex;             /* asegurar layout flex aunque falte la clase de Bootstrap */
+  align-items: center;              /* centrar verticalmente icono + texto */
+  gap: 0.35rem;                     /* separación entre icono y texto */
+}
+
+/* Tamaño único de iconos y micro-ajuste del emoji */
+.p-2.mt-auto {
+  --footer-icon-size: 1.1em;        /* alto del icono relativo al texto del link */
+  --footer-icon-nudge: 0.01em;      /* empuje vertical del emoji (ajústalo si quieres) */
+}
+
+/* Imagen (GitHub) */
+.p-2.mt-auto img.footer-icon {
+  height: var(--footer-icon-size) !important;
+  width: auto;
+}
+
+/* Emoji (documento) */
+.p-2.mt-auto span.footer-icon {
+  font-size: var(--footer-icon-size);
+  line-height: 1;
+  position: relative;
+  top: var(--footer-icon-nudge);    /* ↓ baja un pelín el emoji para cuadrarlo con el <img> */
+}
+
+/* (Opcional) Monitores muy grandes: subir un punto */
+@media (min-width: 1600px) {
+  .p-2.mt-auto a { font-size: var(--font-xl); }        /* texto del link un poco mayor */
+  .p-2.mt-auto { --footer-icon-size: 1.15em; }         /* iconos escalan con el texto */
+}
+
+/* ================== Plotly + tokens de tipografía ================== */
+/* Mapeo de tokens a tamaños de elementos del gráfico */
+:root {
+  --plot-title:  var(--font-xl);  
+  --plot-axis:   var(--font-lg);  
+  --plot-legend: var(--font-md);  
+  --plot-text:   var(--font-lg);  
+}
+
+/* Escalado en pantallas muy grandes */
+@media (min-width:1600px) {
+  :root {
+    --plot-title:  calc(var(--font-xl) * 1.05);
+    --plot-axis:   calc(var(--font-lg) * 1.05);
+    --plot-legend: calc(var(--font-md) * 1.05);
+    --plot-text:   calc(var(--font-lg) * 1.05);
   }
-  .dropdown-text {
-    font-size: 14px;
-  }
-  #tab-content {
-    padding: 1rem !important;
+}
+
+/* Compacto en móvil */
+@media (max-width:767.98px) {
+  :root {
+    --plot-title:  calc(var(--font-xl) * 0.85);
+    --plot-axis:   calc(var(--font-lg) * 0.85);
+    --plot-legend: calc(var(--font-md) * 0.90);
+    --plot-text:   calc(var(--font-lg) * 0.85);
   }
 }
 
-/* Media query para pantallas pequeñas (<768px) */
-@media (max-width: 767.98px) {
-  .tabs {
-    font-size: 12px !important;
-  }
-  .dropdown-text {
-    font-size: 10px;
-  }
-  #tab-content {
-    padding: 0.5rem !important;
-  }
+/* ===== Modal de info (Saltmarsh): ancho + tipografías ===== */
+#info-modal .modal-title {                          /* título del modal */
+  font-size: var(--font-xl);
+  font-weight: 700;
+}
+
+#info-modal .modal-body {                           /* texto principal */
+  font-size: var(--font-lg);
+  line-height: 1.6;
+}
+
+#info-modal .modal-body li {                        /* separadores de listas */
+  margin-bottom: 0.5rem;
+}
+
+#info-modal .modal-footer .btn {                    /* botón Close más legible */
+  font-size: var(--font-lg);
+  padding: 0.45rem 0.9rem;
 }

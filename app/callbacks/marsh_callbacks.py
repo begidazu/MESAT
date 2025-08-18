@@ -38,14 +38,6 @@ def _acc_tif_from_class_tif(class_tif):  # localizar tif de acreción emparejado
     hits = glob.glob(os.path.join(folder, f"{stem}*_accretion{ext}"))  # buscar variantes
     return hits[0] if hits else None  # devolver primera coincidencia o None
 
-# def _find_class_tif(area, scen, year):  # localizar tif de clases por área/escenario/año
-#     base = os.path.join(os.getcwd(), "results", "saltmarshes", area, scen)  # ruta base
-#     if not os.path.isdir(base):  # comprobar existencia de carpeta
-#         return None  # no hay datos
-#     hits = glob.glob(os.path.join(base, f"*{year}*.tif")) + glob.glob(os.path.join(base, f"*{year}*.tiff"))  # candidatos por año
-#     hits = [p for p in hits if "accretion" not in os.path.basename(p).lower()]  # excluir *_accretion.*
-#     return sorted(hits)[0] if hits else None  # devolver primero o None
-
 def _areas_por_habitat(tif_path):  # sumar áreas (ha) por clase
     with rasterio.open(tif_path) as src:  # abrir tif
         arr = src.read(1)  # leer banda 1
@@ -155,13 +147,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     {'label': 'Irish Sea', 'value': 'Irish_Sea'}
                                 ],
                                 placeholder= 'Select Study Area',
-                                className='dropdown-text'
+                                className='dropdown-text',
+                                searchable=False
                             ),
                             html.Div(
                                 id='ec',
                                 hidden= True,
                                 children=[
-                                    html.B("Select Ecosystem Components to assess ecosystem condition", className='form-check-label'),
+                                    html.Legend("Select Ecosystem Components to assess ecosystem condition", className='mt-4'),
                                     dcc.Checklist(id= 'ec-dropdown', options=[], value=[], labelClassName='form-check-label', inputClassName='form-check-input', className='form-check'),
                                     html.Div(  # fila de botones
                                         style={'display':'flex','gap':'10px','alignItems':'center', 'padding-top': '1.5%'},  # estilos
@@ -225,14 +218,16 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     {"label":"Cadiz Bay","value":"Cadiz_Bay"},
                                 ],
                                 placeholder="Select Study Area",  # ayuda
-                                className='dropdown-text'  # clase css
+                                className='dropdown-text',  # clase css,
+                                searchable=False
                             ),
                             dcc.Dropdown(  # selector de año
                                 id="year-dropdown",  # id
                                 options=[],  # sin opciones hasta elegir área
                                 placeholder="Year",  # ayuda
                                 className="dropdown-text",  # clase css
-                                disabled=True  # deshabilitado hasta elegir área
+                                disabled=True,  # deshabilitado hasta elegir área
+                                searchable=False
                             ),
                             html.Div(  # fila de botones
                                 style={'display':'flex','gap':'10px','alignItems':'center'},  # estilos
@@ -328,9 +323,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         html.Li([html.B("Accretion: "), html.I("Accretion"), " is the process where the elevation of a saltmarsh surface increases over time, either by the accumulation of mineral sediments (like silt and clay) or by the buildup of organic matter from decaying plant material. Through ", html.I("accretion"), ", saltmarshes sequester carbon from both accumulation of mineral sediments and organic matter from decaying plant material. "]) # info Accretion
                                 ])
                             ),
-                            dbc.ModalFooter(dbc.Button("Close", id="info-close", className="ml-auto", n_clicks=0))  # pie
+                            dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close", n_clicks=0)) 
                         ],
-                        id="info-modal", is_open=False, size="lg", centered=True, backdrop=True  # props
+                        id="info-modal", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
                     )
                 ], style={'padding':'20px'})  # padding general
 
@@ -384,8 +379,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
     @app.callback(  # pintar overlays para 3 escenarios
         Output("reg-rcp45","children", allow_duplicate=True),
-        #Output("raster-layer-regional_rcp85","children", allow_duplicate=True),
-        #Output("raster-layer-global_rcp45","children",  allow_duplicate=True),
         Output("reset-button", "disabled", allow_duplicate=True),
         Output("study-area-dropdown", "disabled", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
@@ -459,37 +452,99 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             hits = [p for p in hits if "accretion" not in os.path.basename(p).lower()]  # excluir acreción
             return sorted(hits)[0] if hits else None  # devolver primero o None
 
-        def fig_areas_from_tif(tif_path, y_max_area):  # figura de áreas
-            etiquetas, areas_ha, _ = _areas_por_habitat(tif_path)  # sumar áreas
-            fig = px.bar(  # barplot
+        def fig_areas_from_tif(tif_path, y_max_area):
+            etiquetas, areas_ha, _ = _areas_por_habitat(tif_path)
+            fig = px.bar(
                 x=etiquetas, y=areas_ha, title="<b>Habitat Areas (ha)</b>",
                 color=etiquetas, color_discrete_map=LABEL_TO_COLOR
             )
-            fig.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', cliponaxis=False)  # etiquetas
-            fig.update_layout(showlegend=False, xaxis_title="<b>Habitat</b>", yaxis_title="<b>Area (ha)</b>",
-                              title_x=0.5, title_font_family="Garamond", title_font_size=25,
-                              uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0, y_max_area])  # layout
-            fig.update_xaxes(categoryorder='array', categoryarray=CATEGORY_ORDER)  # orden
-            return fig  # devolver figura
+            fig.update_traces(
+                texttemplate='%{y:.2f}',
+                textposition='outside',
+                textfont=dict(size=22)
+            )
+            fig.update_layout(
+                showlegend=False,
+                xaxis_title="<b>Habitat</b>",
+                yaxis_title="<b>Area (ha)</b>",
+                title_x=0.5,
+                title_font_family="Garamond",
+                title_font_size=36,
+                uniformtext_minsize=10,
+                uniformtext_mode='show',
+                yaxis_range=[0, y_max_area],
+                height=560,
+                margin=dict(t=80, r=40, b=120, l=110)  # más aire
+            )
+            fig.update_xaxes(
+                categoryorder='array',
+                categoryarray=CATEGORY_ORDER,
+                tickfont=dict(size=22),            # tamaño ticks X desde Plotly
+                title_font=dict(size=24),          # tamaño título X desde Plotly
+                title_standoff=28,                 # separación título–ticks X
+                automargin=True
+            )
+            fig.update_yaxes(
+                tickfont=dict(size=22),            # tamaño ticks Y desde Plotly
+                title_font=dict(size=24),          # tamaño título Y desde Plotly
+                title_standoff=38,                 # separación título–ticks Y
+                automargin=True
+            )
+            return fig
 
-        def fig_acc_from_pair(class_tif_path, y_max_acc):  # figura de acreción
-            acc_tif = _acc_tif_from_class_tif(class_tif_path)  # localizar accretion
-            if not acc_tif:  # si no existe
-                return html.Div("No accretion raster found in this scenario folder.", style={"color":"#555","fontStyle":"italic"})  # mensaje
-            etiquetas_acc, valores_acc = _accretion_volume_by_class(class_tif_path, acc_tif)  # calcular volúmenes
-            if not valores_acc:  # si vacío
-                return html.Div("No non-zero accumulated accretion found for this scenario.", style={"color":"#555","fontStyle":"italic"})  # mensaje
-            fig = px.bar(  # barplot
-                x=etiquetas_acc, y=valores_acc, title="<b>Accumulated Accretion (m³) by habitat</b>",
+
+        def fig_acc_from_pair(class_tif_path, y_max_acc):
+            acc_tif = _acc_tif_from_class_tif(class_tif_path)
+            if not acc_tif:
+                return html.Div("No accretion raster found in this scenario folder.",
+                                style={"color":"#555","fontStyle":"italic"})
+            etiquetas_acc, valores_acc = _accretion_volume_by_class(class_tif_path, acc_tif)
+            if not valores_acc:
+                return html.Div("No non-zero accumulated accretion found for this scenario.",
+                                style={"color":"#555","fontStyle":"italic"})
+
+            fig = px.bar(
+                x=etiquetas_acc, y=valores_acc,
+                title="<b>Accumulated Accretion (m³) by habitat</b>",
                 color=etiquetas_acc, color_discrete_map=LABEL_TO_COLOR
             )
-            y_max = max(valores_acc)  # máximo
-            fig.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside', textfont_size=14, cliponaxis=False)  # etiquetas
-            fig.update_layout(showlegend=False, xaxis_title="<b>Habitat</b>", yaxis_title="<b>Accretion volume (m³/year)</b>",
-                              title_x=0.5, title_font_family="Garamond", title_font_size=25,
-                              uniformtext_minsize=10, uniformtext_mode='show', yaxis_range=[0, y_max_acc])  # layout
-            fig.update_xaxes(categoryorder='array', categoryarray=CATEGORY_ORDER)  # orden
-            return dcc.Graph(figure=fig, config={"modeBarButtonsToRemove": ["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]})  # componente Graph
+            fig.update_traces(
+                texttemplate='%{y:.2f}',
+                textposition='outside',
+                textfont=dict(size=22)
+            )
+            fig.update_layout(
+                showlegend=False,
+                xaxis_title="<b>Habitat</b>",
+                yaxis_title="<b>Accretion volume (m³/year)</b>",
+                title_x=0.5,
+                title_font_family="Garamond",
+                title_font_size=36,
+                uniformtext_minsize=10,
+                uniformtext_mode='show',
+                yaxis_range=[0, y_max_acc],
+                height=560,
+                margin=dict(t=80, r=40, b=120, l=110)
+            )
+            fig.update_xaxes(
+                categoryorder='array',
+                categoryarray=CATEGORY_ORDER,
+                tickfont=dict(size=22),
+                title_font=dict(size=24),
+                title_standoff=28,
+                automargin=True
+            )
+            fig.update_yaxes(
+                tickfont=dict(size=22),
+                title_font=dict(size=24),
+                title_standoff=38,
+                automargin=True
+            )
+            return dcc.Graph(
+                figure=fig,
+                config={"modeBarButtonsToRemove": ["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]}
+            )
+
 
 
         # Scan all scenarios to find the maximum area and accretion to fix the y-axis of the graphs:
@@ -514,8 +569,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     pass
 
         # Give a 20% of margin:
-        global_area_max = global_area_max * 1.20 if global_area_max else 1.0
-        global_acc_max  = global_acc_max  * 1.20 if global_acc_max  else 1.0
+        global_area_max = global_area_max * 1.30 if global_area_max else 1.0
+        global_acc_max  = global_acc_max  * 1.30 if global_acc_max  else 1.0
 
         area_tabs_children, acc_tabs_children = [], []  # listas de tabs
         first_value = None  # valor inicial seleccionado
@@ -528,9 +583,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                 continue  # siguiente escenario
 
             fig_areas = fig_areas_from_tif(tif_path, global_area_max)  # construir figura
-            area_tabs_children.append(dcc.Tab(label=scen_label, value=scen, children=[dcc.Graph(figure=fig_areas, config={"modeBarButtonsToRemove": ["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]})]))  # tab con figura
+            area_tabs_children.append(dcc.Tab(label=scen_label, value=scen, children=[dcc.Graph(figure=fig_areas, config={"modeBarButtonsToRemove": ["zoom2d","pan2d","zoomIn2d","zoomOut2d","lasso2d","resetScale2d"]})], style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}))  # tab con figura
             acc_content = fig_acc_from_pair(tif_path, global_acc_max)  # contenido de acreción
-            acc_tabs_children.append(dcc.Tab(label=scen_label, value=scen, children=[acc_content]))  # tab de acreción
+            acc_tabs_children.append(dcc.Tab(label=scen_label, value=scen, children=[acc_content], style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}))  # tab de acreción
 
             if first_value is None:  # fijar tab inicial
                 first_value = scen  # seleccionar este
