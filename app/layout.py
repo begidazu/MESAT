@@ -109,7 +109,47 @@ def create_layout():  # definir función que construye el layout
                                 ]
                             )
                         ]
-                    )
+                    ),
+
+                    # almacén de sesión para recordar si se ocultó
+                    dcc.Store(id="welcome-store", storage_type="session"),
+
+                    # modal de bienvenida
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader(dbc.ModalTitle("Welcome to the MSP GIS App")),
+                            dbc.ModalBody(
+                                html.Div(
+                                    [
+                                        html.P("Here a quick summary of how to use the app:"),
+                                        html.Ul([
+                                            html.Li("AAAAA."),
+                                            html.Li("BBBBB"),
+                                            html.Li("CCCCC"),
+                                        ]),
+                                        html.Div(
+                                            dbc.Checkbox(
+                                                id="welcome-dont-show",
+                                                label="Don't show this again",
+                                                value=False,
+                                                className="mt-2"
+                                            )
+                                        ),
+                                    ]
+                                )
+                            ),
+                            dbc.ModalFooter(
+                                dbc.Button("Continue", id="welcome-close", n_clicks=0, className="ms-auto")
+                            ),
+                        ],
+                        id="welcome-modal",
+                        is_open=True,          # ← se abre al cargar (el callback decidirá si mostrar o no)
+                        centered=True,
+                        scrollable=True,
+                        backdrop="static",     # ← evita cerrar clicando fuera
+                        keyboard=False,        # ← evita cerrar con ESC
+                        size="xl",             # ← base; el ancho real lo controlamos en CSS
+                    ),
                 ]
             )
         ]

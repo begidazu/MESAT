@@ -180,11 +180,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             ) 
                         ]
                     ),
-
-
-
-
-
                     dcc.Loading(  # contenedor con spinner
                         id="loading-opsa",  # id
                         type="dot",  # tipo de spinner
@@ -192,6 +187,22 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         children=[  # hijos
                             html.Legend("Ocean Physical Stock Account compilation", className='mt-4', id='opsa-legend', hidden=True),
                             html.Div(id="opsa-chart", style={'marginTop':'20px'})]  # contenedor de gráficas
+                    ),
+                    dbc.Modal(  # modal de información
+                        [
+                            dbc.ModalHeader(dbc.ModalTitle("Physical Account Compilation Information")),  # cabecera
+                            dbc.ModalBody(  # cuerpo
+                                html.Ul([
+                                        html.Li([html.B("Mudflat: "), html.I("Mudflats")," represent an important part of coastal wetlands, which, like marshes, provide a wide range of ecosystem services such as coastal defence and carbon sequestration."]),  # info Mudflat
+                                        html.Li([html.B("Saltmarsh: "), html.I("Saltmarshes"), " are coastal wetlands characterized by its low-lying, flat, and poorly drained soil that is regularly or occasionally flooded by salty or brackish water. Like Mudflats, saltmarshes provide a wide range of ecosystem services such as coastal defence, carbon sequestration and food provisioning."]),  # info Saltmarsh
+                                        html.Li([html.B("Upland Areas: "), html.I("Upland Areas"), " represent non-flooded areas where marshes can migrate during sea level rise conditions."]),  # info Upland
+                                        html.Li([html.B("Channel: "), html.I("Channels"), " are key features of wetlands that control fundamental dynamics like sediment availability, nutrient circulation and hydrodynamics."]),  # info Channel
+                                        html.Li([html.B("Accretion: "), html.I("Accretion"), " is the process where the elevation of a saltmarsh surface increases over time, either by the accumulation of mineral sediments (like silt and clay) or by the buildup of organic matter from decaying plant material. Through ", html.I("accretion"), ", saltmarshes sequester carbon from both accumulation of mineral sediments and organic matter from decaying plant material. "]) # info Accretion
+                                ])
+                            ),
+                            dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close", n_clicks=0)) 
+                        ],
+                        id="info-modal", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
                     )
 
 
@@ -722,3 +733,28 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         method_children = [html.Span('📄', className="me-1 footer-icon"), m_text]
         code_children   = [html.Img(src="/assets/logos/github-mark.png", className="me-1 footer-icon"), c_text]
         return method_children, m_href, code_children, c_href
+    
+
+    # Callback para mostrar el modal al iniciar la app: 
+    @app.callback(
+        Output("welcome-modal", "is_open"),
+        Output("welcome-store", "data"),
+        Input("welcome-close", "n_clicks"),
+        State("welcome-dont-show", "value"),
+        State("welcome-store", "data"),
+        prevent_initial_call=False
+    )
+    def control_welcome_modal(n_close, dont_show, store):
+        # 1ª carga: si no hay estado en la sesión, mostramos el modal
+        if store is None:
+            # Si aún no se ha pulsado cerrar, lo mostramos
+            if not n_close:
+                return True, None
+        # Si se pulsó cerrar, persistimos la preferencia
+        if n_close:
+            return False, {"dismissed": bool(dont_show)}
+        # Si ya había estado en sesión:
+        if isinstance(store, dict) and store.get("dismissed", False):
+            return False, store  # no mostrar más en esta sesión si marcó la casilla
+        return True, store       # de lo contrario, mostrar
+

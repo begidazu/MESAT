@@ -186,21 +186,21 @@ img, canvas { /* elementos gráficos */
 }
 
 /* ===== Modal de info (Saltmarsh): ancho + tipografías ===== */
-#info-modal .modal-title {                          /* título del modal */
+#info-modal, #welcome-modal .modal-title {                          /* título del modal */
   font-size: var(--font-xl);
   font-weight: 700;
 }
 
-#info-modal .modal-body {                           /* texto principal */
+#info-modal, #welcome-modal .modal-body {                           /* texto principal */
   font-size: var(--font-lg);
   line-height: 1.6;
 }
 
-#info-modal .modal-body li {                        /* separadores de listas */
+#info-modal, #welcome-modal .modal-body li {                        /* separadores de listas */
   margin-bottom: 0.5rem;
 }
 
-#info-modal .modal-footer .btn {                    /* botón Close más legible */
+#info-modal, #welcome-modal .modal-footer .btn {                    /* botón Close más legible */
   font-size: var(--font-lg);
   padding: 0.45rem 0.9rem;
 }
