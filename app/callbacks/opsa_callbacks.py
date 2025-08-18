@@ -1,11 +1,10 @@
 # app/callbacks/opsa_callbacks.py  # callbacks del tab Physical con 6 capas estáticas por clase
-
 import dash  # framework Dash
 from typing import List  # tipado de listas
-from dash import Input, Output, State, html, dash_table, callback_context  # componentes Dash
+from dash import Input, Output, State, html, dash_table, dcc, callback_context  # componentes Dash
 from dash.exceptions import PreventUpdate  # controlar no-actualizaciones
 import dash_leaflet as dl  # Leaflet para Dash
-import plotly.express as px
+import pandas as pd
 
 from app.models.opsa import compute_condition_mean, compute_summary_by_habitat_type  # función del modelo OPSA
 
@@ -216,7 +215,6 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
                 sort_action="native",  # ordenable
                 filter_action="native",  # sin filtro (puedes activar si quieres)
                 page_action="none",  # sin paginación (tabla compacta)
-                export_format="csv",  # permitir exportar
                 export_headers="display",  # usar cabeceras visibles
                 style_table={"maxHeight": "720px", "overflowY": "auto", "border": "1px solid #ddd", "borderRadius": "8px"},  # estilo contenedor
                 style_cell= {"padding": "8px", "fontSize": "1.2rem", "textAlign": "center"},  # celdas
@@ -282,3 +280,21 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         if trigger in ["info-button-opsa", "info-opsa-close"]:  # si es abrir/cerrar
             return not is_open  # alternar
         return is_open  # mantener
+    
+    #Download callback:
+    @app.callback(
+        Output("opsa-download", "data"),                    # ← archivo a descargar
+        Input("opsa-results", "n_clicks"),                 # ← clic en el botón
+        State("opsa-summary-table", "derived_virtual_data"),# ← datos filtrados/ordenados visibles
+        State("opsa-summary-table", "data"),               # ← datos originales como respaldo
+        prevent_initial_call=True
+    )
+    def download_opsa_table(n, visible_rows, all_rows):
+        if not n:                                         # ← si no hay clic, no hagas nada
+            raise PreventUpdate                           # ← evita actualización
+        rows = visible_rows if visible_rows is not None else all_rows  # ← prioriza lo visible
+        if not rows:                                      # ← si no hay datos, no descargues
+            raise PreventUpdate                           # ← evita actualización
+        df = pd.DataFrame(rows)                           # ← construir DataFrame con las filas
+        # Opción A: CSV
+        return dcc.send_data_frame(df.to_csv, "opsa_summary.csv", index=False)

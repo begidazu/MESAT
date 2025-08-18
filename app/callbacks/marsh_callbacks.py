@@ -189,7 +189,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             html.Div(id="opsa-chart", style={'marginTop':'20px'}),
                             html.Div(  # barra inferior
                                     id='button-bar-opsa',  # id
-                                    style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},  # estilos
+                                    style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', 'padding': '20px'},  # estilos
                                     children=[  # hijos
                                         html.Button(  # botón info
                                             [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Ocean Physycal Stock Account compilation info")],  # contenido
@@ -217,15 +217,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     ),
                     dbc.Modal(  # modal de información
                         [
-                            dbc.ModalHeader(dbc.ModalTitle("Physical Account Compilation Information")),  # cabecera
+                            dbc.ModalHeader(dbc.ModalTitle("Ocean Physical Stock Account compilation")),  # cabecera
                             dbc.ModalBody(  # cuerpo
-                                html.Ul([
-                                        html.Li([html.B("Mudflat: "), html.I("Mudflats")," represent an important part of coastal wetlands, which, like marshes, provide a wide range of ecosystem services such as coastal defence and carbon sequestration."]),  # info Mudflat
-                                        html.Li([html.B("Saltmarsh: "), html.I("Saltmarshes"), " are coastal wetlands characterized by its low-lying, flat, and poorly drained soil that is regularly or occasionally flooded by salty or brackish water. Like Mudflats, saltmarshes provide a wide range of ecosystem services such as coastal defence, carbon sequestration and food provisioning."]),  # info Saltmarsh
-                                        html.Li([html.B("Upland Areas: "), html.I("Upland Areas"), " represent non-flooded areas where marshes can migrate during sea level rise conditions."]),  # info Upland
-                                        html.Li([html.B("Channel: "), html.I("Channels"), " are key features of wetlands that control fundamental dynamics like sediment availability, nutrient circulation and hydrodynamics."]),  # info Channel
-                                        html.Li([html.B("Accretion: "), html.I("Accretion"), " is the process where the elevation of a saltmarsh surface increases over time, either by the accumulation of mineral sediments (like silt and clay) or by the buildup of organic matter from decaying plant material. Through ", html.I("accretion"), ", saltmarshes sequester carbon from both accumulation of mineral sediments and organic matter from decaying plant material. "]) # info Accretion
-                                ])
+                                # "The", html.B("System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA)"), "is the globally adopted statistical standard that organises biophysical information on ecosystems and ecosystem services, tracks changes in ecosystem extent and condition, and links this information to human activities. SEEA-EA accounts are divided into two subgroups — stock and flow accounts — that are further categorised into physical or monetary accounts.",
+                                # html.Img(src="/assets/images/SEEA.png"),
+                                # "Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the ocean physical stock accounts compilation for the three study areas assessed in the Ph.D. The table of the tabs shows the ecosystem extent and condition of "
                             ),
                             dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-opsa-close", n_clicks=0)) 
                         ],
