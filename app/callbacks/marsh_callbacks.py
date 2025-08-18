@@ -693,3 +693,32 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         url = f"/raster/{area}/{scen}/{year}.png?ts={int(time.time())}"
         return [dl.ImageOverlay(id=f"overlay-{scen}", url=url,
                                 bounds=[[b.bottom,b.left],[b.top,b.right]], opacity=1)]
+    
+    # Callback para cambiar los link del footer y el texto si es el caso:
+    @app.callback(
+        Output("method-link", "children"),
+        Output("method-link", "href"),
+        Output("code-link", "children"),
+        Output("code-link", "href"),
+        Input("tabs", "value"),
+    )
+    def update_footer_links_full(tab):
+        labels = {
+            "tab-saltmarsh":  ("Access the methodology", "Access the code"),
+            "tab-physical":   ("Access the methodology", "Access the code"),
+            "tab-fishstock":  ("Fish Stocks docs", "Fish Stocks code"),
+            "tab-management": ("Management docs", "Management code"),
+        }
+        urls = {
+            "tab-saltmarsh":  ("https://doi.org/10.1016/j.scitotenv.2024.178164",
+                            "https://github.com/begidazu/PhD_Web_App/tree/main/saltmarsh"),
+            "tab-physical":   ("https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit#heading=h.i7jku579q3oc",
+                            "https://github.com/begidazu/PhD_Web_App/blob/physical_accounts/app/models/opsa.py"),
+            "tab-fishstock":  (),
+            "tab-management": (),
+        }
+        m_text, c_text = labels.get(tab, labels["tab-saltmarsh"])
+        m_href, c_href = urls.get(tab, urls["tab-saltmarsh"])
+        method_children = [html.Span('📄', className="me-1 footer-icon"), m_text]
+        code_children   = [html.Img(src="/assets/logos/github-mark.png", className="me-1 footer-icon"), c_text]
+        return method_children, m_href, code_children, c_href
