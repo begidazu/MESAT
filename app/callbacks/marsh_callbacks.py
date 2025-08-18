@@ -186,7 +186,34 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         color='#103e95',
                         children=[  # hijos
                             html.Legend("Ocean Physical Stock Account compilation", className='mt-4', id='opsa-legend', hidden=True),
-                            html.Div(id="opsa-chart", style={'marginTop':'20px'})]  # contenedor de gráficas
+                            html.Div(id="opsa-chart", style={'marginTop':'20px'}),
+                            html.Div(  # barra inferior
+                                    id='button-bar-opsa',  # id
+                                    style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},  # estilos
+                                    children=[  # hijos
+                                        html.Button(  # botón info
+                                            [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Ocean Physycal Stock Account compilation info")],  # contenido
+                                            id='info-button-opsa',  # id
+                                            className='btn btn-outline-primary',
+                                            hidden=True,  # oculto al inicio
+                                            n_clicks=0  # contador
+                                        ),
+                                        html.Div(  # contenedor de descarga
+                                            [
+                                                html.Button(  # botón de descarga
+                                                    [html.Img(src='/assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")],  # contenido
+                                                    id='opsa-results',  # id
+                                                    hidden=True,  # oculto al inicio
+                                                    n_clicks=0,  # contador
+                                                    className='btn btn-outline-primary'
+                                                ),
+                                                dcc.Download(id='opsa-download')  # componente de descarga
+                                            ]
+                                        )
+                                    ]
+                                )
+                            ],  # contenedor de gráficas
+                            
                     ),
                     dbc.Modal(  # modal de información
                         [
@@ -200,9 +227,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         html.Li([html.B("Accretion: "), html.I("Accretion"), " is the process where the elevation of a saltmarsh surface increases over time, either by the accumulation of mineral sediments (like silt and clay) or by the buildup of organic matter from decaying plant material. Through ", html.I("accretion"), ", saltmarshes sequester carbon from both accumulation of mineral sediments and organic matter from decaying plant material. "]) # info Accretion
                                 ])
                             ),
-                            dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close", n_clicks=0)) 
+                            dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-opsa-close", n_clicks=0)) 
                         ],
-                        id="info-modal", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
+                        id="info-opsa-modal", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
                     )
 
 

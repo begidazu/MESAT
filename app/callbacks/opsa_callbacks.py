@@ -2,7 +2,7 @@
 
 import dash  # framework Dash
 from typing import List  # tipado de listas
-from dash import Input, Output, State, html, dcc, dash_table  # componentes Dash
+from dash import Input, Output, State, html, dash_table, callback_context  # componentes Dash
 from dash.exceptions import PreventUpdate  # controlar no-actualizaciones
 import dash_leaflet as dl  # Leaflet para Dash
 import plotly.express as px
@@ -115,6 +115,8 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         Output("map", "viewport", allow_duplicate=True),  # ajustar viewport
         Output("opsa-legend", "children", allow_duplicate=True),  # poner leyenda
         Output("opsa-chart", "children", allow_duplicate=True), # agregar grafica/tabla
+        Output("info-button-opsa", "hidden", allow_duplicate=True),
+        Output("opsa-results", "hidden", allow_duplicate=True),
         Input("run-eva-button", "n_clicks"),  # clics en Run
         State("opsa-study-area", "value"),  # área seleccionada
         State("ec-dropdown", "value"),  # EC seleccionados
@@ -228,7 +230,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
             table_block = html.Div(f"Summary error: {e}", style={'color':'#b00020','fontStyle':'italic','padding':'8px'})  # mensaje de error
 
         # 5) Devolver capas + estado UI + leyenda
-        return layers, False, True, True, True, viewport, legend, table_block  # devolver todo preparado
+        return layers, False, True, True, True, viewport, legend, table_block, False, False  # devolver todo preparado
 
     @app.callback(  # resetear el tab Physical
         Output("opsa-layer", "children", allow_duplicate=True),  # limpiar capas
@@ -242,6 +244,8 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         Output("ec", "hidden", allow_duplicate=True),
         Output("opsa-study-area", "value"),
         Output("opsa-chart", "children"),
+        Output("info-button-opsa", "hidden"),
+        Output("opsa-results", "hidden"),
         Input("reset-eva-button", "n_clicks"),  # clics en Reset
         prevent_initial_call=True  # evitar disparo inicial
     )
@@ -249,7 +253,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         if not n:  # si no hay clic
             raise PreventUpdate  # no actualizar
         default_view = {"center": [48.912724, -1.141208], "zoom": 6}  # viewport por defecto
-        return [], [], False, False, True, True, default_view, [], True, "", []  # devolver estado limpio
+        return [], [], False, False, True, True, default_view, [], True, "", [], True, True  # devolver estado limpio
 
     @app.callback(  # limpiar al cambiar de tab
         Output("opsa-legend", "children", allow_duplicate=True),  # limpiar leyenda
@@ -262,3 +266,19 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         if active_tab != "tab-physical":  # si no estamos en Physical
             return [], True, [] # dejar leyenda vacía
         raise PreventUpdate  # si seguimos en Physical, no tocar
+    
+    @app.callback(  # toggle modal info
+        Output("info-opsa-modal", "is_open"),
+        Input("info-button-opsa", "n_clicks"),
+        Input("info-opsa-close",  "n_clicks"),
+        State("info-opsa-modal",  "is_open"),
+        prevent_initial_call=True
+    )
+    def toggle_info_modal(open_clicks, close_clicks, is_open):  # alternar modal
+        ctx = callback_context  # contexto
+        if not ctx.triggered:  # si no hay disparador
+            raise PreventUpdate  # no actualizar
+        trigger = ctx.triggered[0]["prop_id"].split(".")[0]  # id del disparador
+        if trigger in ["info-button-opsa", "info-opsa-close"]:  # si es abrir/cerrar
+            return not is_open  # alternar
+        return is_open  # mantener
