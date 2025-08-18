@@ -219,9 +219,42 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         [
                             dbc.ModalHeader(dbc.ModalTitle("Ocean Physical Stock Account compilation")),  # cabecera
                             dbc.ModalBody(  # cuerpo
-                                # "The", html.B("System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA)"), "is the globally adopted statistical standard that organises biophysical information on ecosystems and ecosystem services, tracks changes in ecosystem extent and condition, and links this information to human activities. SEEA-EA accounts are divided into two subgroups — stock and flow accounts — that are further categorised into physical or monetary accounts.",
-                                # html.Img(src="/assets/images/SEEA.png"),
-                                # "Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the ocean physical stock accounts compilation for the three study areas assessed in the Ph.D. The table of the tabs shows the ecosystem extent and condition of "
+                                 html.Div(
+                                    [
+                                        # 1) Texto introductorio
+                                        html.P([
+                                            "The ", html.B("System of Environmental–Economic Accounting – Ecosystem Accounting (SEEA-EA)"),
+                                            " is the globally adopted statistical standard that organises biophysical information on ecosystems and ecosystem services, tracks changes in ecosystem extent and condition, and links this information to human activities. SEEA-EA accounts are divided into two subgroups — stock and flow accounts — that are further categorised into physical or monetary accounts."
+                                        ], className="mb-3", style={"textAlign": "justify"}),
+
+                                        # 2) Imagen centrada + pie
+                                        html.Figure(
+                                            [
+                                                html.Img(
+                                                    src="/assets/images/SEEA.png",
+                                                    alt="SEEA-EA framework diagram",
+                                                    style={"maxWidth": "100%", "height": "auto"}  # responsive
+                                                ),
+                                                html.Figcaption(
+                                                    "adopted from SEEA-EA framework (UN, 2021).",
+                                                    className="text-muted mt-1",
+                                                    style={"fontSize": "var(--font-sm)"}          # opcional
+                                                ),
+                                            ],
+                                            className="text-center my-3"  # margen vertical + centrado
+                                        ),
+
+                                        # 3) Texto posterior (y lo que necesites debajo)
+                                        html.P(
+                                            "Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the three study areas assessed in the Ph.D according to the EUNIS habitat (version 2012) classification. It is important to highlight that for OPSA condition assessment user must include all ecosystem components for complete condition indicators. However, if you want to see OPSA assessment taking into account particular ecosystem components, you can select them in the checklist",
+                                            className="mb-2", style={"textAlign": "justify"}
+                                        ),
+                                        html.P(
+                                            html.I("*Notice that you can assess ecosystem condition by EUNIS habitat type selecting the target ecosystem component in the checklist."),
+                                            className="mb-2", style={"textAlign": "justify"}
+                                        ),
+                                    ]
+                                )
                             ),
                             dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-opsa-close", n_clicks=0)) 
                         ],
