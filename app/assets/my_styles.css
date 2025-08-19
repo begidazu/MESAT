@@ -204,3 +204,13 @@ img, canvas { /* elementos gráficos */
   font-size: var(--font-lg);
   padding: 0.45rem 0.9rem;
 }
+
+@media (min-width: 1200px) {
+        .modal-xl {
+        --bs-modal-width: 2000px;
+    }}
+
+@media (max-width:767.98px) {
+        .modal-md {
+        --bs-modal-width: 600px;
+    }}
