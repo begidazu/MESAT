@@ -41,7 +41,7 @@ def create_layout():  # definir función que construye el layout
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
                                      # --- Leyenda OPSA (contenedor, el contenido lo rellenan callbacks) ---
                                     html.Div(  # contenedor de la leyenda flotante
-                                        id='opsa-legend',  # id para actualizar desde callbacks
+                                        id='opsa-legend-div',  # id para actualizar desde callbacks
                                         style={  # estilos para posicionarla sobre el mapa
                                             'position': 'absolute',  # posición absoluta dentro del mapa
                                             'bottom': '10px',  # distancia al borde inferior
@@ -63,7 +63,7 @@ def create_layout():  # definir función que construye el layout
                                         ]
                                     )
                                 ]
-                            )
+                            ),
                         ]
                     ),
                     dbc.Col(  # columna de la barra lateral

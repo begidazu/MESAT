@@ -15,6 +15,7 @@ from app.models.opsa import compute_condition_mean, compute_summary_by_habitat_t
 
 def _legend_item(color: str, label: str) -> html.Div:  # crear un ítem de leyenda con color sólido
     return html.Div(  # contenedor del ítem
+        className="legend-item",
         style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'},  # estilo
         children=[  # hijos
             html.Div(style={'width':'14px','height':'14px','background':color,'border':'1px solid #888'}),  # cuadrito color
@@ -24,13 +25,15 @@ def _legend_item(color: str, label: str) -> html.Div:  # crear un ítem de leyen
 
 def _legend_nodata() -> html.Div:  # crear ítem de leyenda para NoData
     return html.Div(  # contenedor
+        className="legend-item",
         style={'display':'flex','alignItems':'center','gap':'6px','marginBottom':'4px'},  # estilo
         children=[  # hijos
-            html.Div(style={  # cuadrito con tramado
+            html.Div(
+                style={  # cuadrito con tramado
                 'width':'14px','height':'14px',
                 'backgroundImage':'repeating-linear-gradient(45deg, rgba(0,0,0,0) 0, rgba(0,0,0,0) 4px, rgba(0,0,0,0.35) 4px, rgba(0,0,0,0.35) 6px)',
                 'border':'1px solid #000'
-            }),
+                }),
             html.Span("NoData")  # etiqueta
         ]
     )
@@ -39,6 +42,7 @@ def _build_legend() -> html.Div:  # construir la leyenda completa
     colors = ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c']  # paleta 5 clases (verde claro→oscuro)
     labels = ['Very low (0–1)','Low (1–2)','Medium (2–3)','High (3–4)','Very high (4–5)']  # etiquetas
     return html.Div(  # contenedor de leyenda
+        className="legend",
         children=[
             html.Div("Condition", style={'fontWeight':'bold','marginBottom':'6px'}),  # título
             _legend_nodata(),  # item NoData
@@ -107,12 +111,12 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
 
     @app.callback(  # ejecutar modelo y pintar 6 capas estáticas por clase (sin JS)
         Output("opsa-layer", "children", allow_duplicate=True),  # lista de capas a pintar
-        Output("reset-eva-button", "disabled", allow_duplicate=True),  # habilitar Reset
+        Output("reset-eva-button", "disabled"),  # habilitar Reset
         Output("opsa-study-area", "disabled", allow_duplicate=True),  # bloquear área
         Output("ec-dropdown", "disabled", allow_duplicate=True),  # bloquear checklist
-        Output("run-eva-button", "disabled", allow_duplicate=True),  # bloquear Run
+        Output("run-eva-button", "disabled"),  # bloquear Run
         Output("map", "viewport", allow_duplicate=True),  # ajustar viewport
-        Output("opsa-legend", "children", allow_duplicate=True),  # poner leyenda
+        Output("opsa-legend-div", "children"),  # poner leyenda
         Output("opsa-chart", "children", allow_duplicate=True), # agregar grafica/tabla
         Output("info-button-opsa", "hidden", allow_duplicate=True),
         Output("opsa-results", "hidden", allow_duplicate=True),
@@ -213,7 +217,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
                 columns=[{"name": c, "id": c} for c in df_disp.columns],  # columnas
                 data=df_disp.to_dict("records"),  # filas
                 sort_action="native",  # ordenable
-                filter_action="native",  # sin filtro (puedes activar si quieres)
+                filter_action="native",  # con filtro (puedes activar si quieres)
                 page_action="none",  # sin paginación (tabla compacta)
                 export_headers="display",  # usar cabeceras visibles
                 style_table={"maxHeight": "720px", "overflowY": "auto", "border": "1px solid #ddd", "borderRadius": "8px"},  # estilo contenedor
@@ -223,22 +227,22 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
                     {"if": {"row_index": "odd"}, "backgroundColor": "#fafafa"}  # zebra
                 ],
             )
-            table_block = html.Div([html.Hr(), html.H4("Summary by Habitat type"), table], style={"marginTop":"8px"})  # bloque con título y tabla
+            table_block = html.Div([html.Hr(), html.H4("Ocean Physical Stock Account compilation: summary by habitat type"), table], style={"marginTop":"8px"})  # bloque con título y tabla
         except Exception as e:  # si algo falla
             table_block = html.Div(f"Summary error: {e}", style={'color':'#b00020','fontStyle':'italic','padding':'8px'})  # mensaje de error
 
         # 5) Devolver capas + estado UI + leyenda
-        return layers, False, True, True, True, viewport, legend, table_block, False, False  # devolver todo preparado
+        return layers, False, True, True, True, viewport, legend, table_block, False, False  # devolver todo 
 
     @app.callback(  # resetear el tab Physical
         Output("opsa-layer", "children", allow_duplicate=True),  # limpiar capas
-        Output("ec-dropdown", "value"),  # limpiar selección
+        Output("ec-dropdown", "value", allow_duplicate=True),  # limpiar selección
         Output("ec-dropdown", "disabled", allow_duplicate=True),  # reactivar checklist
         Output("opsa-study-area", "disabled", allow_duplicate=True),  # reactivar área
         Output("run-eva-button", "disabled", allow_duplicate=True),  # deshabilitar Run hasta nueva selección
         Output("reset-eva-button", "disabled", allow_duplicate=True),  # deshabilitar Reset
         Output("map", "viewport", allow_duplicate=True),  # volver a vista por defecto
-        Output("opsa-legend", "children", allow_duplicate=True),  # limpiar leyenda
+        Output("opsa-legend-div", "children", allow_duplicate=True),  # limpiar leyenda
         Output("ec", "hidden", allow_duplicate=True),
         Output("opsa-study-area", "value"),
         Output("opsa-chart", "children"),
@@ -254,7 +258,7 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         return [], [], False, False, True, True, default_view, [], True, "", [], True, True  # devolver estado limpio
 
     @app.callback(  # limpiar al cambiar de tab
-        Output("opsa-legend", "children", allow_duplicate=True),  # limpiar leyenda
+        Output("opsa-legend-div", "children", allow_duplicate=True),  # limpiar leyenda
         Output("ec", "hidden", allow_duplicate=True),
         Output("opsa-layer", "children"),
         Input("tabs", "value"),  # tab activo

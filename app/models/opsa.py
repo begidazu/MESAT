@@ -141,7 +141,6 @@ def compute_condition_mean(
     # Diagnóstico (opcional):
     try:
         counts = gdf[out_field_class].value_counts().sort_index()
-        print(f"OPSA DEBUG ➜ clases (0..5): {dict(counts)}")
     except Exception:
         pass
 

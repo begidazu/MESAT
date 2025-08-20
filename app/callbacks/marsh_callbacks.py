@@ -185,7 +185,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         type="dot",  # tipo de spinner
                         color='#103e95',
                         children=[  # hijos
-                            html.Legend("Ocean Physical Stock Account compilation", className='mt-4', id='opsa-legend', hidden=True),
+                            #html.Legend("Ocean Physical Stock Account compilation: summary by habitat type", className='mt-4', id='opsa-legend', hidden=True),
                             html.Div(id="opsa-chart", style={'marginTop':'20px'}),
                             html.Div(  # barra inferior
                                     id='button-bar-opsa',  # id
