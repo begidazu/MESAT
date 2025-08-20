@@ -26,16 +26,21 @@ def create_layout():  # definir función que construye el layout
                                         children=[  # hijos del grupo de dibujo
                                             dl.EditControl(  # control de edición
                                                 id='edit-control',  # id del control
-                                                position='topleft',  # ubicación del control
-                                                draw={  # herramientas activas
-                                                    'polygon': True,  # permitir polígonos
-                                                    'polyline': False,  # desactivar polilíneas
-                                                    'rectangle': False,  # desactivar rectángulo
-                                                    'circle': False,  # desactivar círculo
-                                                    'marker': False  # desactivar marcador
-                                                },
-                                                edit={'remove': True}  # permitir borrar
+                                                # position='topleft',  # ubicación del control
+                                                # draw={  # herramientas activas
+                                                #     'polygon': False,   # permitir polígonos
+                                                #     'polyline': False,  # desactivar polilíneas
+                                                #     'rectangle': False,  # desactivar rectángulo
+                                                #     'circle': False,  # desactivar círculo
+                                                #     'marker': False  # desactivar marcador
+                                                # },
+                                                # edit={'remove': True}  # permitir borrar
+                                                draw={"polyline": False, "rectangle": False, "circle": False, "circlemarker": False, "marker": True, "polygon": True},
+                                                edit={"edit": True, "remove": True}
                                             )
+
+
+
                                         ]
                                     ),
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
@@ -56,14 +61,9 @@ def create_layout():  # definir función que construye el layout
                                         },
                                         children=[]  # vacío al inicio; se completa al ejecutar OPSA
                                     ),
-                                    html.Div(
-                                        [
-                                            dcc.Loading(type='circle',  parent_style={"position": "relative", "z-index": "100", "width": "100%", "height": "100%"}), 
-                                            dl.FeatureGroup(id='reg-rcp45', children=[])
-                                        ]
-                                    )
                                 ]
                             ),
+
                         ]
                     ),
                     dbc.Col(  # columna de la barra lateral
@@ -113,6 +113,9 @@ def create_layout():  # definir función que construye el layout
 
                     # almacén de sesión para recordar si se ocultó
                     dcc.Store(id="welcome-store", storage_type="session"),
+                    # almacen para guardar los poligonos dibujados por los susuarios sobre actividades economicas
+                    # dcc.Store(id='mgmt-active'),
+                    # dcc.Store(id='activity-geojson', data={}),
 
                     # modal de bienvenida
                     dbc.Modal(

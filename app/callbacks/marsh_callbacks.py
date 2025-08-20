@@ -325,7 +325,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     dbc.Checklist(
                                         id='vessel',
                                         options=[{"label": "New Vessel Rounte", "value": "new_vessel_route"}],
-                                        value=[], inline=True, style={'margin': '0'}
+                                        value=[], style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-primary', style={'width': '100%'}),
