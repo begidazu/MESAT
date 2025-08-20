@@ -27,6 +27,13 @@ CLASS_INFO = {  # mapa valor->(etiqueta,color)
 }
 LABEL_TO_COLOR = {name: color for _, (name, color) in CLASS_INFO.items()}  # etiqueta->color
 CATEGORY_ORDER = [CLASS_INFO[k][0] for k in sorted(CLASS_INFO.keys())]  # orden fijo de categorías
+row_style = {
+        'display': 'grid',
+        'gridTemplateColumns': '280px 100px 1fr',  # [col1: checklist] [col2: botón] [col3: input]
+        'alignItems': 'center',
+        'columnGap': '12px',
+        'width': '100%',
+    }
 
 def _acc_tif_from_class_tif(class_tif):  # localizar tif de acreción emparejado
     base, ext = os.path.splitext(class_tif)  # separar base y extensión
@@ -267,8 +274,86 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                 ], style={'padding':'20px'})
         
         elif tab == "tab-management":
-            # return management_layout(key)
-            return html.Div("Management Scenarios — coming soon", key=key, style={'padding':'20px'})
+            # return management_layout(key)            
+            return html.Div(
+                key=key,
+                children=[
+                    html.Legend("What economic activity you want to establish?"),
+                    html.Div(
+                        id='activity-checklist',
+                        style={'display': 'flex', 'flexDirection': 'column', 'gap': '10px', 'width': '100%'},
+                        children=[
+
+                            html.Div(
+                                id="wind-farm-div",
+                                style=row_style,
+                                children=[
+                                    dbc.Checklist(
+                                        id='wind-farm',
+                                        options=[{"label": "Wind Farm", "value": "wind_farm"}],
+                                        value=[], inline=True, style={'margin': '0'}
+                                    ),
+                                    html.Button("Draw", id='wind-farm-draw', n_clicks=0, disabled=True,
+                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                    dcc.Input(id='wind-farm-file', type="file",
+                                            className="form-control", disabled=True,
+                                            style={'width': '100%', 'marginLeft': '25px'})
+                                ]
+                            ),
+
+                            html.Div(
+                                id="aquaculture-div",
+                                style=row_style,
+                                children=[
+                                    dbc.Checklist(
+                                        id='aquaculture',
+                                        options=[{"label": "Aquaculture", "value": "aquaculture"}],
+                                        value=[], inline=True, style={'margin': '0', 'width': '100%'}
+                                    ),
+                                    html.Button("Draw", id='aquaculture-draw', n_clicks=0, disabled=True,
+                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                    dcc.Input(id='aquaculture-file', type="file",
+                                            className="form-control", disabled=True,
+                                            style={'width': '100%', 'marginLeft': '25px'})
+                                ]
+                            ),
+
+                            html.Div(
+                                id="vessel-div",
+                                style=row_style,
+                                children=[
+                                    dbc.Checklist(
+                                        id='vessel',
+                                        options=[{"label": "New Vessel Rounte", "value": "new_vessel_route"}],
+                                        value=[], inline=True, style={'margin': '0'}
+                                    ),
+                                    html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
+                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                    dcc.Input(id='vessel-file', type="file",
+                                            className="form-control", disabled=True,
+                                            style={'width': '100%', 'marginLeft': '25px'})
+                                ]
+                            ),
+
+                            html.Div(
+                                id="defence-div",
+                                style=row_style,
+                                children=[
+                                    dbc.Checklist(
+                                        id='defence',
+                                        options=[{"label": "Defence", "value": "defence"}],
+                                        value=[], inline=True, style={'margin': '0'}
+                                    ),
+                                    html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
+                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                    dcc.Input(id='defence-file', type="file",
+                                            className="form-control", disabled=True,
+                                            style={'width': '100%', 'marginLeft': '25px'})
+                                ]
+                            ),
+                        ]
+                    )
+                ], style={'padding':'20px'})
 
         elif tab == 'tab-saltmarsh':
             return html.Div(

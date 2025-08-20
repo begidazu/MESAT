@@ -233,3 +233,9 @@ img, canvas { /* elementos gráficos */
   .legend-item { font-size: var(--font-sm); }
   .legend { font-size: var(--font-md); }
 }
+
+/* Management scenarios tab styles */
+#activity-checklist {
+  font-size: var(--font-xl); /* Tamaño de fuente fluido para checklist */
+}
+
