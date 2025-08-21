@@ -344,7 +344,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         options=[{"label": "Defence", "value": "defence"}],
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
-                                    html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
+                                    html.Button(html.U("Draw"), id='defence-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-primary', style={'width': '100%'}),
                                     dcc.Input(id='defence-file', type="file",
                                             className="form-control", disabled=True,
@@ -352,7 +352,17 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 ]
                             ),
                         ]
-                    )
+                    ),
+
+
+                    html.Div(id="test"),
+                    html.Div(id="debug-feats"),
+                    html.Div(id="debug-created"),
+
+
+
+
+
                 ], style={'padding':'20px'})
 
         elif tab == 'tab-saltmarsh':

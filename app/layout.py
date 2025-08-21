@@ -1,5 +1,6 @@
 from dash import html, dcc  # importar componentes básicos de Dash
 import dash_leaflet as dl  # importar integración Leaflet
+from dash_extensions.javascript import assign
 import dash_bootstrap_components as dbc  # importar Bootstrap para layout
 
 # Layout completamente flexible y responsive usando utilidades de Bootstrap
@@ -61,6 +62,13 @@ def create_layout():  # definir función que construye el layout
                                         },
                                         children=[]  # vacío al inicio; se completa al ejecutar OPSA
                                     ),
+
+                                    
+
+                                    dl.FeatureGroup(id="mgmt-layer", children=[]),
+
+
+
                                 ]
                             ),
 
@@ -114,8 +122,11 @@ def create_layout():  # definir función que construye el layout
                     # almacén de sesión para recordar si se ocultó
                     dcc.Store(id="welcome-store", storage_type="session"),
                     # almacen para guardar los poligonos dibujados por los susuarios sobre actividades economicas
-                    # dcc.Store(id='mgmt-active'),
-                    # dcc.Store(id='activity-geojson', data={}),
+                    # dcc.Store(id="draw-style", data={"category": "wind", "color": "#f59e0b"}),
+                    # dcc.Store(id="draw-count", data=0),
+                    dcc.Store(id="current-color", data="#f59e0b"),
+                    dcc.Store(id="draw-len", data=0),
+
 
                     # modal de bienvenida
                     dbc.Modal(
