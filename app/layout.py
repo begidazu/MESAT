@@ -36,12 +36,9 @@ def create_layout():  # definir función que construye el layout
                                                 #     'marker': False  # desactivar marcador
                                                 # },
                                                 # edit={'remove': True}  # permitir borrar
-                                                draw={"polyline": False, "rectangle": False, "circle": False, "circlemarker": False, "marker": True, "polygon": True},
+                                                draw={"polyline": False, "rectangle": False, "circle": False, "circlemarker": False, "marker": False, "polygon": True},
                                                 edit={"edit": True, "remove": True}
                                             )
-
-
-
                                         ]
                                     ),
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
@@ -64,8 +61,11 @@ def create_layout():  # definir función que construye el layout
                                     ),
 
                                     
-
-                                    dl.FeatureGroup(id="mgmt-layer", children=[]),
+                                    # Layers where we store the management polygons
+                                    dl.FeatureGroup(id="mgmt-wind", children=[]),
+                                    dl.FeatureGroup(id="mgmt-aqua", children=[]),
+                                    dl.FeatureGroup(id="mgmt-vessel", children=[]),
+                                    dl.FeatureGroup(id="mgmt-defence", children=[])
 
 
 
@@ -124,7 +124,7 @@ def create_layout():  # definir función que construye el layout
                     # almacen para guardar los poligonos dibujados por los susuarios sobre actividades economicas
                     # dcc.Store(id="draw-style", data={"category": "wind", "color": "#f59e0b"}),
                     # dcc.Store(id="draw-count", data=0),
-                    dcc.Store(id="current-color", data="#f59e0b"),
+                    dcc.Store(id="draw-meta", data={"layer": "wind", "color": "#f59e0b"}),
                     dcc.Store(id="draw-len", data=0),
 
 
