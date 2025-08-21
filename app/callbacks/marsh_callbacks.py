@@ -294,7 +294,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='wind-farm-draw', n_clicks=0, disabled=True,
-                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                                className='btn btn-outline-warning', style={'width': '100%'}),
                                     dcc.Input(id='wind-farm-file', type="file",
                                             className="form-control", disabled=True,
                                             style={'width': '100%', 'marginLeft': '25px'})
@@ -311,7 +311,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         value=[], inline=True, style={'margin': '0', 'width': '100%'}
                                     ),
                                     html.Button("Draw", id='aquaculture-draw', n_clicks=0, disabled=True,
-                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                                className='btn btn-outline-success', style={'width': '100%'}),
                                     dcc.Input(id='aquaculture-file', type="file",
                                             className="form-control", disabled=True,
                                             style={'width': '100%', 'marginLeft': '25px'})
@@ -328,7 +328,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         value=[], style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
-                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                                className='btn btn-outline-info', style={'width': '100%'}),
                                     dcc.Input(id='vessel-file', type="file",
                                             className="form-control", disabled=True,
                                             style={'width': '100%', 'marginLeft': '25px'})
@@ -344,8 +344,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         options=[{"label": "Defence", "value": "defence"}],
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
-                                    html.Button(html.U("Draw"), id='defence-draw', n_clicks=0, disabled=True,
-                                                className='btn btn-outline-primary', style={'width': '100%'}),
+                                    html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
+                                                className='btn btn-outline-danger', style={'width': '100%'}),
                                     dcc.Input(id='defence-file', type="file",
                                             className="form-control", disabled=True,
                                             style={'width': '100%', 'marginLeft': '25px'})
@@ -353,15 +353,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             ),
                         ]
                     ),
-
-
-                    html.Div(id="test"),
-                    html.Div(id="debug-feats"),
-                    html.Div(id="debug-created"),
-
-
-
-
 
                 ], style={'padding':'20px'})
 
