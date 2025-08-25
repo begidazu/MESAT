@@ -295,9 +295,17 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     ),
                                     html.Button("Draw", id='wind-farm-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-warning', style={'width': '100%'}),
-                                    dcc.Input(id='wind-farm-file', type="file",
-                                            className="form-control", disabled=True,
-                                            style={'width': '100%', 'marginLeft': '25px'})
+                                    dcc.Upload(                                                      # componente para subir ficheros
+                                        id="wind-farm-file",                                         # id del upload
+                                        multiple=False,                                              # un único fichero
+                                        accept="",                                                   # ← permitir cualquier tipo (validamos en callback)
+                                        className="upload-as-input form-control form-control-sm",    # clases base (borde, etc.)
+                                        children=html.Div(                                           # etiqueta visible
+                                            id="wind-farm-file-label",                               # id del label
+                                            children="Choose file: .json or .parquet"                # texto inicial
+                                        ),
+                                    ),
+
                                 ]
                             ),
 

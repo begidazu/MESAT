@@ -239,3 +239,22 @@ img, canvas { /* elementos gráficos */
   font-size: var(--font-xl); /* Tamaño de fuente fluido para checklist */
 }
 
+/* Input style */
+.upload-as-input {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: calc(1.5em + .5rem + 2px);
+  padding: .25rem .5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.upload-as-input:hover { background-color: #f8f9fa; }
+
+/* -------- Estado inválido (extensión no permitida) -------- */
+.upload-invalid {                           /* clase que aplicamos desde el callback */
+  border-color: #dc3545 !important;         /* rojo Bootstrap */
+  background-color: #fff5f5 !important;     /* ligero fondo rosado */
+  color: #dc3545 !important;                /* texto rojo para enfatizar */
+}

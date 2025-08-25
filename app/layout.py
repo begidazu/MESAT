@@ -27,22 +27,16 @@ def create_layout():  # definir función que construye el layout
                                         children=[  # hijos del grupo de dibujo
                                             dl.EditControl(  # control de edición
                                                 id='edit-control',  # id del control
-                                                # position='topleft',  # ubicación del control
-                                                # draw={  # herramientas activas
-                                                #     'polygon': False,   # permitir polígonos
-                                                #     'polyline': False,  # desactivar polilíneas
-                                                #     'rectangle': False,  # desactivar rectángulo
-                                                #     'circle': False,  # desactivar círculo
-                                                #     'marker': False  # desactivar marcador
-                                                # },
-                                                # edit={'remove': True}  # permitir borrar
                                                 draw={"polyline": False, "rectangle": False, "circle": False, "circlemarker": False, "marker": False, "polygon": True},
                                                 edit={"edit": True, "remove": True}
                                             )
                                         ]
                                     ),
+                                    # Layers where we store the raster tiles for the saltmarsh model
+                                    dl.FeatureGroup(id='reg-rcp45', children=[]),
+                                    # Layer where we store the EUNIS habitat polygons:
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
-                                     # --- Leyenda OPSA (contenedor, el contenido lo rellenan callbacks) ---
+                                     # OPSA legend:
                                     html.Div(  # contenedor de la leyenda flotante
                                         id='opsa-legend-div',  # id para actualizar desde callbacks
                                         style={  # estilos para posicionarla sobre el mapa
@@ -65,7 +59,10 @@ def create_layout():  # definir función que construye el layout
                                     dl.FeatureGroup(id="mgmt-wind", children=[]),
                                     dl.FeatureGroup(id="mgmt-aqua", children=[]),
                                     dl.FeatureGroup(id="mgmt-vessel", children=[]),
-                                    dl.FeatureGroup(id="mgmt-defence", children=[])
+                                    dl.FeatureGroup(id="mgmt-defence", children=[]),
+
+                                    # Layers where we store the uploaded files:
+                                    dl.FeatureGroup(id="mgmt-wind-upload", children=[]),  # capa para los datos subidos (Wind)
 
 
 
@@ -122,10 +119,13 @@ def create_layout():  # definir función que construye el layout
                     # almacén de sesión para recordar si se ocultó
                     dcc.Store(id="welcome-store", storage_type="session"),
                     # almacen para guardar los poligonos dibujados por los susuarios sobre actividades economicas
-                    # dcc.Store(id="draw-style", data={"category": "wind", "color": "#f59e0b"}),
-                    # dcc.Store(id="draw-count", data=0),
                     dcc.Store(id="draw-meta", data={"layer": "wind", "color": "#f59e0b"}),
                     dcc.Store(id="draw-len", data=0),
+                    # almacen para guardar los ficheros subidos por actividad economica
+                    dcc.Store(id="wind-file-store"),                           # store para Wind Farm
+                    dcc.Store(id="aqua-file-store"),                           # store para Aquaculture
+                    dcc.Store(id="vessel-file-store"),                         # store para Vessel Route
+                    dcc.Store(id="defence-file-store"),                        # store para Defence
 
 
                     # modal de bienvenida
