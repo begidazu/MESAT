@@ -19,36 +19,39 @@ import threading, time
 from pathlib import Path
 import shutil, os
 
-# New to delete user uploads in case are old:
-# TTL_HOURS = int(os.getenv("UPLOADS_TTL_HOURS", "6"))        # tiempo de vida máximo
-# GC_INTERVAL_MIN = int(os.getenv("UPLOADS_GC_MIN", "30"))    # frecuencia del GC
+# Definimos el tiempo maximo que queramos que se guarden los ficheros subidos por los usuarios:
+TTL_HOURS = int(os.getenv("UPLOADS_TTL_HOURS", "6"))        # el segundo argumento son las horas
 
-# def _gc_uploads_loop(root="uploads"):                       # bucle del recolector
-#     ttl = TTL_HOURS * 3600
-#     while True:
-#         try:
-#             now = time.time()
-#             base = Path(os.getcwd()) / root
-#             if base.exists():
-#                 for kind_dir in base.iterdir():             # p.ej. wind/aqua/...
-#                     if not kind_dir.is_dir():
-#                         continue
-#                     for sid_dir in kind_dir.iterdir():      # p.ej. <session_id>/
-#                         if not sid_dir.is_dir():
-#                             continue
-#                         age = now - sid_dir.stat().st_mtime
-#                         if age > ttl:                       # carpeta “vieja”
-#                             shutil.rmtree(sid_dir, ignore_errors=True)
-#         except Exception:
-#             pass
-#         time.sleep(GC_INTERVAL_MIN * 60)
-#------------------------------------------------------------------------------------
+# Definimos cada cuanto tiempo se ejecuta el recolector para borrar las carpetas viejas:
+GC_INTERVAL_MIN = int(os.getenv("UPLOADS_GC_MIN", "30"))    # frecuencia en minutos
 
-app = create_app()  # instancia Dash/Flask
+# Funcion para borrar las carpetas viejas de uploads:
+def _gc_uploads_loop(root="uploads"):                       # bucle del recolector
+    ttl = TTL_HOURS * 3600
+    while True:
+        try:
+            now = time.time()
+            base = Path(os.getcwd()) / root
+            if base.exists():
+                for kind_dir in base.iterdir():             # p.ej. wind/aqua/...
+                    if not kind_dir.is_dir():
+                        continue
+                    for sid_dir in kind_dir.iterdir():      # p.ej. <session_id>/
+                        if not sid_dir.is_dir():
+                            continue
+                        age = now - sid_dir.stat().st_mtime
+                        if age > ttl:                       # carpeta “vieja”
+                            shutil.rmtree(sid_dir, ignore_errors=True)
+        except Exception:
+            pass
+        time.sleep(GC_INTERVAL_MIN * 60)
 
-#--------------  DELETE OLD SESSIONS -----------------
-# threading.Thread(target=_gc_uploads_loop, args=("uploads",), daemon=True).start()
-#-----------------------------------------------------
+# Creamos la instancia de la app dash/flask:
+app = create_app()  
+
+# Generamos un hilo daemos que se ejecuta en segundo plano que maneja las carpetas viejas:
+threading.Thread(target=_gc_uploads_loop, args=("uploads",), daemon=True).start()
+
 
 @app.server.route("/raster/<area>/<scenario>/<int:year>.png")  # endpoint de PNG
 def serve_reprojected_raster(area, scenario, year):  # servir PNG desde tif de clases

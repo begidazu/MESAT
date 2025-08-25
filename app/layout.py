@@ -116,8 +116,9 @@ def create_layout():  # definir función que construye el layout
                         ]
                     ),
 
-                    # almacén de sesión para recordar si se ocultó
+                    # almacén de sesión: recargar la pestaña no pierde la sesión, eliminarla y volver a abrir la app si. La sesion es un ID que se guarda en el navegador y se usa para recordad los uploads de cada sesion
                     dcc.Store(id="welcome-store", storage_type="session"),
+                    dcc.Store(id="session-id", storage_type="session"),
                     # almacen para guardar los poligonos dibujados por los susuarios sobre actividades economicas
                     dcc.Store(id="draw-meta", data={"layer": "wind", "color": "#f59e0b"}),
                     dcc.Store(id="draw-len", data=0),
