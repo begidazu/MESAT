@@ -38,11 +38,12 @@ COLOR = {
 
 
 
-
+# Clase base FORMS:
+UPLOAD_CLASS = "form-control form-control-lg"
 # Clase base del upload:
-BASE_UPLOAD_CLASS = "upload-as-input form-control form-control-sm"
+BASE_UPLOAD_CLASS = "form-control is-valid form-control-lg"
 # Clase para upload invalido:                 
-INVALID_UPLOAD_CLASS = BASE_UPLOAD_CLASS + " upload-invalid"                      
+INVALID_UPLOAD_CLASS = "form-control is-invalid form-control-lg"                      
 
 # Funcion para validar la extension del fichero subido por los usuarios:
 def _valid_ext(filename: str) -> bool:                                                
@@ -374,7 +375,8 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-wind-upload", "children", allow_duplicate=True),                                           
         Output("wind-farm-file-label", "children", allow_duplicate=True),
         Output("wind-farm-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("wind-farm-file", "contents"),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero                                     
+        Output("wind-farm-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("wind-farm-file", "className"),                                     
         Input("wind-file-store", "data"),                                                                       
         Input("mgmt-wind", "children"),                                                                         
         Input("wind-farm", "value"),                                                                            
@@ -392,15 +394,15 @@ def register_management_callbacks(app: dash.Dash):
                 _rm_tree(_session_dir("wind", sid))
             except Exception:
                 pass                                                                                             
-            return True, True, [], None, [], "Choose file: .json or .parquet", None, None                               
+            return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
 
         # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                              
         if file_present:                                                                                         
-            return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
+            return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update               
 
         # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
         has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
-        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update            
+        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update            
 
     # Callback que pinta el fichero en GeoJSON para los wind-farms (hacer lo mismo para las otras actividades y cambiar el color de los poligonos):
     @app.callback(                                                                                  
