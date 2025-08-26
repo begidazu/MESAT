@@ -1,7 +1,7 @@
 # management_callbacks.py
 import os, base64, uuid
 import dash
-from dash import Input, Output, State, no_update, html
+from dash import Input, Output, State, no_update, html, dcc
 from dash.exceptions import PreventUpdate
 import dash_leaflet as dl
 import json, time
@@ -372,7 +372,9 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-wind", "children", allow_duplicate=True),                                                  
         Output("wind-file-store", "data", allow_duplicate=True),                                                
         Output("mgmt-wind-upload", "children", allow_duplicate=True),                                           
-        Output("wind-farm-file-label", "children", allow_duplicate=True),                                     
+        Output("wind-farm-file-label", "children", allow_duplicate=True),
+        Output("wind-farm-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("wind-farm-file", "contents"),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero                                     
         Input("wind-file-store", "data"),                                                                       
         Input("mgmt-wind", "children"),                                                                         
         Input("wind-farm", "value"),                                                                            
@@ -390,15 +392,15 @@ def register_management_callbacks(app: dash.Dash):
                 _rm_tree(_session_dir("wind", sid))
             except Exception:
                 pass                                                                                             
-            return True, True, [], None, [], "Choose file: .json or .parquet"                                   
+            return True, True, [], None, [], "Choose file: .json or .parquet", None, None                               
 
         # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                              
         if file_present:                                                                                         
-            return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update                    
+            return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
 
         # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
         has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
-        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
+        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update            
 
     # Callback que pinta el fichero en GeoJSON para los wind-farms (hacer lo mismo para las otras actividades y cambiar el color de los poligonos):
     @app.callback(                                                                                  

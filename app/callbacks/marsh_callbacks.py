@@ -303,8 +303,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         children=html.Div(                                           # etiqueta visible
                                             id="wind-farm-file-label",                               # id del label
                                             children="Choose file: .json or .parquet"                # texto inicial
-                                        ),
-                                    ),
+                                            ),
+                                    )
 
                                 ]
                             ),
