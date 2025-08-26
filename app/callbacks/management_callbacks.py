@@ -396,8 +396,9 @@ def register_management_callbacks(app: dash.Dash):
         if file_present:                                                                                         
             return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update                    
 
-        # Caso 3: checklist marcado y NO hay fichero -> habilitar Draw y Upload                                  
-        return False, False, dash.no_update, dash.no_update, dash.no_update, dash.no_update                      
+        # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
+        has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
+        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
 
     # Callback que pinta el fichero en GeoJSON para los wind-farms (hacer lo mismo para las otras actividades y cambiar el color de los poligonos):
     @app.callback(                                                                                  
@@ -438,7 +439,8 @@ def register_management_callbacks(app: dash.Dash):
             )
             return [layer]                                                                           # devolver lista con la capa
         except Exception:                                                                             
-            return []                                                                                
+            return []         
+
 
 
 
