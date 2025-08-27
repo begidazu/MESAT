@@ -214,7 +214,7 @@ def register_management_callbacks(app: dash.Dash):
     # 3) Pintamos los poligonos en el mapa y los almacenamos en el FeatureGrop correspondiente cuando el usuario acaba un poligono. Tambien limpiamos los FeatureGroup si el trigger fue un checklist.
     @app.callback(
         Output("mgmt-wind", "children"),
-        Output("mgmt-aqua", "children"),
+        Output("mgmt-aquaculture", "children"),
         Output("mgmt-vessel", "children"),
         Output("mgmt-defence", "children"),
         Output("draw-len", "data"),
@@ -227,7 +227,7 @@ def register_management_callbacks(app: dash.Dash):
         State("draw-len", "data"),
         State("draw-meta", "data"),
         State("mgmt-wind", "children"),
-        State("mgmt-aqua", "children"),
+        State("mgmt-aquaculture", "children"),
         State("mgmt-vessel", "children"),
         State("mgmt-defence", "children"),
         prevent_initial_call=True
@@ -312,6 +312,8 @@ def register_management_callbacks(app: dash.Dash):
             raise PreventUpdate
         return uuid.uuid4().hex
 
+
+#--------------------------------------------------------- LOGIC OF DRAW AND UPLOAD BUTTONS OF THE MANAGEMENT SCENARIOS ------------------------------------------------------------------------------------------
 
     # Si el fichero no tiene la extension que queremos escribimos que no es valido, si es valido se guarda y se convierte a GeoJSON para ponerlo en el mapa (WIND):
     @app.callback(
@@ -563,12 +565,6 @@ def register_management_callbacks(app: dash.Dash):
             return []         
 
 
-
-
-
-
-
-
     # Si el fichero no tiene la extension que queremos escribimos que no es valido, si es valido se guarda y se convierte a GeoJSON para ponerlo en el mapa (VESSEL ROUTES):
     @app.callback(
         Output("vessel-file-label", "children", allow_duplicate=True),
@@ -693,5 +689,132 @@ def register_management_callbacks(app: dash.Dash):
             )
             return [layer]                                                                           # devolver lista con la capa
         except Exception:                                                                             
-            return []       
+            return []
 
+    # Si el fichero no tiene la extension que queremos escribimos que no es valido, si es valido se guarda y se convierte a GeoJSON para ponerlo en el mapa (DEFENCE):
+    @app.callback(
+        Output("defence-file-label", "children", allow_duplicate=True),
+        Output("defence-file", "className", allow_duplicate=True),
+        Output("defence-file-store", "data", allow_duplicate=True),
+        Input("defence-file", "filename"),
+        Input("defence-file", "contents"),
+        State("defence-file-store", "data"),
+        State("session-id", "data"),
+        prevent_initial_call=True
+    )
+    def on_upload_defence(filename, contents, prev_store, sid):
+        if not filename:
+            raise PreventUpdate
+        label_text = filename
+        if not _valid_ext(filename):
+            return label_text, INVALID_UPLOAD_CLASS, {"valid": False, "reason": "bad_extension"}
+        if not contents:
+            return label_text, BASE_UPLOAD_CLASS, no_update
+        try:
+            sid = sid if isinstance(sid, str) and sid else None
+            out_path = _save_upload_to_disk(contents, filename, "defence", sid)
+            # eliminar fichero previo de ESTA sesión si existía
+            try:
+                if isinstance(prev_store, dict) and prev_store.get("valid"):
+                    old_path = prev_store.get("path")
+                    if old_path and Path(old_path).exists() and sid in Path(old_path).parts:
+                        Path(old_path).unlink(missing_ok=True)
+            except Exception:
+                pass
+            payload = {
+                "valid": True,
+                "kind": "defence",
+                "filename": filename,
+                "ext": os.path.splitext(filename)[1].lower(),
+                "path": out_path,
+                "ts": int(time.time()),
+                "sid": sid
+            }
+            return label_text, BASE_UPLOAD_CLASS, payload
+        except Exception as e:
+            return f"{filename} — error: {e}", INVALID_UPLOAD_CLASS, {"valid": False, "error": str(e)}
+        
+    
+
+    # Sincronizos la UI para que si hay un fichero subido por el usuario se deshabiliten el boton DRAW y el Upload, limpiar GeoJSON al deseleccionar checklist, restaurar texto del Upload, etc. (DEFENCE)
+    @app.callback(                                                                                              
+        Output("defence-draw", "disabled", allow_duplicate=True),                                            
+        Output("defence-file", "disabled", allow_duplicate=True),                                             
+        Output("mgmt-defence", "children", allow_duplicate=True),                                                  
+        Output("defence-file-store", "data", allow_duplicate=True),                                                
+        Output("mgmt-defence-upload", "children", allow_duplicate=True),                                           
+        Output("defence-file-label", "children", allow_duplicate=True),
+        Output("defence-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("defence-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("defence-file", "className"),                                     
+        Input("defence-file-store", "data"),                                                                       
+        Input("mgmt-defence", "children"),                                                                         
+        Input("defence", "value"),                                                                            
+        State("session-id", "data"),
+        prevent_initial_call=True                                                                              
+    )
+    def sync_defence_ui(store, drawn_children, aqua_checked, sid):                                                
+        selected = bool(aqua_checked)                                                                           
+        file_present = isinstance(store, dict) and store.get("valid") is True                                   
+
+        # Caso 1: checklist desmarcado -> limpiar Store y polígonos, y dejar controles deshabilitados            
+        if not selected:
+            # borrar toda la carpeta de la sesión para wind
+            try:
+                _rm_tree(_session_dir("defence", sid))
+            except Exception:
+                pass                                                                                             
+            return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
+
+        # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                              
+        if file_present:                                                                                         
+            return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update               
+
+        # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
+        has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
+        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+    
+
+
+    # Callback que pinta el fichero en GeoJSON para los wind-farms (hacer lo mismo para las otras actividades y cambiar el color de los poligonos): (DEFENCE)
+    @app.callback(                                                                                  
+        Output("mgmt-defence-upload", "children"),                                                     # salida: capa pintada en el mapa
+        Input("defence-file-store", "data"),                                                           # entrada: cambios en el Store de wind
+        prevent_initial_call=True                                                                   
+    )
+    def paint_defence_uploaded(data):                                                                  
+        if not data or not isinstance(data, dict):                                                  
+            raise PreventUpdate                                                                      # no actualizar si no hay nada
+        if not data.get("valid"):                                                                   
+            return []                                                                                # limpiar capa si hubo intento inválido
+
+        path = data.get("path")                                                                      # ruta del archivo guardado en la carpeta de la sesion
+        ext  = (data.get("ext") or "").lower()                                                      
+
+        # estilo común para polígonos/líneas (Leaflet aplicará estilo a features no puntuales)       
+        style = dict(color="#e74c3c", weight=3, fillColor="#e74c3c", fillOpacity=0.4)               # estilo Wind
+
+        try:                                                                                         # intentar construir GeoJSON en memoria
+            if ext == ".json":                                                                       # caso GeoJSON directo
+                with open(path, "r", encoding="utf-8") as f:                                         # abrir fichero json
+                    geo = json.load(f)                                                               # cargar a dict
+            elif ext == ".parquet":                                                                  # caso Parquet -> GeoJSON
+                geo = _to_geojson_from_parquet(path)                                                 # convertir parquet a GeoJSON dict
+            else:                                                                                    # extensión no soportada
+                return []                                                                            # no pintamos nada
+
+            # proteger contra colecciones vacías para evitar zoom no deseado                        
+            if not isinstance(geo, dict) or not geo.get("features"):                                 
+                return []                                                                            
+
+            layer = dl.GeoJSON(                                                                      # crear capa GeoJSON
+                data=geo,                                                                            # pasar dict geojson
+                zoomToBounds=True,                                                                   # ajustar mapa al contenido
+                options=dict(style=style),                                                           # estilo para polígonos/líneas
+                id=f"defence-upload-{data.get('ts', 0)}"                                                # id único por timestamp
+            )
+            return [layer]                                                                           # devolver lista con la capa
+        except Exception:                                                                             
+            return []        
+
+# -------------------------------------------- END LOGIC MANAGEMENT SCENARIOS DRAW AND UPLOAD ----------------------------------------------------------------------------------
