@@ -301,10 +301,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         accept="",                                                   # ← permitir cualquier tipo (validamos en callback)
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",    # clases base (borde, etc.)
-                                        children=html.Div(                                           # etiqueta visible
-                                            id="wind-farm-file-label",                               # id del label
-                                            children="Choose json or parquet file"  # texto inicial
-                                            )
+                                        children=html.Div(id="wind-farm-file-label")                 # etiqueta visible                                                                                                                 
                                     )
 
                                 ]
@@ -327,10 +324,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         accept="",
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",
-                                        children=html.Div(
-                                            id="aquaculture-file-label",
-                                            children = "Choose json or parquet file"
-                                            )                                       
+                                        children=html.Div(id="aquaculture-file-label")                                       
                                         )
                                 ]
                             ),
@@ -352,10 +346,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         accept="",
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",
-                                        children=html.Div(
-                                            id="vessel-file-label",
-                                            children = "Choose json or parquet file"
-                                            )                                        
+                                        children=html.Div(id="vessel-file-label")                                        
                                         )
                                 ]
                             ),
@@ -377,10 +368,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         accept="",
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",
-                                        children=html.Div(
-                                            id="defence-file-label",
-                                            children = "Choose json or parquet file"
-                                            )                                        
+                                        children=html.Div(id="defence-file-label")                                        
                                         )
                                 ]
                             ),
