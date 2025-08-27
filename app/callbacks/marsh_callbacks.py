@@ -304,7 +304,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         children=html.Div(                                           # etiqueta visible
                                             id="wind-farm-file-label",                               # id del label
                                             children="Choose json or parquet file"  # texto inicial
-                                            ),
+                                            )
                                     )
 
                                 ]
@@ -321,9 +321,17 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     ),
                                     html.Button("Draw", id='aquaculture-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-success', style={'width': '100%'}),
-                                    dcc.Input(id='aquaculture-file', type="file",
-                                            className="form-control", disabled=True,
-                                            style={'width': '100%', 'marginLeft': '25px'})
+                                    dcc.Upload(
+                                        id='aquaculture-file', 
+                                        multiple=False,
+                                        accept="",
+                                        style={'width': '100%', 'marginLeft': '25px'},
+                                        className="upload-as-input form-control form-control-lg",
+                                        children=html.Div(
+                                            id="aquaculture-file-label",
+                                            children = "Choose json or parquet file"
+                                            )                                       
+                                        )
                                 ]
                             ),
 
@@ -338,9 +346,17 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     ),
                                     html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-info', style={'width': '100%'}),
-                                    dcc.Input(id='vessel-file', type="file",
-                                            className="form-control", disabled=True,
-                                            style={'width': '100%', 'marginLeft': '25px'})
+                                    dcc.Upload(
+                                        id='vessel-file',
+                                        multiple=False,
+                                        accept="",
+                                        style={'width': '100%', 'marginLeft': '25px'},
+                                        className="upload-as-input form-control form-control-lg",
+                                        children=html.Div(
+                                            id="vessel-file-label",
+                                            children = "Choose json or parquet file"
+                                            )                                        
+                                        )
                                 ]
                             ),
 
@@ -355,9 +371,17 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     ),
                                     html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-danger', style={'width': '100%'}),
-                                    dcc.Input(id='defence-file', type="file",
-                                            className="form-control", disabled=True,
-                                            style={'width': '100%', 'marginLeft': '25px'})
+                                    dcc.Upload(
+                                        id='defence-file',
+                                        multiple=False,
+                                        accept="",
+                                        style={'width': '100%', 'marginLeft': '25px'},
+                                        className="upload-as-input form-control form-control-lg",
+                                        children=html.Div(
+                                            id="defence-file-label",
+                                            children = "Choose json or parquet file"
+                                            )                                        
+                                        )
                                 ]
                             ),
                         ]

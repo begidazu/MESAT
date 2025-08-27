@@ -57,14 +57,15 @@ def create_layout():  # definir función que construye el layout
                                     
                                     # Layers where we store the management polygons
                                     dl.FeatureGroup(id="mgmt-wind", children=[]),
-                                    dl.FeatureGroup(id="mgmt-aqua", children=[]),
+                                    dl.FeatureGroup(id="mgmt-aquaculture", children=[]),
                                     dl.FeatureGroup(id="mgmt-vessel", children=[]),
                                     dl.FeatureGroup(id="mgmt-defence", children=[]),
 
                                     # Layers where we store the uploaded files:
                                     dl.FeatureGroup(id="mgmt-wind-upload", children=[]),  # capa para los datos subidos (Wind)
-
-
+                                    dl.FeatureGroup(id="mgmt-aquaculture-upload", children=[]),  # capa para los datos subidos (Aquaculture)
+                                    dl.FeatureGroup(id="mgmt-vessel-upload", children=[]),# capa para los datos subidos (Vessel Routes)
+                                    dl.FeatureGroup(id="mgmt-defence-upload", children=[])# capa para los datos subidos (Defence)
 
                                 ]
                             ),
@@ -124,7 +125,7 @@ def create_layout():  # definir función que construye el layout
                     dcc.Store(id="draw-len", data=0),
                     # almacen para guardar los ficheros subidos por actividad economica
                     dcc.Store(id="wind-file-store"),                           # store para Wind Farm
-                    dcc.Store(id="aqua-file-store"),                           # store para Aquaculture
+                    dcc.Store(id="aquaculture-file-store"),                    # store para Aquaculture
                     dcc.Store(id="vessel-file-store"),                         # store para Vessel Route
                     dcc.Store(id="defence-file-store"),                        # store para Defence
 
