@@ -631,7 +631,7 @@ def register_management_callbacks(app: dash.Dash):
         State("session-id", "data"),
         prevent_initial_call=True                                                                              
     )
-    def sync_aqua_ui(store, drawn_children, aqua_checked, sid):                                                
+    def sync_vessel_ui(store, drawn_children, aqua_checked, sid):                                                
         selected = bool(aqua_checked)                                                                           
         file_present = isinstance(store, dict) and store.get("valid") is True                                   
 
@@ -660,7 +660,7 @@ def register_management_callbacks(app: dash.Dash):
         Input("vessel-file-store", "data"),                                                           # entrada: cambios en el Store de wind
         prevent_initial_call=True                                                                   
     )
-    def paint_aqua_uploaded(data):                                                                  
+    def paint_vessel_uploaded(data):                                                                  
         if not data or not isinstance(data, dict):                                                  
             raise PreventUpdate                                                                      # no actualizar si no hay nada
         if not data.get("valid"):                                                                   
