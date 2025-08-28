@@ -37,16 +37,12 @@ def create_grid(gdf = None, bounds=None, grid_size = 100):
     returns: a GeoDataFrame of grid polygons
     see https://james-brennan.github.io/posts/fast_gridding_geopandas/
     """
-    
     # bounds:
     xmin, ymin, xmax, ymax= bounds
-
     # cell size
     cell_size = grid_size
-
     # Geodataframe CRS:
     crs = gdf.crs
-
     # create the cells in a loop
     grid_cells = []
     for x0 in np.arange(xmin, xmax+cell_size, cell_size ):
@@ -56,13 +52,23 @@ def create_grid(gdf = None, bounds=None, grid_size = 100):
             poly = shapely.geometry.box(x0, y0, x1, y1)
             #print (gdf.overlay(poly, how='intersection'))
             grid_cells.append( poly )
-
-    cells = gpd.GeoDataFrame(grid_cells, columns=['geometry'],
-                                     crs=crs)
+    cells = gpd.GeoDataFrame(grid_cells, columns=['geometry'], crs=crs)
     return cells
 
+# Funcion para quedarnos con los poligonos de un Geodataframe que intersecan con otro Geodataframe
+def keep_intersecting(gdf1: gpd.GeoDataFrame, gdf2: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    # 1) Sanea geometrías (evita TopologyException)
+    g1 = gdf1.copy()
+    g2 = gdf2.copy()
+    g1["geometry"] = g1.geometry.buffer(0)
+    g2["geometry"] = g2.geometry.buffer(0)
+
+    # 2) Une espacialmente y conserva índices únicos de la izquierda
+    hits = gpd.sjoin(g1, g2[["geometry"]], how="inner", predicate="intersects")
+    return g1.loc[hits.index.unique()].copy() 
 
 
+# --------------------- EVA Assessment Questions ----------------------------------------------------
 def aq1(
      aoi: str,                      # ruta al area de interes (json o parquet)
      #species: List[str],            # list of Worms species ID  or species name
@@ -97,7 +103,9 @@ def aq1(
     grid = create_grid(gdf = gdf_m, bounds=bounds, grid_size= grid_size)
 
     # Clean the grid saving those grids that intersect with the aoi:
-    
+    filtered_grid = keep_intersecting(grid, gdf_m)
+
+    filtered_grid.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cleaned_grid.shp")
     
 
     #print(f"Min longitude: {min_x}; Min latitude {min_y}; Max longitude: {max_x}; Max latitude: {max_y}")
