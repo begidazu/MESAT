@@ -142,7 +142,7 @@ def aq1(
      aoi: str,                       # ruta al area de interes (json o parquet)
      species: List[str],             # list of species names
      grid_size: int,                  # size of the rectangular grid in meters  
-     #min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
+     min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
      #cut_lrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
      span_years: int                  # Time span of the occurrence data for the assesment in years
     ) -> json:
@@ -177,25 +177,25 @@ def aq1(
     # Clean the grid saving those grids that intersect with the aoi:
     filtered_grid = keep_intersecting(grid, gdf_m)
 
-    # Download the species occurrence data from pyobis (we will use the occurrence data of the last 10 years):
+    filtered_grid.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\filtered_grid.shp")
+
+    # Set up the occurrence data start and end date:
     end_date = datetime.now()
     start_date = end_date - relativedelta(years=span_years)
 
-        # Dissolve AOI and normalize to MultiPolygon and get the wkt:
-    # gdf_m_wgs = gdf_m.to_crs(epsg=4326)
-    # geom_all = gdf_m_wgs.geometry.union_all() if hasattr(gdf_m_wgs.geometry, "union_all") else gdf_m_wgs.unary_union
-    # mp = to_multipolygon(geom_all)
-    
+    # Convert Area of Interest to 4326 EPSG as obis data is mainly on that Coordinate System. Also simplify the polygon.
     from shapely.wkt import dumps as wkt_dumps
     aoi_gdf = aoi_gdf.to_crs(epsg=4326)
     geom = aoi_gdf.geometry.iloc[0]
     geom_s = geom.simplify(0.005, preserve_topology=True)
     wkt_str = wkt_dumps(geom_s, rounding_precision=6)
     
-        # Download accourrences
+    # Bucle para iterar sobre la lista de especies y definir si son LRF o no:
+
+
+        # Download the species occurrence data from pyobis (we will use the occurrence data of the last 10 years):
     occ_data = occurrences.search(scientificname=species, geometry=wkt_str, startdate=start_date.strftime("%Y-%m-%d"), enddate=end_date.strftime("%Y-%m-%d")).execute()
-    print(occ_data)
-    print(occ_data.columns)
+
     # Drop duplicates and keep just the fields 'scientificName', 'geodeicDatum' (Coordinate System), 'datasetID', Latitude and Longitude
     fil_occ_data = occ_data.drop_duplicates(subset=["decimalLatitude", "decimalLongitude"], keep="first")
     fil_occ_data = fil_occ_data[["scientificName", "datasetID", "decimalLatitude", "decimalLongitude"]]
@@ -212,7 +212,23 @@ def aq1(
     # Project the occ_gdf into the aoi CRS:
     occ_gdf_proj = occ_gdf.to_crs(metric_crs)
 
+    # Save the occurrence data:
     occ_gdf_proj.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\test_occurrence.shp")
+
+    # Grid intersecting with occurrence:
+    intersect = gpd.sjoin(filtered_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
+    occ_grid = filtered_grid.loc[intersect.index.unique()].copy()
+
+    # If the percentage is less than the threshold to do the assessment pass:
+    print(f"Numero de grids:{len(filtered_grid)}; Numero de grids con occurrence data: {len(occ_grid)}")
+    if ((len(occ_grid)/len(filtered_grid))*100) < min_grid_per:
+        print("El porcentaje de celdas con datos es demasiado pequeno para hacer el assessment. Continuamos con la siguinte especie!")
+        pass
+    elif ((len(occ_grid)/len(filtered_grid))*100) >= min_grid_per:
+        print("El porcentaje de celdas con datos es adecuado, la especie se incluye en el assessment")
+
+
+    occ_grid.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\grid_occurrence.shp")
 
     #print(f"Min longitude: {min_x}; Min latitude {min_y}; Max longitude: {max_x}; Max latitude: {max_y}")
 
@@ -221,4 +237,4 @@ def aq1(
 
     return print(json.dumps("//"))
 
-aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", ["Spartina", "Juncus"], 3000, 50)
+aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", "Spartina", grid_size=3000, min_grid_per=5, span_years=50)
