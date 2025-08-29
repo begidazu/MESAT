@@ -191,44 +191,50 @@ def aq1(
     wkt_str = wkt_dumps(geom_s, rounding_precision=6)
     
     # Bucle para iterar sobre la lista de especies y definir si son LRF o no:
+    for specie in species:
+
+        # Intentamos bajarnos los datos, si no hay datos de esa especie pasamos a la siguiente especie:
+        try:
+            # Download the species occurrence data from pyobis (we will use the occurrence data of the last 10 years):
+            occ_data = occurrences.search(scientificname=specie, geometry=wkt_str, startdate=start_date.strftime("%Y-%m-%d"), enddate=end_date.strftime("%Y-%m-%d")).execute()
+            print(occ_data.columns)
+
+            # Drop duplicates and keep just the fields 'scientificName', 'geodeicDatum' (Coordinate System), 'datasetID', Latitude and Longitude
+            fil_occ_data = occ_data.drop_duplicates(subset=["decimalLatitude", "decimalLongitude"], keep="first")
+            filtered_occ_data = fil_occ_data[["scientificName", "datasetID", "decimalLatitude", "decimalLongitude"]]
+
+            # Create geometry of the occurrence data
+            geometry = [Point(xy) for xy in zip(filtered_occ_data['decimalLongitude'], filtered_occ_data['decimalLatitude'])]
+
+            # Create the occurrence geodataframe:
+            occ_gdf = gpd.GeoDataFrame(filtered_occ_data, geometry=geometry)
+
+            # Establish the Coordinate System to EPSG:4326 (it has to be equal to geodeticDatum):
+            occ_gdf.set_crs("EPSG:4326", allow_override=True, inplace=True)
+
+            # Project the occ_gdf into the aoi CRS:
+            occ_gdf_proj = occ_gdf.to_crs(metric_crs)
+
+            # Save the occurrence data:
+            #occ_gdf_proj.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\test_occurrence.shp")
+
+            # Grid intersecting with occurrence:
+            intersect = gpd.sjoin(filtered_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
+            occ_grid = filtered_grid.loc[intersect.index.unique()].copy()
+
+            # If the percentage is less than the threshold to do the assessment pass:
+            print(f"Numero de grids {specie}:{len(filtered_grid)}; Numero de grids con occurrence data {specie}: {len(occ_grid)}")
+            if ((len(occ_grid)/len(filtered_grid))*100) < min_grid_per:
+                print(f"El porcentaje de celdas con datos es demasiado pequeno para hacer el assessment con {specie}. Continuamos con la siguinte especie!")
+                pass
+            elif ((len(occ_grid)/len(filtered_grid))*100) >= min_grid_per:
+                print(f"El porcentaje de celdas con datos es adecuado, la especie {specie} se incluye en el assessment")
+
+        except KeyError:
+            pass
 
 
-        # Download the species occurrence data from pyobis (we will use the occurrence data of the last 10 years):
-    occ_data = occurrences.search(scientificname=species, geometry=wkt_str, startdate=start_date.strftime("%Y-%m-%d"), enddate=end_date.strftime("%Y-%m-%d")).execute()
-
-    # Drop duplicates and keep just the fields 'scientificName', 'geodeicDatum' (Coordinate System), 'datasetID', Latitude and Longitude
-    fil_occ_data = occ_data.drop_duplicates(subset=["decimalLatitude", "decimalLongitude"], keep="first")
-    fil_occ_data = fil_occ_data[["scientificName", "datasetID", "decimalLatitude", "decimalLongitude"]]
-
-    # Create geometry of the occurrence data
-    geometry = [Point(xy) for xy in zip(fil_occ_data['decimalLongitude'], fil_occ_data['decimalLatitude'])]
-
-    # Create the occurrence geodataframe:
-    occ_gdf = gpd.GeoDataFrame(fil_occ_data, geometry=geometry)
-
-    # Establish the Coordinate System to EPSG:4326 (it has to be equal to geodeticDatum):
-    occ_gdf.set_crs("EPSG:4326", allow_override=True, inplace=True)
-
-    # Project the occ_gdf into the aoi CRS:
-    occ_gdf_proj = occ_gdf.to_crs(metric_crs)
-
-    # Save the occurrence data:
-    occ_gdf_proj.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\test_occurrence.shp")
-
-    # Grid intersecting with occurrence:
-    intersect = gpd.sjoin(filtered_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
-    occ_grid = filtered_grid.loc[intersect.index.unique()].copy()
-
-    # If the percentage is less than the threshold to do the assessment pass:
-    print(f"Numero de grids:{len(filtered_grid)}; Numero de grids con occurrence data: {len(occ_grid)}")
-    if ((len(occ_grid)/len(filtered_grid))*100) < min_grid_per:
-        print("El porcentaje de celdas con datos es demasiado pequeno para hacer el assessment. Continuamos con la siguinte especie!")
-        pass
-    elif ((len(occ_grid)/len(filtered_grid))*100) >= min_grid_per:
-        print("El porcentaje de celdas con datos es adecuado, la especie se incluye en el assessment")
-
-
-    occ_grid.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\grid_occurrence.shp")
+        #occ_grid.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\grid_occurrence.shp")
 
     #print(f"Min longitude: {min_x}; Min latitude {min_y}; Max longitude: {max_x}; Max latitude: {max_y}")
 
@@ -237,4 +243,4 @@ def aq1(
 
     return print(json.dumps("//"))
 
-aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", "Spartina", grid_size=3000, min_grid_per=5, span_years=50)
+aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", ["Spartina", "Anas", "Halimione"], grid_size=3000, min_grid_per=5, span_years=50)
