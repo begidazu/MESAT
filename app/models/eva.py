@@ -43,7 +43,6 @@ def create_grid(gdf = None, bounds=None, grid_size = 100):
     """Create square grid that covers a geodataframe area
     or a fixed boundary with x-y coords
     returns: a GeoDataFrame of grid polygons
-    see https://james-brennan.github.io/posts/fast_gridding_geopandas/
     """
     # bounds:
     xmin, ymin, xmax, ymax= bounds
@@ -145,7 +144,7 @@ def aq1(
      min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
      cut_lrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
      span_years: int                  # Time span of the occurrence data for the assesment in years
-    ) -> json:
+    ) -> gpd.GeoDataFrame:
 
     # We add a conditional to check file format
     if not (aoi.endswith(".json") or aoi.endswith(".parquet") or aoi.endswith(".geojson")):
@@ -193,6 +192,9 @@ def aq1(
     # Array to store the Locally Rare Species:
     lrs_array = []
 
+    # Create a column where we will aggregate the EV values of Locally Rare Species:
+    filtered_grid["aggregation"] = 0
+
     # Bucle para iterar sobre la lista de especies y definir si son LRF o no:
     for specie in species:
 
@@ -217,9 +219,6 @@ def aq1(
             # Project the occ_gdf into the aoi CRS:
             occ_gdf_proj = occ_gdf.to_crs(metric_crs)
 
-            # Save the occurrence data:
-            #occ_gdf_proj.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\test_occurrence.shp")
-
             # Grid intersecting with occurrence:
             intersect = gpd.sjoin(filtered_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
             occ_grid = filtered_grid.loc[intersect.index.unique()].copy()
@@ -231,11 +230,17 @@ def aq1(
                 pass
             elif ((len(occ_grid)/len(filtered_grid))*100) >= min_grid_per:
                 print(f"El porcentaje de celdas con datos es adecuado, la especie {specie} se incluye en el assessment")
+                pass
 
             # Check if the species is Locally Rare Species or not based on the threshold passed by the user:
             if ((len(occ_grid)/len(filtered_grid))*100) < cut_lrf:
                 print(f"La especie/taxon {specie} es Locally Rare Feature!")
                 lrs_array.append(specie)
+
+                # Add a value of 5 into a column 'aggregation' where the the especies is present
+                filtered_grid.loc[occ_grid.index, "aggregation"] += 5
+                pass
+
             elif ((len(occ_grid)/len(filtered_grid))*100) >= cut_lrf:
                 print(f"La especie/taxon {specie} NO es Locally Rare Feature!")
                 pass
@@ -243,14 +248,10 @@ def aq1(
         except KeyError:
             pass
 
-    print(lrs_array)
-        #occ_grid.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\grid_occurrence.shp")
+    # Average the value with the number of Locally Rare Features
+    filtered_grid['aq1'] = filtered_grid["aggregation"]/len(lrs_array)
 
-    #print(f"Min longitude: {min_x}; Min latitude {min_y}; Max longitude: {max_x}; Max latitude: {max_y}")
+    return filtered_grid
 
-    # Create a regular grid with the bbox coordinates and the gridsize passed by the user:
+aq1_gdf = aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", ["Spartina", "Anas", "Halimione"], grid_size=3000, min_grid_per=5, cut_lrf=30, span_years=50)
 
-
-    return print(json.dumps("//"))
-
-aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", ["Spartina", "Anas", "Halimione"], grid_size=3000, min_grid_per=5, cut_lrf=10, span_years=50)
