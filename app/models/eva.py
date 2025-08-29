@@ -143,7 +143,7 @@ def aq1(
      species: List[str],             # list of species names
      grid_size: int,                  # size of the rectangular grid in meters  
      min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
-     #cut_lrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
+     cut_lrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
      span_years: int                  # Time span of the occurrence data for the assesment in years
     ) -> json:
 
@@ -190,6 +190,9 @@ def aq1(
     geom_s = geom.simplify(0.005, preserve_topology=True)
     wkt_str = wkt_dumps(geom_s, rounding_precision=6)
     
+    # Array to store the Locally Rare Species:
+    lrs_array = []
+
     # Bucle para iterar sobre la lista de especies y definir si son LRF o no:
     for specie in species:
 
@@ -197,7 +200,6 @@ def aq1(
         try:
             # Download the species occurrence data from pyobis (we will use the occurrence data of the last 10 years):
             occ_data = occurrences.search(scientificname=specie, geometry=wkt_str, startdate=start_date.strftime("%Y-%m-%d"), enddate=end_date.strftime("%Y-%m-%d")).execute()
-            print(occ_data.columns)
 
             # Drop duplicates and keep just the fields 'scientificName', 'geodeicDatum' (Coordinate System), 'datasetID', Latitude and Longitude
             fil_occ_data = occ_data.drop_duplicates(subset=["decimalLatitude", "decimalLongitude"], keep="first")
@@ -230,10 +232,18 @@ def aq1(
             elif ((len(occ_grid)/len(filtered_grid))*100) >= min_grid_per:
                 print(f"El porcentaje de celdas con datos es adecuado, la especie {specie} se incluye en el assessment")
 
+            # Check if the species is Locally Rare Species or not based on the threshold passed by the user:
+            if ((len(occ_grid)/len(filtered_grid))*100) < cut_lrf:
+                print(f"La especie/taxon {specie} es Locally Rare Feature!")
+                lrs_array.append(specie)
+            elif ((len(occ_grid)/len(filtered_grid))*100) >= cut_lrf:
+                print(f"La especie/taxon {specie} NO es Locally Rare Feature!")
+                pass
+
         except KeyError:
             pass
 
-
+    print(lrs_array)
         #occ_grid.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\grid_occurrence.shp")
 
     #print(f"Min longitude: {min_x}; Min latitude {min_y}; Max longitude: {max_x}; Max latitude: {max_y}")
@@ -243,4 +253,4 @@ def aq1(
 
     return print(json.dumps("//"))
 
-aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", ["Spartina", "Anas", "Halimione"], grid_size=3000, min_grid_per=5, span_years=50)
+aq1(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test.geojson", ["Spartina", "Anas", "Halimione"], grid_size=3000, min_grid_per=5, cut_lrf=10, span_years=50)
