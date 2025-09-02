@@ -819,8 +819,7 @@ def register_management_callbacks(app: dash.Dash):
 
 # -------------------------------------------- END LOGIC MANAGEMENT SCENARIOS DRAW AND UPLOAD ----------------------------------------------------------------------------------
 
-# Function to zoom to management area:
-
+# Callback to zoom to management area:
     @app.callback(  # centrar/zoom por área
         Output("map", "viewport", allow_duplicate=True),
         Output("mgmt-reset-button", "disabled"),
@@ -865,7 +864,7 @@ def register_management_callbacks(app: dash.Dash):
 
         return {"center": center, "zoom": zoom}, False, new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence
     
-# Reset function:
+# Reset callback:
     @app.callback(
         Output("mgmt-study-area-dropdown", "value", allow_duplicate=True),
         Output("wind-farm", "value", allow_duplicate=True),
@@ -905,3 +904,29 @@ def register_management_callbacks(app: dash.Dash):
             True,           # deshabilitar botón reset
             new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence
         )
+    
+# Callback to enable run when any drawn or layer has a children:
+    @app.callback(
+        Output("mgmt-run-button", "disabled"),  # ← por si otro callback también lo toca
+        Input("mgmt-wind", "children"),
+        Input("mgmt-aquaculture", "children"),
+        Input("mgmt-vessel", "children"),
+        Input("mgmt-defence", "children"),
+        Input("mgmt-wind-upload", "children"),
+        Input("mgmt-aquaculture-upload", "children"),
+        Input("mgmt-vessel-upload", "children"),
+        Input("mgmt-defence-upload", "children"),
+        prevent_initial_call=False  # ← evalúa también al cargar para dejarlo deshabilitado si está vacío
+    )
+    def toggle_mgmt_run(*children_groups):
+        def has_items(c):                          # ← True si hay al menos un hijo
+            if c is None:
+                return False
+            if isinstance(c, list):
+                return len(c) > 0
+            if isinstance(c, dict):               # ← un único componente serializado
+                return True
+            return bool(c)
+
+        any_layer_has_data = any(has_items(c) for c in children_groups)
+        return not any_layer_has_data             # ← disabled = no hay datos
