@@ -20,6 +20,7 @@ try:                                                             # intentar impo
 except Exception:                                                # si no está disponible shapely
     shp_wkt = shp_wkb = mapping = Point = None
 
+from app.models.management_scenarios import eunis_available, saltmarsh_available
 
 # mapping de botones -> (layer_key, color)
 COLOR = {
@@ -167,37 +168,43 @@ def _to_geojson_from_parquet(path):
     return {"type": "FeatureCollection", "features": []}          # devolver vacío si no hay geometría detectable
 
 # Function to build tabs where we will store the management scenarios affection graphs:
-def _build_mgmt_tabs():  # crea 4 pestañas principales y 3 subpestañas en cada una
-    from dash import dcc, html  # usar imports locales para no romper tu cabecera
+def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):                   # ← recibe si EUNIS está habilitado
+    from dash import dcc, html                               # ← imports locales
 
-    def _subtabs(slug):  # slug: 'wind' | 'aquaculture' | 'vessel' | 'defence'
+    def _subtabs(slug):                                      # ← crea las 3 subpestañas
         return dcc.Tabs(
-            id=f"mgmt-{slug}-subtabs",
-            value="eunis",
+            id=f"mgmt-{slug}-subtabs",                       # ← id de subtabs
+            value="eunis",                                   # ← seleccion inicial
             children=[
-                dcc.Tab(label="EUNIS", value="eunis", style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[
-                    html.Div(id=f"mgmt-{slug}-eunis", children="(tabla EUNIS pendiente)")
-                ]),
-                dcc.Tab(label="Saltmarshes", value="saltmarshes", style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[
-                    html.Div(id=f"mgmt-{slug}-saltmarshes", children="(tabla Saltmarshes pendiente)")
-                ]),
-                dcc.Tab(label="Fish", value="fish", style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[
-                    html.Div(id=f"mgmt-{slug}-fish", children="(pendiente)")
-                ]),
+                dcc.Tab(                                     # ← subpestaña EUNIS
+                    label="EUNIS", value="eunis",
+                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    disabled=not eunis_enabled,              # ← bloquear si no hay EUNIS
+                    children=[html.Div(id=f"mgmt-{slug}-eunis", children="(tabla EUNIS)")]
+                ),
+                dcc.Tab(                                     # ← subpestaña Saltmarshes
+                    label="Saltmarshes", value="saltmarshes",
+                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    disabled= not saltmarsh_enabled,
+                    children=[html.Div(id=f"mgmt-{slug}-saltmarshes", children="(tabla Saltmarshes)")]
+                ),
+                dcc.Tab(                                     # ← subpestaña Fish
+                    label="Fish", value="fish",
+                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    children=[html.Div(id=f"mgmt-{slug}-fish", children="(pendiente)")]
+                ),
             ]
         )
 
-    return dcc.Tabs(
-        id="mgmt-main-tabs",
-        value="wind",
-        className="form-check",
+    return dcc.Tabs(                                         # ← pestañas principales (4 actividades)
+        id="mgmt-main-tabs", value="wind",
         children=[
-            dcc.Tab(label="Wind Farms",    value="wind", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},   children=[_subtabs("wind")]),
+            dcc.Tab(label="Wind Farms",    value="wind", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},    children=[_subtabs("wind")]),
             dcc.Tab(label="Aquaculture",   value="aquaculture", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[_subtabs("aquaculture")]),
             dcc.Tab(label="Vessel Routes", value="vessel", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},  children=[_subtabs("vessel")]),
             dcc.Tab(label="Defence",       value="defence", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[_subtabs("defence")]),
         ]
-    )
+    )  
 
 
 # Definis los callbacks que vienen de la app para el tab-management:
@@ -910,6 +917,7 @@ def register_management_callbacks(app: dash.Dash):
         Output("aquaculture", "options", allow_duplicate=True),
         Output("vessel", "options", allow_duplicate=True),
         Output("defence", "options", allow_duplicate=True),
+        Output("mgmt-table", "children", allow_duplicate=True),
         Input("mgmt-reset-button", "n_clicks"),
         State("wind-farm", "options"),
         State("aquaculture", "options"),
@@ -935,7 +943,7 @@ def register_management_callbacks(app: dash.Dash):
             [], [], [], [], # values de los 4 checklists
             default_view,   # viewport
             True,           # deshabilitar botón reset
-            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence
+            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, []
         )
     
 # Callback to enable run when any drawn or layer has a children:
@@ -967,10 +975,13 @@ def register_management_callbacks(app: dash.Dash):
 # Callback to execute the management scenarios when the user clicks on RUN button:
     @app.callback(
         Output("mgmt-table", "children"),
-        Input("mgmt-run-button", "n_clicks"),
+        Input("mgmt-run-button", "n_clicks"),              
+        State("mgmt-study-area-dropdown", "value"),    
         prevent_initial_call=True
     )
-    def show_mgmt_tabs(n):
-        if not n:
+    def show_mgmt_tabs(n, area):
+        if not (n and area):
             raise PreventUpdate
-        return _build_mgmt_tabs()
+        enabled = eunis_available(area)
+        saltmarsh_enabled = saltmarsh_available(area)
+        return _build_mgmt_tabs(enabled, saltmarsh_enabled)
