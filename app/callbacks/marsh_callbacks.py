@@ -278,10 +278,27 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
-                    html.Legend("What economic activity you want to establish?"),
+                    html.Legend("In wich study area you want to simulate?"),
+                    html.Div(
+                        style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
+                        children=dcc.Dropdown(
+                                id="mgmt-study-area-dropdown",  # id
+                                options=[  # opciones
+                                    {"label":"Santander Coast", "value": "Santander"},
+                                    {"label":"North Sea", "value":"North_Sea"},
+                                    {"label":"Irish Sea", "value": "Irish_Sea"},
+                                    {"label":"Urdaibai Estuary","value":"Urdaibai_Estuary"},
+                                    {"label":"Cadiz Bay","value":"Cadiz_Bay"},
+                                ],
+                                placeholder="Select Study Area",  # ayuda
+                                className='dropdown-text',  # clase css,
+                                searchable=False
+                        )
+                    ),
+                    html.Legend("What economic activity you want to establish?", style={'display':'flex', 'marginTop':'25px'}),
                     html.Div(
                         id='activity-checklist',
-                        style={'display': 'flex', 'flexDirection': 'column', 'gap': '10px', 'width': '100%'},
+                        style={'display': 'flex', 'flexDirection': 'column', 'gap': '15px', 'width': '100%'},
                         children=[
 
                             html.Div(
@@ -347,7 +364,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",
                                         children=html.Div(id="vessel-file-label")                                        
-                                        )
+                                    )
                                 ]
                             ),
 

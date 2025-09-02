@@ -818,3 +818,24 @@ def register_management_callbacks(app: dash.Dash):
             return []        
 
 # -------------------------------------------- END LOGIC MANAGEMENT SCENARIOS DRAW AND UPLOAD ----------------------------------------------------------------------------------
+
+# Function to zoom to management area:
+
+    @app.callback(  # centrar/zoom por área
+        Output("map", "viewport", allow_duplicate=True),
+        Input("mgmt-study-area-dropdown", "value"),
+        prevent_initial_call=True
+    )
+    def management_zoom(area):  # cambiar viewport
+        if not area:
+            raise PreventUpdate
+        mapping = {
+            "Santander": ([43.553269, -3.71836], 11),
+            "North_Sea": ([51.824025,  2.627373], 9),
+            "Irish_Sea": ([53.741164, -4.608093], 9),
+            "Urdaibai_Estuary": ([43.364580815052316, -2.67957208131426804], 14),
+            "Cadiz_Bay":        ([36.520874060327226, -6.203490800462997],  15)
+        }
+        center, zoom = mapping[area]
+        return {"center": center, "zoom": zoom}
+    
