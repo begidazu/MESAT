@@ -907,7 +907,7 @@ def register_management_callbacks(app: dash.Dash):
     
 # Callback to enable run when any drawn or layer has a children:
     @app.callback(
-        Output("mgmt-run-button", "disabled"),  # ← por si otro callback también lo toca
+        Output("mgmt-run-button", "disabled"),  # por si otro callback también lo toca
         Input("mgmt-wind", "children"),
         Input("mgmt-aquaculture", "children"),
         Input("mgmt-vessel", "children"),
@@ -916,17 +916,24 @@ def register_management_callbacks(app: dash.Dash):
         Input("mgmt-aquaculture-upload", "children"),
         Input("mgmt-vessel-upload", "children"),
         Input("mgmt-defence-upload", "children"),
-        prevent_initial_call=False  # ← evalúa también al cargar para dejarlo deshabilitado si está vacío
+        prevent_initial_call=False  # evalúa también al cargar para dejarlo deshabilitado si está vacío
     )
     def toggle_mgmt_run(*children_groups):
-        def has_items(c):                          # ← True si hay al menos un hijo
+        def has_items(c):                          # True si hay al menos un hijo
             if c is None:
                 return False
             if isinstance(c, list):
                 return len(c) > 0
-            if isinstance(c, dict):               # ← un único componente serializado
+            if isinstance(c, dict):               # un único componente serializado
                 return True
             return bool(c)
 
         any_layer_has_data = any(has_items(c) for c in children_groups)
-        return not any_layer_has_data             # ← disabled = no hay datos
+        return not any_layer_has_data             # disabled = no hay datos
+    
+# Callback to execute the management scenarios when the user clicks on RUN button:
+    # @app.callback(
+
+    # )
+    # def run_mgmt_scenarios():
+    #     return

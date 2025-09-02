@@ -190,7 +190,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     dcc.Loading(  # contenedor con spinner
                         id="loading-opsa",  # id
                         type="dot",  # tipo de spinner
-                        color='#103e95',
+                        color='#2c3e50',
                         children=[  # hijos
                             #html.Legend("Ocean Physical Stock Account compilation: summary by habitat type", className='mt-4', id='opsa-legend', hidden=True),
                             html.Div(id="opsa-chart", style={'marginTop':'20px'}),
@@ -315,7 +315,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     dcc.Upload(                                                      # componente para subir ficheros
                                         id="wind-farm-file",                                         # id del upload
                                         multiple=False,                                              # un único fichero
-                                        accept="",                                                   # ← permitir cualquier tipo (validamos en callback)
+                                        accept="",                                                   # permitir cualquier tipo (validamos en callback)
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",    # clases base (borde, etc.)
                                         children=html.Div(id="wind-farm-file-label")                 # etiqueta visible                                                                                                                 
@@ -411,7 +411,40 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             )
                         ]
                     ),
-
+                    dcc.Loading(
+                        id="loading'mgmt",
+                        type="dot",
+                        color='#2c3e50',
+                        children=[
+                            html.Legend("Economic activities affection to ecosystems", className="mt-4", id="mgmt-legend-affection", hidden=True),
+                            html.Div(id="mgmt-table", style={'marginTop': '20px'}),
+                            html.Div(
+                                id='mgmt-button-bar',
+                                style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},
+                                children=[
+                                    html.Button(  # botón info
+                                        [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Management scenarios info")],  
+                                        id='mgmt-info-button',  # id
+                                        className='btn btn-outline-primary',
+                                        hidden=True,  # oculto al inicio
+                                        n_clicks=0  # contador
+                                    ),
+                                    html.Div(  # contenedor de descarga
+                                        [
+                                            html.Button(  # botón de descarga
+                                                [html.Img(src='/assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")], 
+                                                id='mgmt-results',  # id
+                                                hidden=True,  # oculto al inicio
+                                                n_clicks=0,  # contador
+                                                className='btn btn-outline-primary'
+                                            ),
+                                            dcc.Download(id='mgmt-download')  # componente de descarga
+                                        ]
+                                    )
+                                ]
+                            )
+                        ]   
+                    )
                 ], style={'padding':'20px'})
 
         elif tab == 'tab-saltmarsh':
@@ -491,7 +524,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     dcc.Loading(  # contenedor con spinner
                         id="loading",  # id
                         type="dot",  # tipo de spinner
-                        color='#103e95',
+                        color='#2c3e50',
                         children=[  # hijos
                             html.Legend("Habitat distribution and accretion statistics", className='mt-4', id='saltmarsh-legend', hidden=True),
                             html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),  # contenedor de gráficas
