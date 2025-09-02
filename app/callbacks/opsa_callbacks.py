@@ -5,6 +5,8 @@ from dash import Input, Output, State, html, dash_table, dcc, callback_context  
 from dash.exceptions import PreventUpdate  # controlar no-actualizaciones
 import dash_leaflet as dl  # Leaflet para Dash
 import pandas as pd
+import io, zipfile, json # buffers en memoria
+from zipfile import ZipFile  # crear ZIPs
 
 from app.models.opsa import compute_condition_mean, compute_summary_by_habitat_type  # función del modelo OPSA
 
@@ -286,19 +288,59 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
         return is_open  # mantener
     
     #Download callback:
+    # @app.callback(
+    #     Output("opsa-download", "data"),                    # ← archivo a descargar
+    #     Input("opsa-results", "n_clicks"),                 # ← clic en el botón
+    #     State("opsa-summary-table", "derived_virtual_data"),# ← datos filtrados/ordenados visibles
+    #     State("opsa-summary-table", "data"),               # ← datos originales como respaldo
+    #     prevent_initial_call=True
+    # )
+    # def download_opsa_table(n, visible_rows, all_rows):
+    #     if not n:                                         # ← si no hay clic, no hagas nada
+    #         raise PreventUpdate                           # ← evita actualización
+    #     rows = visible_rows if visible_rows is not None else all_rows  # ← prioriza lo visible
+    #     if not rows:                                      # ← si no hay datos, no descargues
+    #         raise PreventUpdate                           # ← evita actualización
+    #     df = pd.DataFrame(rows)                           # ← construir DataFrame con las filas
+    #     # Opción A: CSV
+    #     return dcc.send_data_frame(df.to_csv, "opsa_summary.csv", index=False)
+
     @app.callback(
-        Output("opsa-download", "data"),                    # ← archivo a descargar
-        Input("opsa-results", "n_clicks"),                 # ← clic en el botón
-        State("opsa-summary-table", "derived_virtual_data"),# ← datos filtrados/ordenados visibles
-        State("opsa-summary-table", "data"),               # ← datos originales como respaldo
+        Output("opsa-download", "data"),                             # ← archivo a descargar (ZIP)
+        Input("opsa-results", "n_clicks"),                           # ← clic en el botón
+        State("opsa-summary-table", "derived_virtual_data"),         # ← filas visibles (filtro/orden)
+        State("opsa-summary-table", "data"),                         # ← filas originales
+        State("opsa-layer", "children"),                             # ← capas pintadas
         prevent_initial_call=True
     )
-    def download_opsa_table(n, visible_rows, all_rows):
-        if not n:                                         # ← si no hay clic, no hagas nada
-            raise PreventUpdate                           # ← evita actualización
-        rows = visible_rows if visible_rows is not None else all_rows  # ← prioriza lo visible
-        if not rows:                                      # ← si no hay datos, no descargues
-            raise PreventUpdate                           # ← evita actualización
-        df = pd.DataFrame(rows)                           # ← construir DataFrame con las filas
-        # Opción A: CSV
-        return dcc.send_data_frame(df.to_csv, "opsa_summary.csv", index=False)
+    def download_opsa_table(n, visible_rows, all_rows, opsa_layer):
+        if not n:
+            raise PreventUpdate
+
+        rows = visible_rows if visible_rows is not None else all_rows
+        if not rows:
+            raise PreventUpdate
+
+        # 1) CSV en memoria (no escribas a disco)
+        df = pd.DataFrame(rows)
+        csv_text = df.to_csv(index=False)  # ← string CSV
+
+        # 2) Extraer GeoJSON desde las capas del mapa y unir features
+        features = []
+        if isinstance(opsa_layer, list):
+            for child in opsa_layer:
+                # Cada child es un dict (layout serializado); sus datos están en child["props"]["data"]
+                data = (child.get("props", {}) or {}).get("data") if isinstance(child, dict) else None
+                if isinstance(data, dict) and data.get("type") == "FeatureCollection":
+                    features.extend(data.get("features", []))
+        geojson_dict = {"type": "FeatureCollection", "features": features}
+
+        # 3) Comprimir ambos en un ZIP en memoria
+        def _writer(buf):
+            bio = io.BytesIO()
+            with zipfile.ZipFile(bio, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr("opsa_summary.csv", csv_text)                       # ← escribe CSV como texto
+                zf.writestr("opsa_layer.geojson", json.dumps(geojson_dict))     # ← escribe GeoJSON como texto
+            buf.write(bio.getvalue())
+
+        return dcc.send_bytes(_writer, "opsa_results.zip")
