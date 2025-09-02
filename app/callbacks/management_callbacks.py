@@ -753,8 +753,8 @@ def register_management_callbacks(app: dash.Dash):
         State("session-id", "data"),
         prevent_initial_call=True                                                                              
     )
-    def sync_defence_ui(store, drawn_children, aqua_checked, sid):                                                
-        selected = bool(aqua_checked)                                                                           
+    def sync_defence_ui(store, drawn_children, def_checked, sid):                                                
+        selected = bool(def_checked)                                                                           
         file_present = isinstance(store, dict) and store.get("valid") is True                                   
 
         # Caso 1: checklist desmarcado -> limpiar Store y polígonos, y dejar controles deshabilitados            
@@ -764,7 +764,7 @@ def register_management_callbacks(app: dash.Dash):
                 _rm_tree(_session_dir("defence", sid))
             except Exception:
                 pass                                                                                             
-            return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
+            return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                       
 
         # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                              
         if file_present:                                                                                         
@@ -823,10 +823,19 @@ def register_management_callbacks(app: dash.Dash):
 
     @app.callback(  # centrar/zoom por área
         Output("map", "viewport", allow_duplicate=True),
+        Output("mgmt-reset-button", "disabled"),
+        Output("wind-farm", "options", allow_duplicate=True),
+        Output("aquaculture", "options", allow_duplicate=True),
+        Output("vessel", "options", allow_duplicate=True),
+        Output("defence", "options", allow_duplicate=True),
         Input("mgmt-study-area-dropdown", "value"),
+        State("wind-farm", "options"),
+        State("aquaculture", "options"),
+        State("vessel", "options"),
+        State("defence", "options"),
         prevent_initial_call=True
     )
-    def management_zoom(area):  # cambiar viewport
+    def management_zoom(area, opts_w, opts_a, opts_v, opts_d):  # cambiar viewport
         if not area:
             raise PreventUpdate
         mapping = {
@@ -837,5 +846,62 @@ def register_management_callbacks(app: dash.Dash):
             "Cadiz_Bay":        ([36.520874060327226, -6.203490800462997],  15)
         }
         center, zoom = mapping[area]
-        return {"center": center, "zoom": zoom}
+        new_opts_wind = [
+            {**w, "disabled": False} if w.get("value") == "wind_farm" else w
+            for w in (opts_w or [{"label":"Wind Farm","value":"wind_farm","disabled":True}])
+        ]
+        new_opts_aqua = [
+            {**a, "disabled": False} if a.get("value") == "aquaculture" else a
+            for a in (opts_a or [{"label":"Aquaculture","value":"aquaculture","disabled":True}])
+        ]
+        new_opts_vessel = [
+            {**v, "disabled": False} if v.get("value") == "new_vessel_route" else v
+            for v in (opts_v or [{"label":"New Vessel Route","value":"new_vessel_route","disabled":True}])
+        ]
+        new_opts_defence = [
+            {**d, "disabled": False} if d.get("value") == "defence" else d
+            for d in (opts_d or [{"label":"Defence","value":"defence","disabled":True}])
+        ]
+
+        return {"center": center, "zoom": zoom}, False, new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence
     
+# Reset function:
+    @app.callback(
+        Output("mgmt-study-area-dropdown", "value", allow_duplicate=True),
+        Output("wind-farm", "value", allow_duplicate=True),
+        Output("aquaculture", "value", allow_duplicate=True),
+        Output("vessel", "value", allow_duplicate=True),
+        Output("defence", "value", allow_duplicate=True),
+        Output("map", "viewport", allow_duplicate=True),
+        Output("mgmt-reset-button", "disabled", allow_duplicate=True),
+        Output("wind-farm", "options", allow_duplicate=True),
+        Output("aquaculture", "options", allow_duplicate=True),
+        Output("vessel", "options", allow_duplicate=True),
+        Output("defence", "options", allow_duplicate=True),
+        Input("mgmt-reset-button", "n_clicks"),
+        State("wind-farm", "options"),
+        State("aquaculture", "options"),
+        State("vessel", "options"),
+        State("defence", "options"),
+        prevent_initial_call=True
+    )
+    def reset_mgmt(n, opts_w, opts_a, opts_v, opts_d):
+        if not n:
+            raise PreventUpdate
+
+        default_view = {"center": [48.912724, -1.141208], "zoom": 6}
+
+        # deshabilitar cada opción de nuevo
+        new_opts_wind = [{**o, "disabled": True} if o.get("value") == "wind_farm" else o for o in (opts_w or [])]
+        new_opts_aqua = [{**o, "disabled": True} if o.get("value") == "aquaculture" else o for o in (opts_a or [])]
+        new_opts_vessel = [{**o, "disabled": True} if o.get("value") == "new_vessel_route" else o for o in (opts_v or [])]
+        new_opts_defence = [{**o, "disabled": True} if o.get("value") == "defence" else o for o in (opts_d or [])]
+
+        # limpiar selección, stores, etc. y volver a la configuracion inicial
+        return (
+            None,           # dropdown
+            [], [], [], [], # values de los 4 checklists
+            default_view,   # viewport
+            True,           # deshabilitar botón reset
+            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence
+        )

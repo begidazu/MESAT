@@ -307,7 +307,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='wind-farm',
-                                        options=[{"label": "Wind Farm", "value": "wind_farm"}],
+                                        options=[{"label": "Wind Farm", "value": "wind_farm", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='wind-farm-draw', n_clicks=0, disabled=True,
@@ -330,7 +330,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='aquaculture',
-                                        options=[{"label": "Aquaculture", "value": "aquaculture"}],
+                                        options=[{"label": "Aquaculture", "value": "aquaculture", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0', 'width': '100%'}
                                     ),
                                     html.Button("Draw", id='aquaculture-draw', n_clicks=0, disabled=True,
@@ -352,7 +352,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='vessel',
-                                        options=[{"label": "New Vessel Rounte", "value": "new_vessel_route"}],
+                                        options=[{"label": "New Vessel Rounte", "value": "new_vessel_route", "disabled" : True}],
                                         value=[], style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
@@ -374,7 +374,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='defence',
-                                        options=[{"label": "Defence", "value": "defence"}],
+                                        options=[{"label": "Defence", "value": "defence", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
@@ -389,6 +389,26 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         )
                                 ]
                             ),
+                        ]
+                    ),
+                    html.Div(  # fila de botones
+                        style={'display':'flex','gap':'10px','alignItems':'center', 'marginTop':'25px'},  # estilos
+                        children=[  # hijos
+                            html.Button(  # botón Run
+                                html.Span("Run"),  # texto
+                                id="mgmt-run-button",  # id
+                                n_clicks=0,  # contador
+                                disabled=True,  # deshabilitado al inicio
+                                className='btn btn-outline-primary'  # clase css
+                                #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
+                            ),
+                            html.Button(  # botón Reset
+                                html.Span("Reset"),  # texto
+                                id="mgmt-reset-button",  # id
+                                n_clicks=0,  # contador
+                                className='btn btn-outline-primary',  # clase css
+                                disabled=True  # deshabilitado al inicio
+                            )
                         ]
                     ),
 
