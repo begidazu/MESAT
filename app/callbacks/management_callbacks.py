@@ -166,6 +166,39 @@ def _to_geojson_from_parquet(path):
     # 2.d) si no se pudo inferir geometría, devolver vacío
     return {"type": "FeatureCollection", "features": []}          # devolver vacío si no hay geometría detectable
 
+# Function to build tabs where we will store the management scenarios affection graphs:
+def _build_mgmt_tabs():  # crea 4 pestañas principales y 3 subpestañas en cada una
+    from dash import dcc, html  # usar imports locales para no romper tu cabecera
+
+    def _subtabs(slug):  # slug: 'wind' | 'aquaculture' | 'vessel' | 'defence'
+        return dcc.Tabs(
+            id=f"mgmt-{slug}-subtabs",
+            value="eunis",
+            children=[
+                dcc.Tab(label="EUNIS", value="eunis", style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[
+                    html.Div(id=f"mgmt-{slug}-eunis", children="(tabla EUNIS pendiente)")
+                ]),
+                dcc.Tab(label="Saltmarshes", value="saltmarshes", style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[
+                    html.Div(id=f"mgmt-{slug}-saltmarshes", children="(tabla Saltmarshes pendiente)")
+                ]),
+                dcc.Tab(label="Fish", value="fish", style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[
+                    html.Div(id=f"mgmt-{slug}-fish", children="(pendiente)")
+                ]),
+            ]
+        )
+
+    return dcc.Tabs(
+        id="mgmt-main-tabs",
+        value="wind",
+        className="form-check",
+        children=[
+            dcc.Tab(label="Wind Farms",    value="wind", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},   children=[_subtabs("wind")]),
+            dcc.Tab(label="Aquaculture",   value="aquaculture", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[_subtabs("aquaculture")]),
+            dcc.Tab(label="Vessel Routes", value="vessel", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},  children=[_subtabs("vessel")]),
+            dcc.Tab(label="Defence",       value="defence", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[_subtabs("defence")]),
+        ]
+    )
+
 
 # Definis los callbacks que vienen de la app para el tab-management:
 def register_management_callbacks(app: dash.Dash):
@@ -619,7 +652,7 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-vessel-upload", "children", allow_duplicate=True),                                           
         Output("vessel-file-label", "children", allow_duplicate=True),
         Output("vessel-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("vessel-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("vessel-file", "contents", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
         Output("vessel-file", "className"),                                     
         Input("vessel-file-store", "data"),                                                                       
         Input("mgmt-vessel", "children"),                                                                         
@@ -932,8 +965,12 @@ def register_management_callbacks(app: dash.Dash):
         return not any_layer_has_data             # disabled = no hay datos
     
 # Callback to execute the management scenarios when the user clicks on RUN button:
-    # @app.callback(
-
-    # )
-    # def run_mgmt_scenarios():
-    #     return
+    @app.callback(
+        Output("mgmt-table", "children"),
+        Input("mgmt-run-button", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def show_mgmt_tabs(n):
+        if not n:
+            raise PreventUpdate
+        return _build_mgmt_tabs()
