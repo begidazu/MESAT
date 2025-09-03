@@ -1,7 +1,7 @@
 # management_callbacks.py
 import os, base64, uuid
 import dash
-from dash import Input, Output, State, no_update, html, dcc
+from dash import Input, Output, State, no_update, html, dcc, dash_table
 from dash.exceptions import PreventUpdate
 import dash_leaflet as dl
 import json, time
@@ -20,7 +20,7 @@ try:                                                             # intentar impo
 except Exception:                                                # si no está disponible shapely
     shp_wkt = shp_wkb = mapping = Point = None
 
-from app.models.management_scenarios import eunis_available, saltmarsh_available
+from app.models.management_scenarios import eunis_available, saltmarsh_available, wind_eunis_table
 
 # mapping de botones -> (layer_key, color)
 COLOR = {
@@ -168,43 +168,58 @@ def _to_geojson_from_parquet(path):
     return {"type": "FeatureCollection", "features": []}          # devolver vacío si no hay geometría detectable
 
 # Function to build tabs where we will store the management scenarios affection graphs:
-def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):                   # ← recibe si EUNIS está habilitado
-    from dash import dcc, html                               # ← imports locales
 
-    def _subtabs(slug):                                      # ← crea las 3 subpestañas
+def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
+
+    def _subtabs(slug):
         return dcc.Tabs(
-            id=f"mgmt-{slug}-subtabs",                       # ← id de subtabs
-            value="eunis",                                   # ← seleccion inicial
+            id=f"mgmt-{slug}-subtabs",
+            value="eunis",
             children=[
-                dcc.Tab(                                     # ← subpestaña EUNIS
+                dcc.Tab(
                     label="EUNIS", value="eunis",
-                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    disabled=not eunis_enabled,              # ← bloquear si no hay EUNIS
+                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    disabled=not eunis_enabled,
                     children=[html.Div(id=f"mgmt-{slug}-eunis", children="(tabla EUNIS)")]
                 ),
-                dcc.Tab(                                     # ← subpestaña Saltmarshes
+                dcc.Tab(
                     label="Saltmarshes", value="saltmarshes",
-                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    disabled= not saltmarsh_enabled,
+                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    disabled=not saltmarsh_enabled,
                     children=[html.Div(id=f"mgmt-{slug}-saltmarshes", children="(tabla Saltmarshes)")]
                 ),
-                dcc.Tab(                                     # ← subpestaña Fish
+                dcc.Tab(
                     label="Fish", value="fish",
-                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     children=[html.Div(id=f"mgmt-{slug}-fish", children="(pendiente)")]
                 ),
             ]
         )
 
-    return dcc.Tabs(                                         # ← pestañas principales (4 actividades)
+    return dcc.Tabs(
         id="mgmt-main-tabs", value="wind",
         children=[
-            dcc.Tab(label="Wind Farms",    value="wind", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},    children=[_subtabs("wind")]),
-            dcc.Tab(label="Aquaculture",   value="aquaculture", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[_subtabs("aquaculture")]),
-            dcc.Tab(label="Vessel Routes", value="vessel", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},  children=[_subtabs("vessel")]),
-            dcc.Tab(label="Defence",       value="defence", style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"}, children=[_subtabs("defence")]),
+            dcc.Tab(label="Wind Farms", value="wind",
+                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    children=[_subtabs("wind")]),
+            dcc.Tab(label="Aquaculture", value="aquaculture",
+                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    children=[_subtabs("aquaculture")]),
+            dcc.Tab(label="Vessel Routes", value="vessel",
+                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    children=[_subtabs("vessel")]),
+            dcc.Tab(label="Defence", value="defence",
+                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    children=[_subtabs("defence")]),
         ]
-    )  
+    )
 
 
 # Definis los callbacks que vienen de la app para el tab-management:
@@ -972,16 +987,55 @@ def register_management_callbacks(app: dash.Dash):
         any_layer_has_data = any(has_items(c) for c in children_groups)
         return not any_layer_has_data             # disabled = no hay datos
     
-# Callback to execute the management scenarios when the user clicks on RUN button:
+
+# Callback to render the summary tabs:
     @app.callback(
         Output("mgmt-table", "children"),
-        Input("mgmt-run-button", "n_clicks"),              
-        State("mgmt-study-area-dropdown", "value"),    
+        Input("mgmt-run-button", "n_clicks"),
+        State("mgmt-study-area-dropdown", "value"),
         prevent_initial_call=True
     )
-    def show_mgmt_tabs(n, area):
+    def render_mgmt_tabs(n, area):
         if not (n and area):
             raise PreventUpdate
-        enabled = eunis_available(area)
+        eunis_enabled = eunis_available(area)
         saltmarsh_enabled = saltmarsh_available(area)
-        return _build_mgmt_tabs(enabled, saltmarsh_enabled)
+        print("[render_mgmt_tabs] area:", area, "eunis_enabled:", eunis_enabled)
+        return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled)
+
+# Callback to compute the wind farm afection to eunis:
+    @app.callback(
+        Output("mgmt-wind-eunis", "children"),
+        Input("mgmt-table", "children"),   # único trigger
+        State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-wind", "children"),
+        State("mgmt-wind-upload", "children"),
+        prevent_initial_call=True
+    )
+    def fill_wind_eunis(_tabs_ready, area, mgmt_w, mgmt_wu):
+        if not _tabs_ready:
+            raise PreventUpdate
+        try:
+            # pasa aquí el nombre EXACTO de tu campo de hábitat
+            df = wind_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
+            print("[wind_eunis_table] shape:", None if df is None else df.shape)
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return html.Div(f"Error generando la tabla: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
+
+        if df is None or df.empty:
+            return html.Div("No hay hábitats EUNIS afectados por Wind Farms.",
+                            className="text-muted", style={"padding":"8px"})
+
+        table = dash_table.DataTable(
+            columns=[{"name": c, "id": c} for c in df.columns],
+            data=df.to_dict("records"),
+            sort_action="native", filter_action="native", page_action="none",
+            style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+            style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+            style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+            style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
+        )
+        return html.Div([html.Hr(), html.H4("Ocean Physical Stock Account compilation: summary by habitat type"), table],
+                        style={"marginTop":"8px"})
+

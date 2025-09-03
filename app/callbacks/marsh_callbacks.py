@@ -417,7 +417,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         color='#2c3e50',
                         children=[
                             html.Legend("Economic activities affection to ecosystems", className="mt-4", id="mgmt-legend-affection", hidden=True),
-                            html.Div(id="mgmt-table", style={'marginTop': '20px'}),
+                            html.Div(id="mgmt-table", style={'marginTop': '20px'},),
                             html.Div(
                                 id='mgmt-button-bar',
                                 style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},
