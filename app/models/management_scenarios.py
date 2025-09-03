@@ -34,21 +34,21 @@ def saltmarsh_accretion_path(area: str):
     return paths[1] if paths else None
 
 # Function to compute the EUNIS table:
-def wind_eunis_table(area: str,
-                     wind_children,
-                     wind_upload_children,
+def activity_eunis_table(area: str,
+                     activity_children,
+                     activity_upload_children,
                      label_col: str) -> pd.DataFrame:
     # 1) Unir geometrías user + upload
     geoms = []
-    if wind_children:
-        for ch in (wind_children if isinstance(wind_children, list) else [wind_children]):
+    if activity_children:
+        for ch in (activity_children if isinstance(activity_children, list) else [activity_children]):
             if isinstance(ch, dict) and ch.get("type","").endswith("Polygon"):
                 pos = (ch.get("props",{}) or {}).get("positions") or []
                 if pos and len(pos) >= 3:
                     ring = [(float(lon), float(lat)) for lat, lon in pos]  # [lat,lon] -> (lon,lat)
                     geoms.append(Polygon(ring))
-    if wind_upload_children:
-        for ch in (wind_upload_children if isinstance(wind_upload_children, list) else [wind_upload_children]):
+    if activity_upload_children:
+        for ch in (activity_upload_children if isinstance(activity_upload_children, list) else [activity_upload_children]):
             if isinstance(ch, dict) and ch.get("type","").endswith("GeoJSON"):
                 data = (ch.get("props",{}) or {}).get("data") or {}
                 for f in data.get("features", []):

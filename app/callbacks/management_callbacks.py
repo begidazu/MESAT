@@ -20,7 +20,7 @@ try:                                                             # intentar impo
 except Exception:                                                # si no está disponible shapely
     shp_wkt = shp_wkb = mapping = Point = None
 
-from app.models.management_scenarios import eunis_available, saltmarsh_available, wind_eunis_table
+from app.models.management_scenarios import eunis_available, saltmarsh_available, activity_eunis_table
 
 # mapping de botones -> (layer_key, color)
 COLOR = {
@@ -1006,7 +1006,6 @@ def register_management_callbacks(app: dash.Dash):
             raise PreventUpdate
         eunis_enabled = eunis_available(area)
         saltmarsh_enabled = saltmarsh_available(area)
-        print("[render_mgmt_tabs] area:", area, "eunis_enabled:", eunis_enabled)
         return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False
 
 # Callback to compute the wind farm afection to eunis:
@@ -1023,14 +1022,121 @@ def register_management_callbacks(app: dash.Dash):
             raise PreventUpdate
         try:
             # pasa aquí el nombre EXACTO de tu campo de hábitat
-            df = wind_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
-            print("[wind_eunis_table] shape:", None if df is None else df.shape)
+            df = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
         except Exception as e:
             import traceback; traceback.print_exc()
             return html.Div(f"Error generando la tabla: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
 
         if df is None or df.empty:
             return html.Div("No hay hábitats EUNIS afectados por Wind Farms.",
+                            className="text-muted", style={"padding":"8px"})
+
+        table = dash_table.DataTable(
+            columns=[{"name": c, "id": c} for c in df.columns],
+            data=df.to_dict("records"),
+            sort_action="native", filter_action="native", page_action="none",
+            style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+            style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+            style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+            style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
+        )
+        return html.Div([html.Hr(), table],
+                        style={"marginTop":"8px"})
+
+# Callback to compute the aquaculture affection to eunis:    
+    @app.callback(
+        Output("mgmt-aquaculture-eunis", "children"),
+        Input("mgmt-table", "children"),   # único trigger
+        State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-aquaculture", "children"),
+        State("mgmt-aquaculture-upload", "children"),
+        prevent_initial_call=True
+    )
+    def fill_aquaculture_eunis(_tabs_ready, area, mgmt_a, mgmt_au):
+        if not _tabs_ready:
+            raise PreventUpdate
+        try:
+            # pasa aquí el nombre EXACTO de tu campo de hábitat
+            df = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
+
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return html.Div(f"Error generating table: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
+
+        if df is None or df.empty:
+            return html.Div("No EUNIS habitats affected by aquaculture",
+                            className="text-muted", style={"padding":"8px"})
+
+        table = dash_table.DataTable(
+            columns=[{"name": c, "id": c} for c in df.columns],
+            data=df.to_dict("records"),
+            sort_action="native", filter_action="native", page_action="none",
+            style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+            style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+            style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+            style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
+        )
+        return html.Div([html.Hr(), table],
+                        style={"marginTop":"8px"})
+    
+# Callback to compute the vessel route affection to eunis:    
+    @app.callback(
+        Output("mgmt-vessel-eunis", "children"),
+        Input("mgmt-table", "children"),   # único trigger
+        State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-vessel", "children"),
+        State("mgmt-vessel-upload", "children"),
+        prevent_initial_call=True
+    )
+    def fill_vessel_eunis(_tabs_ready, area, mgmt_v, mgmt_vu):
+        if not _tabs_ready:
+            raise PreventUpdate
+        try:
+            # pasa aquí el nombre EXACTO de tu campo de hábitat
+            df = activity_eunis_table(area, mgmt_v, mgmt_vu, label_col="AllcombD")
+
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return html.Div(f"Error generating table: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
+
+        if df is None or df.empty:
+            return html.Div("No EUNIS habitats affected by vessel",
+                            className="text-muted", style={"padding":"8px"})
+
+        table = dash_table.DataTable(
+            columns=[{"name": c, "id": c} for c in df.columns],
+            data=df.to_dict("records"),
+            sort_action="native", filter_action="native", page_action="none",
+            style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+            style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+            style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+            style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
+        )
+        return html.Div([html.Hr(), table],
+                        style={"marginTop":"8px"})
+    
+# Callback to compute the defence affection to eunis:    
+    @app.callback(
+        Output("mgmt-defence-eunis", "children"),
+        Input("mgmt-table", "children"),   # único trigger
+        State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-defence", "children"),
+        State("mgmt-defence-upload", "children"),
+        prevent_initial_call=True
+    )
+    def fill_defence_eunis(_tabs_ready, area, mgmt_d, mgmt_du):
+        if not _tabs_ready:
+            raise PreventUpdate
+        try:
+            # pasa aquí el nombre EXACTO de tu campo de hábitat
+            df = activity_eunis_table(area, mgmt_d, mgmt_du, label_col="AllcombD")
+
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return html.Div(f"Error generating table: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
+
+        if df is None or df.empty:
+            return html.Div("No EUNIS habitats affected by defence",
                             className="text-muted", style={"padding":"8px"})
 
         table = dash_table.DataTable(
