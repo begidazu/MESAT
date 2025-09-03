@@ -420,7 +420,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             html.Div(id="mgmt-table", style={'marginTop': '20px'},),
                             html.Div(
                                 id='mgmt-button-bar',
-                                style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},
+                                style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
                                 children=[
                                     html.Button(  # botón info
                                         [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Management scenarios info")],  

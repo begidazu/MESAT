@@ -933,6 +933,9 @@ def register_management_callbacks(app: dash.Dash):
         Output("vessel", "options", allow_duplicate=True),
         Output("defence", "options", allow_duplicate=True),
         Output("mgmt-table", "children", allow_duplicate=True),
+        Output("mgmt-legend-affection", "hidden", allow_duplicate=True),
+        Output("mgmt-info-button", "hidden", allow_duplicate=True),
+        Output("mgmt-results", "hidden", allow_duplicate=True),
         Input("mgmt-reset-button", "n_clicks"),
         State("wind-farm", "options"),
         State("aquaculture", "options"),
@@ -958,7 +961,7 @@ def register_management_callbacks(app: dash.Dash):
             [], [], [], [], # values de los 4 checklists
             default_view,   # viewport
             True,           # deshabilitar botón reset
-            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, []
+            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True
         )
     
 # Callback to enable run when any drawn or layer has a children:
@@ -991,6 +994,9 @@ def register_management_callbacks(app: dash.Dash):
 # Callback to render the summary tabs:
     @app.callback(
         Output("mgmt-table", "children"),
+        Output("mgmt-legend-affection", "hidden"),
+        Output("mgmt-info-button", "hidden"),
+        Output("mgmt-results", "hidden"),
         Input("mgmt-run-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
         prevent_initial_call=True
@@ -1001,7 +1007,7 @@ def register_management_callbacks(app: dash.Dash):
         eunis_enabled = eunis_available(area)
         saltmarsh_enabled = saltmarsh_available(area)
         print("[render_mgmt_tabs] area:", area, "eunis_enabled:", eunis_enabled)
-        return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled)
+        return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False
 
 # Callback to compute the wind farm afection to eunis:
     @app.callback(
@@ -1036,6 +1042,6 @@ def register_management_callbacks(app: dash.Dash):
             style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
             style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
         )
-        return html.Div([html.Hr(), html.H4("Ocean Physical Stock Account compilation: summary by habitat type"), table],
+        return html.Div([html.Hr(), table],
                         style={"marginTop":"8px"})
 
