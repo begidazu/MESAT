@@ -351,7 +351,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='vessel',
-                                        options=[{"label": "New Vessel Rounte", "value": "new_vessel_route", "disabled" : True}],
+                                        options=[{"label": "New Vessel Route", "value": "new_vessel_route", "disabled" : True}],
                                         value=[], style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
@@ -422,7 +422,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
                                 children=[
                                     html.Button(  # botón info
-                                        [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Management scenarios info")],  
+                                        [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Management scenarios info")],
                                         id='mgmt-info-button',  # id
                                         className='btn btn-outline-primary',
                                         hidden=True,  # oculto al inicio
@@ -439,6 +439,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                             ),
                                             dcc.Download(id='mgmt-download')  # componente de descarga
                                         ]
+                                    ),
+                                    html.Button(
+                                        html.Span(["➜ ", "Climate Change scenarios"]),  # texto
+                                        id="mgmt-scenarios-button",  # id
+                                        n_clicks=0,  # contador
+                                        className='btn btn-outline-primary',  # clase css
+                                        hidden=True
                                     )
                                 ]
                             )
