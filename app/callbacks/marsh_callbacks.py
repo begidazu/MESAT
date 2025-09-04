@@ -417,7 +417,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         children=[
                             html.Legend("Economic activities affection to ecosystems", className="mt-4", id="mgmt-legend-affection", hidden=True),
                             html.Div(id="mgmt-table", style={'marginTop': '20px'}),
-                            html.Div(id="mgmt-scenarios-table", style={'marginTop': '20px'},),
                             html.Div(
                                 id='mgmt-button-bar',
                                 style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
@@ -447,7 +446,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         n_clicks=0,  # contador
                                         className='btn btn-outline-primary',  # clase css
                                         hidden=True
-                                    )
+                                    ),
+                                    html.Button(
+                                        html.Span(["➜ ", "Current situation"]),  # texto
+                                        id="mgmt-current-button",  # id
+                                        n_clicks=0,  # contador
+                                        className='btn btn-outline-primary',  # clase css
+                                        hidden=True
+                                    ),
                                 ]
                             )
                         ]   

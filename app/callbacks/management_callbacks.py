@@ -1376,7 +1376,9 @@ def register_management_callbacks(app: dash.Dash):
 
 # Callback to create tabs of saltmarsh scenario affection:
     @app.callback(
-        Output("mgmt-table", "children"),
+        Output("mgmt-table", "children", allow_duplicate=True),
+        Output("mgmt-scenarios-button", "hidden"),
+        Output("mgmt-current-button", "hidden"),
         Input("mgmt-scenarios-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
         State("mgmt-wind", "children"),
@@ -1402,6 +1404,29 @@ def register_management_callbacks(app: dash.Dash):
             mgmt_a, mgmt_au,
             mgmt_v, mgmt_vu,
             mgmt_d, mgmt_du
+        ), True, False
+    
+# Callback: volver a las tabs “Current”
+    @app.callback(
+        Output("mgmt-table", "children", allow_duplicate=True),
+        Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
+        Output("mgmt-current-button", "hidden", allow_duplicate=True),
+        # opcional: re-sincronizar el disabled del botón de escenarios
+        # Output("mgmt-scenarios-button", "disabled", allow_duplicate=True),
+        Input("mgmt-current-button", "n_clicks"),
+        State("mgmt-study-area-dropdown", "value"),
+        prevent_initial_call=True
+    )
+    def current_affection(n, area):
+        if not (n and area):
+            raise PreventUpdate
+
+        eunis_enabled     = eunis_available(area)
+        saltmarsh_enabled = saltmarsh_available(area)
+
+        return (
+            _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled),  # reconstruye tabs originales
+            False,  # muestro botón "Scenarios"
+            True,   # oculto botón "Current"
+            # opcional: not saltmarsh_enabled
         )
-    
-    
