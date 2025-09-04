@@ -5,7 +5,6 @@ from dash import Input, Output, State, no_update, html, dcc, dash_table
 from dash.exceptions import PreventUpdate
 import dash_leaflet as dl
 import json, time
-
 import shutil
 from pathlib import Path 
 import pandas as pd                                              # leer parquet con pandas
@@ -20,7 +19,10 @@ try:                                                             # intentar impo
 except Exception:                                                # si no está disponible shapely
     shp_wkt = shp_wkb = mapping = Point = None
 
-from app.models.management_scenarios import eunis_available, saltmarsh_available, activity_eunis_table, activity_saltmarsh_table
+from app.models.management_scenarios import (
+    eunis_available, saltmarsh_available, activity_eunis_table,
+    activity_saltmarsh_table, saltmarsh_scenario_available, saltmarsh_scenario_years,
+    activity_saltmarsh_scenario_table)
 
 # mapping de botones -> (layer_key, color)
 COLOR = {
@@ -35,7 +37,154 @@ UPLOAD_CLASS = "form-control form-control-lg"
 # Clase base del upload:
 BASE_UPLOAD_CLASS = "form-control is-valid form-control-lg"
 # Clase para upload invalido:                 
-INVALID_UPLOAD_CLASS = "form-control is-invalid form-control-lg"                      
+INVALID_UPLOAD_CLASS = "form-control is-invalid form-control-lg"   
+
+# Keys of the saltmarshs cenarios
+SCEN_LABEL = {
+    "regional_rcp45": "Regional RCP4.5",
+    "regional_rcp85": "Regional RCP8.5",
+    "global_rcp45":   "Global RCP4.5",
+}
+SCEN_KEYS = ["regional_rcp45", "regional_rcp85", "global_rcp45"]
+
+# Function to build tabs of saltmarsh scenario affection:
+# def _build_saltmarsh_scenarios_layout(area: str):
+#     def scenario_tabs(activity_key: str):
+#         # años por cada escenario (solo si existe en esa área)
+#         scen_tabs = []
+#         for scen in SCEN_KEYS:
+#             if not saltmarsh_scenario_available(area, scen):
+#                 continue
+#             years = saltmarsh_scenario_years(area, scen)
+#             scen_tabs.append(
+#                 dcc.Tab(
+#                     label=SCEN_LABEL[scen], value=scen,
+#                     children=[
+#                         dcc.Tabs(
+#                             id=f"mgmt-scen-{activity_key}-years-{scen}",
+#                             value=(years[0] if years else None),
+#                             children=[dcc.Tab(label=y, value=y) for y in years],
+#                             style={"padding": "0.25rem 0.5rem"}
+#                         ),
+#                     ],
+#                     style={"padding":"0.5rem 0.75rem"},
+#                     selected_style={"padding":"0.5rem 0.75rem"}
+#                 )
+#             )
+#         return dcc.Tabs(
+#             id=f"mgmt-scen-{activity_key}-scenarios",
+#             value=(SCEN_KEYS[0] if scen_tabs else None),
+#             children=scen_tabs,
+#             style={"marginBottom":"0.5rem"}
+#         )
+
+#     def activity_panel(label, key):
+#         return dcc.Tab(
+#             label=label, value=key,
+#             children=[
+#                 scenario_tabs(key),
+#                 html.Div(id=f"mgmt-scen-{key}-table")  # un único contenedor por actividad
+#             ],
+#             style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
+#             selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
+#         )
+
+#     return dcc.Tabs(
+#         id="mgmt-scenarios-tabs-main", value="wind",
+#         children=[
+#             activity_panel("Wind Farms",  "wind"),
+#             activity_panel("Aquaculture","aquaculture"),
+#             activity_panel("Vessel Routes","vessel"),
+#             activity_panel("Defence","defence"),
+#         ]
+#     )
+def _render_table(df, empty_text):
+    if df is None or df.empty:
+        return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
+    table = dash_table.DataTable(
+        columns=[{"name": c, "id": c} for c in df.columns],
+        data=df.to_dict("records"),
+        sort_action="native", filter_action="native", page_action="none",
+        style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+        style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+        style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+        style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+    )
+    return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+
+
+def _build_saltmarsh_scenarios_layout(area: str,
+                                      mgmt_w, mgmt_wu,
+                                      mgmt_a, mgmt_au,
+                                      mgmt_v, mgmt_vu,
+                                      mgmt_d, mgmt_du):
+
+    def _years_tabs_for(activity_key: str, act_children, act_upload_children):
+        scen_tabs = []
+        for scen in SCEN_KEYS:
+            if not saltmarsh_scenario_available(area, scen):
+                continue
+            years = saltmarsh_scenario_years(area, scen)
+            if not years:
+                continue
+
+            # Precalcular tablas para TODOS los años de este escenario:
+            year_tabs = []
+            for y in years:
+                try:
+                    df = activity_saltmarsh_scenario_table(area, scen, y, act_children, act_upload_children)
+                    div = _render_table(df, f"No saltmarshes and mudflats within polygons for {SCEN_LABEL[scen]} {y}.")
+                except Exception as e:
+                    import traceback; traceback.print_exc()
+                    div = html.Div(f"Error building table ({SCEN_LABEL[scen]} {y}): {e}",
+                                   style={"color":"crimson","whiteSpace":"pre-wrap"})
+                year_tabs.append(dcc.Tab(label=y, value=y, children=[div]))
+
+            scen_tabs.append(
+                dcc.Tab(
+                    label=SCEN_LABEL[scen], value=scen,
+                    children=[dcc.Tabs(
+                        id=f"mgmt-scen-{activity_key}-years-{scen}",
+                        value=years[0],  # default al primero
+                        children=year_tabs,
+                        style={"padding":"0.25rem 0.5rem"}
+                    )],
+                    style={"padding":"0.5rem 0.75rem"},
+                    selected_style={"padding":"0.5rem 0.75rem"}
+                )
+            )
+
+        # Si no hay ningún escenario disponible, devuelve placeholder
+        if not scen_tabs:
+            return html.Div("No saltmarsh scenario rasters available for this area.",
+                            className="text-muted", style={"padding":"8px"})
+
+        return dcc.Tabs(
+            id=f"mgmt-scen-{activity_key}-scenarios",
+            value=SCEN_KEYS[0],
+            children=scen_tabs,
+            style={"marginBottom":"0.5rem"}
+        )
+
+    def activity_panel(label, key, act_children, act_upload_children):
+        return dcc.Tab(
+            label=label, value=key,
+            children=[
+                _years_tabs_for(key, act_children, act_upload_children)
+            ],
+            style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
+            selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
+        )
+
+    return dcc.Tabs(
+        id="mgmt-scenarios-tabs-main", value="wind",
+        children=[
+            activity_panel("Wind Farms",   "wind",       mgmt_w,  mgmt_wu),
+            activity_panel("Aquaculture",  "aquaculture",mgmt_a,  mgmt_au),
+            activity_panel("Vessel Routes","vessel",     mgmt_v,  mgmt_vu),
+            activity_panel("Defence",      "defence",    mgmt_d,  mgmt_du),
+        ]
+    )
 
 # Funcion para validar la extension del fichero subido por los usuarios:
 def _valid_ext(filename: str) -> bool:                                                
@@ -994,11 +1143,12 @@ def register_management_callbacks(app: dash.Dash):
 
 # Callback to render the summary tabs:
     @app.callback(
-        Output("mgmt-table", "children"),
+        Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-legend-affection", "hidden"),
         Output("mgmt-info-button", "hidden"),
         Output("mgmt-results", "hidden"),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
+        Output("mgmt-scenarios-button", "disabled", allow_duplicate=True),
         Input("mgmt-run-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
         prevent_initial_call=True
@@ -1008,7 +1158,7 @@ def register_management_callbacks(app: dash.Dash):
             raise PreventUpdate
         eunis_enabled = eunis_available(area)
         saltmarsh_enabled = saltmarsh_available(area)
-        return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False, False
+        return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False, False, not saltmarsh_enabled
 
 # Callback to compute the wind farm afection to eunis and saltmarshes:
     @app.callback(
@@ -1224,3 +1374,34 @@ def register_management_callbacks(app: dash.Dash):
 
         return eunis_div, saltmarsh_div
 
+# Callback to create tabs of saltmarsh scenario affection:
+    @app.callback(
+        Output("mgmt-table", "children"),
+        Input("mgmt-scenarios-button", "n_clicks"),
+        State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-wind", "children"),
+        State("mgmt-wind-upload", "children"),
+        State("mgmt-aquaculture", "children"),
+        State("mgmt-aquaculture-upload", "children"),
+        State("mgmt-vessel", "children"),
+        State("mgmt-vessel-upload", "children"),
+        State("mgmt-defence", "children"),
+        State("mgmt-defence-upload", "children"),
+        prevent_initial_call=True
+    )
+    def satlmarsh_scenarios_activities(clicks, area,
+                                    mgmt_w, mgmt_wu,
+                                    mgmt_a, mgmt_au,
+                                    mgmt_v, mgmt_vu,
+                                    mgmt_d, mgmt_du):
+        if not clicks or not area:
+            raise PreventUpdate
+        return _build_saltmarsh_scenarios_layout(
+            area,
+            mgmt_w, mgmt_wu,
+            mgmt_a, mgmt_au,
+            mgmt_v, mgmt_vu,
+            mgmt_d, mgmt_du
+        )
+    
+    

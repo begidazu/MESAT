@@ -1,4 +1,5 @@
 from typing import Any, List, Optional, Dict
+import os
 import pandas as pd                                                
 import geopandas as gpd                                          
 from shapely.geometry import Polygon, shape                      
@@ -26,6 +27,148 @@ SALTMARSH_PATHS = {
     "Cadiz_Bay": ["results/saltmarshes/Cadiz_Bay/regional_rcp45/cadiz_reg_rcp45_2023_25g.tif", "results/saltmarshes/Cadiz_Bay/regional_rcp45/cadiz_reg_rcp45_2023_25g_accretion.tif"],
     "Urdaibai_Estuary": ["results/saltmarshes/Urdaibai_Estuary/regional_rcp45/oka_reg_rcp45_2017_17g.tif", "results/saltmarshes/Urdaibai_Estuary/regional_rcp45/oka_reg_rcp45_2017_17g_accretion.tif"]
 }
+
+SALTMARSH_SCENARIOS_PATHS = {
+    "Santander": {
+        "regional_rcp45": {
+            "habitats": {
+                "2012": r"results\saltmarshes\Bay_of_Santander\regional_rcp45\santander_reg_rcp45_2012_7g.tif",
+                "2062": r"results\saltmarshes\Bay_of_Santander\regional_rcp45\santander_reg_rcp45_2062_7g.tif",
+                "2112": r"results\saltmarshes\Bay_of_Santander\regional_rcp45\santander_reg_rcp45_2112_7g.tif"
+            },
+            "accretion": {
+                "2012": r"results\saltmarshes\Bay_of_Santander\regional_rcp45\santander_reg_rcp45_2012_7g_accretion.tif",
+                "2062": r"results\saltmarshes\Bay_of_Santander\regional_rcp45\santander_reg_rcp45_2062_7g_accretion.tif",
+                "2112": r"results\saltmarshes\Bay_of_Santander\regional_rcp45\santander_reg_rcp45_2112_7g_accretion.tif"
+            }
+        },
+        "regional_rcp85": {
+            "habitats": {
+                "2012": r"results\saltmarshes\Bay_of_Santander\regional_rcp85\santander_reg_rcp45_2012_7g.tif",
+                "2062": r"results\saltmarshes\Bay_of_Santander\regional_rcp85\santander_reg_rcp85_2062_7g.tif",
+                "2112": r"results\saltmarshes\Bay_of_Santander\regional_rcp85\santander_reg_rcp85_2112_7g.tif"
+            },
+            "accretion": {
+                "2012": r"results\saltmarshes\Bay_of_Santander\regional_rcp85\santander_reg_rcp45_2012_7g_accretion.tif",
+                "2062": r"results\saltmarshes\Bay_of_Santander\regional_rcp85\santander_reg_rcp85_2062_7g_accretion.tif",
+                "2112": r"results\saltmarshes\Bay_of_Santander\regional_rcp85\santander_reg_rcp85_2112_7g_accretion.tif"
+            }
+        },
+        "global_rcp45":  {
+            "habitats": {
+                "2012": r"results\saltmarshes\Bay_of_Santander\global_rcp45\santander_reg_rcp45_2012_7g.tif",
+                "2062": r"results\saltmarshes\Bay_of_Santander\global_rcp45\santander_glo_rcp45_2062_7g.tif",
+                "2112": r"results\saltmarshes\Bay_of_Santander\global_rcp45\santander_glo_rcp45_2112_7g.tif"
+            },
+            "accretion": {
+                "2012": r"results\saltmarshes\Bay_of_Santander\global_rcp45\santander_reg_rcp45_2012_7g_accretion.tif",
+                "2062": r"results\saltmarshes\Bay_of_Santander\global_rcp45\santander_glo_rcp45_2062_7g_accretion.tif",
+                "2112": r"results\saltmarshes\Bay_of_Santander\global_rcp45\santander_glo_rcp45_2112_7g_accretion.tif"
+            }
+        }
+    },
+
+    "Cadiz_Bay": {
+        "regional_rcp45": {
+            "habitats": {
+                "2023": r"results\saltmarshes\Cadiz_Bay\regional_rcp45\cadiz_reg_rcp45_2023_25g.tif",
+                "2073": r"results\saltmarshes\Cadiz_Bay\regional_rcp45\cadiz_reg_rcp45_2073_25g.tif",
+                "2123": r"results\saltmarshes\Cadiz_Bay\regional_rcp45\cadiz_reg_rcp45_2123_25g.tif"
+            },
+            "accretion": {
+                "2023": r"results\saltmarshes\Cadiz_Bay\regional_rcp45\cadiz_reg_rcp45_2023_25g_accretion.tif",
+                "2073": r"results\saltmarshes\Cadiz_Bay\regional_rcp45\cadiz_reg_rcp45_2073_25g_accretion.tif",
+                "2123": r"results\saltmarshes\Cadiz_Bay\regional_rcp45\cadiz_reg_rcp45_2123_25g_accretion.tif"
+            }
+        },
+        "regional_rcp85": {
+            "habitats": {
+                "2023": r"results\saltmarshes\Cadiz_Bay\regional_rcp85\cadiz_reg_rcp45_2023_25g.tif",
+                "2073": r"results\saltmarshes\Cadiz_Bay\regional_rcp85\cadiz_reg_rcp85_2073_25g.tif",
+                "2123": r"results\saltmarshes\Cadiz_Bay\regional_rcp85\cadiz_reg_rcp85_2123_25g.tif"
+            },
+            "accretion": {
+                "2023": r"results\saltmarshes\Cadiz_Bay\regional_rcp85\cadiz_reg_rcp45_2023_25g_accretion.tif",
+                "2073": r"results\saltmarshes\Cadiz_Bay\regional_rcp85\cadiz_reg_rcp85_2073_25g_accretion.tif",
+                "2123": r"results\saltmarshes\Cadiz_Bay\regional_rcp85\cadiz_reg_rcp85_2123_25g_accretion.tif"
+            }
+        },
+        "global_rcp45":  {
+            "habitats": {
+                "2023": r"results\saltmarshes\Cadiz_Bay\global_rcp45\cadiz_reg_rcp45_2023_25g.tif",
+                "2073": r"results\saltmarshes\Cadiz_Bay\global_rcp45\cadiz_glo_rcp45_2073_25g.tif",
+                "2123": r"results\saltmarshes\Cadiz_Bay\global_rcp45\cadiz_glo_rcp45_2123_25g.tif"
+            },
+            "accretion": {
+                "2023": r"results\saltmarshes\Cadiz_Bay\global_rcp45\cadiz_reg_rcp45_2023_25g_accretion.tif",
+                "2073": r"results\saltmarshes\Cadiz_Bay\global_rcp45\cadiz_glo_rcp45_2073_25g_accretion.tif",
+                "2123": r"results\saltmarshes\Cadiz_Bay\global_rcp45\cadiz_glo_rcp45_2123_25g_accretion.tif"
+            }
+        }
+    },
+
+    "Urdaibai_Estuary": {
+        "regional_rcp45": {
+            "habitats": {
+                "2017": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp45\oka_reg_rcp45_2017_17g.tif",
+                "2067": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp45\oka_reg_rcp45_2067_17g.tif",
+                "2117": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp45\oka_reg_rcp45_2117_17g.tif"
+            },
+            "accretion": {
+                "2017": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp45\oka_reg_rcp45_2017_17g_accretion.tif",
+                "2067": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp45\oka_reg_rcp45_2067_17g_accretion.tif",
+                "2117": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp45\oka_reg_rcp45_2117_17g_accretion.tif"
+            }
+        },
+        "regional_rcp85": {
+            "habitats": {
+                "2017": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp85\oka_reg_rcp45_2017_17g.tif",
+                "2067": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp85\oka_reg_rcp85_2067_17g.tif",
+                "2117": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp85\oka_reg_rcp85_2117_17g.tif"
+            },
+            "accretion": {
+                "2017": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp85\oka_reg_rcp45_2017_17g_accretion.tif",
+                "2067": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp85\oka_reg_rcp85_2067_17g_accretion.tif",
+                "2117": r"results\saltmarshes\Urdaibai_Estuary\regional_rcp85\oka_reg_rcp85_2117_17g_accretion.tif"
+            }
+        },
+        "global_rcp45":  {
+            "habitats": {
+                "2017": r"results\saltmarshes\Urdaibai_Estuary\global_rcp45\oka_reg_rcp45_2017_17g.tif",
+                "2067": r"results\saltmarshes\Urdaibai_Estuary\global_rcp45\oka_glo_rcp45_2067_17g.tif",
+                "2117": r"results\saltmarshes\Urdaibai_Estuary\global_rcp45\oka_glo_rcp45_2117_17g.tif"
+            },
+            "accretion": {
+                "2017": r"results\saltmarshes\Urdaibai_Estuary\global_rcp45\oka_reg_rcp45_2017_17g_accretion.tif",
+                "2067": r"results\saltmarshes\Urdaibai_Estuary\global_rcp45\oka_glo_rcp45_2067_17g_accretion.tif",
+                "2117": r"results\saltmarshes\Urdaibai_Estuary\global_rcp45\oka_glo_rcp45_2117_17g_accretion.tif"
+            }
+        }
+    },
+}
+
+# Helpers for the paths:
+def _norm(p): 
+    return os.path.normpath(p) if p else None
+
+def saltmarsh_scenario_available(area: str, scenario_key: str) -> bool:
+    return bool(SALTMARSH_SCENARIOS_PATHS.get(area, {}).get(scenario_key))
+
+def saltmarsh_scenario_years(area: str, scenario_key: str):
+    node = SALTMARSH_SCENARIOS_PATHS.get(area, {}).get(scenario_key, {})
+    years = list((node.get("habitats") or {}).keys())
+    # orden numérico por si vienen como str
+    try:
+        years = sorted(years, key=lambda y: int(y))
+    except Exception:
+        years = sorted(years)
+    return years
+
+def saltmarsh_scenario_paths(area: str, scenario_key: str, year: str):
+    node = SALTMARSH_SCENARIOS_PATHS.get(area, {}).get(scenario_key, {})
+    h = _norm((node.get("habitats") or {}).get(year))
+    a = _norm((node.get("accretion") or {}).get(year))
+    return h, a
 
 SALTMARSH_MAP: Dict[int, str] = {
     0: "Mudflat",
@@ -254,6 +397,90 @@ def activity_saltmarsh_table(area: str,
             extent_ha = round(float(extent_ha_by_code[code]), 2)
             if code in (0, 1):  # Mudflat y Saltmarsh
                 acc_val = round(float(acc_sums[code]), 2)
+            else:
+                acc_val = "-"
+            rows.append((name, extent_ha, acc_val))
+
+    return pd.DataFrame(rows, columns=["Ecosystem", "Extent (ha)", "Accretion (m³/yr)"])
+
+# Function to compute activity affection to saltmarsh and mudflats in the x scenario and y year:
+def activity_saltmarsh_scenario_table(area: str,
+                                      scenario_key: str,
+                                      year: str,
+                                      activity_children,
+                                      activity_upload_children) -> pd.DataFrame:
+    ORDER = [0, 1, 2, 3]  # Mudflat, Saltmarsh, Upland Areas, Channel
+
+    # Unión de polígonos
+    act = _collect_activity_union(activity_children, activity_upload_children)
+    if act.empty:
+        return pd.DataFrame({
+            "Ecosystem": [SALTMARSH_MAP[c] for c in ORDER],
+            "Extent (ha)": [0.0, 0.0, 0.0, 0.0],
+            "Accretion (m³/yr)": [0.0, 0.0, "-", "-"],
+        })
+
+    # Rutas por escenario/año
+    hab_path, acc_path = saltmarsh_scenario_paths(area, scenario_key, year)
+    if not (hab_path and acc_path):
+        # sin rutas → devolver tabla vacía “suave”
+        return pd.DataFrame({
+            "Ecosystem": [SALTMARSH_MAP[c] for c in ORDER],
+            "Extent (ha)": [0.0, 0.0, 0.0, 0.0],
+            "Accretion (m³/yr)": ["-", "-", "-", "-"],
+        })
+
+    with rasterio.open(hab_path) as hab_ds:
+        if hab_ds.crs is None or hab_ds.crs.is_geographic:
+            raise ValueError("Habitat TIFF must be in a projected CRS (meters).")
+
+        to_raster = Transformer.from_crs(act.crs, hab_ds.crs, always_xy=True).transform
+        geom_in_raster = shp_transform(to_raster, act.geometry.iloc[0])
+
+        cls_arr, _ = rio_mask(hab_ds, [geom_in_raster], crop=False, filled=False)
+        cls_ma = np.ma.masked_array(cls_arr[0], mask=np.ma.getmaskarray(cls_arr[0]))
+
+        with rasterio.open(acc_path) as acc_ds:
+            same_grid = (acc_ds.crs == hab_ds.crs and
+                         acc_ds.transform == hab_ds.transform and
+                         acc_ds.width == hab_ds.width and
+                         acc_ds.height == hab_ds.height)
+            if same_grid:
+                acc_arr, _ = rio_mask(acc_ds, [geom_in_raster], crop=False, filled=False)
+                acc_ma = np.ma.masked_array(acc_arr[0], mask=np.ma.getmaskarray(acc_arr[0]))
+            else:
+                acc_reproj = np.empty((hab_ds.height, hab_ds.width), dtype=np.float32)
+                reproject(
+                    source=rasterio.band(acc_ds, 1),
+                    destination=acc_reproj,
+                    src_transform=acc_ds.transform,
+                    src_crs=acc_ds.crs,
+                    dst_transform=hab_ds.transform,
+                    dst_crs=hab_ds.crs,
+                    resampling=Resampling.bilinear,
+                )
+                acc_ma = np.ma.masked_array(acc_reproj, mask=cls_ma.mask)
+
+        px_area_m2 = _pixel_area_m2(hab_ds.transform)
+        px_area_ha = px_area_m2 / 10_000.0
+
+        inside = ~cls_ma.mask
+        classes = cls_ma.data[inside].astype(np.int64)
+
+        counts = np.bincount(classes, minlength=4)
+        extent_ha_by_code = counts * px_area_ha
+
+        acc_filled = np.ma.filled(acc_ma, 0.0)
+        acc_sums_m3yr = np.bincount(classes,
+                                    weights=acc_filled[inside],
+                                    minlength=4) * px_area_m2
+
+        rows = []
+        for code in ORDER:
+            name = SALTMARSH_MAP[code]
+            extent_ha = round(float(extent_ha_by_code[code]), 2)
+            if code in (0, 1):
+                acc_val = round(float(acc_sums_m3yr[code]), 2)
             else:
                 acc_val = "-"
             rows.append((name, extent_ha, acc_val))
