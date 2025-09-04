@@ -9,7 +9,6 @@ from dash import Input, Output, State, html, dcc, callback_context  # Dash core
 import dash  # tipado de la app
 from dash.exceptions import PreventUpdate  # evitar actualizaciones
 import dash_bootstrap_components as dbc  # componentes Bootstrap
-from matplotlib.colors import ListedColormap, BoundaryNorm  # colores matplotlib
 import matplotlib.pyplot as plt  # dibujar PNGs
 import plotly.express as px  # gráficas interactivas
 import numpy as np  # numérico
