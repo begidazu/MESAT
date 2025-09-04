@@ -1008,42 +1008,7 @@ def register_management_callbacks(app: dash.Dash):
         saltmarsh_enabled = saltmarsh_available(area)
         return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False
 
-# Callback to compute the wind farm afection to eunis:
-    # @app.callback(
-    #     Output("mgmt-wind-eunis", "children"),
-    #     Input("mgmt-table", "children"),   # único trigger
-    #     State("mgmt-study-area-dropdown", "value"),
-    #     State("mgmt-wind", "children"),
-    #     State("mgmt-wind-upload", "children"),
-    #     prevent_initial_call=True
-    # )
-    # def fill_wind_eunis(_tabs_ready, area, mgmt_w, mgmt_wu):
-    #     if not _tabs_ready:
-    #         raise PreventUpdate
-    #     try:
-    #         # pasa aquí el nombre EXACTO de tu campo de hábitat
-    #         df = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
-
-    #     except Exception as e:
-    #         import traceback; traceback.print_exc()
-    #         return html.Div(f"Error generando la tabla: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
-
-    #     if df is None or df.empty:
-    #         return html.Div("No hay hábitats EUNIS afectados por Wind Farms.",
-    #                         className="text-muted", style={"padding":"8px"})
-
-    #     table = dash_table.DataTable(
-    #         columns=[{"name": c, "id": c} for c in df.columns],
-    #         data=df.to_dict("records"),
-    #         sort_action="native", filter_action="native", page_action="none",
-    #         style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
-    #         style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
-    #         style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
-    #         style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
-    #     )
-
-    #     return html.Div([html.Hr(), table], style={"marginTop":"8px"})
-
+# Callback to compute the wind farm afection to eunis and saltmarshes:
     @app.callback(
         Output("mgmt-wind-eunis", "children"),
         Output("mgmt-wind-saltmarshes", "children"),
@@ -1077,130 +1042,175 @@ def register_management_callbacks(app: dash.Dash):
             df_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
         except Exception as e:
             import traceback; traceback.print_exc()
-            err = html.Div(f"Error generando las tablas: {e}",
+            err = html.Div(f"Error generating tables: {e}",
                         style={"color":"crimson","whiteSpace":"pre-wrap"})
             # devolver SIEMPRE dos salidas
             return err, err
 
         eunis_div = render_table(
             df_eu,
-            "No hay hábitats EUNIS afectados por Wind Farms."
+            "No EUNIS habitats affected by Wind Farms."
         )
 
         saltmarsh_div = render_table(
             df_sm,
-            "No hay superficie afectada en los ecosistemas de saltmarsh."
+            "No saltmarshes and mudflats affected by Wind Farms."
         )
 
         return eunis_div, saltmarsh_div
 
 
-# Callback to compute the aquaculture affection to eunis:    
+# Callback to compute the aquaculture affection to eunis and saltmarshes:    
     @app.callback(
         Output("mgmt-aquaculture-eunis", "children"),
-        Input("mgmt-table", "children"),   # único trigger
+        Output("mgmt-aquaculture-saltmarshes", "children"),
+        Input("mgmt-table", "children"),   # disparador: tabs listos
         State("mgmt-study-area-dropdown", "value"),
         State("mgmt-aquaculture", "children"),
         State("mgmt-aquaculture-upload", "children"),
         prevent_initial_call=True
     )
-    def fill_aquaculture_eunis(_tabs_ready, area, mgmt_a, mgmt_au):
+    def fill_aquaculture_tabs(_tabs_ready, area, mgmt_a, mgmt_au):
         if not _tabs_ready:
             raise PreventUpdate
-        try:
-            # pasa aquí el nombre EXACTO de tu campo de hábitat
-            df = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
 
+        # helpers para no repetir
+        def render_table(df, empty_text):
+            if df is None or df.empty:
+                return html.Div(empty_text, className="text-muted", style={"padding": "8px"})
+            table = dash_table.DataTable(
+                columns=[{"name": c, "id": c} for c in df.columns],
+                data=df.to_dict("records"),
+                sort_action="native", filter_action="native", page_action="none",
+                style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+                style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+                style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+                style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+            )
+            return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+
+        try:
+            df_eu = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
+            df_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
         except Exception as e:
             import traceback; traceback.print_exc()
-            return html.Div(f"Error generating table: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
+            err = html.Div(f"Error generating tables: {e}",
+                        style={"color":"crimson","whiteSpace":"pre-wrap"})
+            # devolver SIEMPRE dos salidas
+            return err, err
 
-        if df is None or df.empty:
-            return html.Div("No EUNIS habitats affected by aquaculture",
-                            className="text-muted", style={"padding":"8px"})
-
-        table = dash_table.DataTable(
-            columns=[{"name": c, "id": c} for c in df.columns],
-            data=df.to_dict("records"),
-            sort_action="native", filter_action="native", page_action="none",
-            style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
-            style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
-            style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
-            style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
+        eunis_div = render_table(
+            df_eu,
+            "No EUNIS habitats affected by Aquaculture."
         )
-        return html.Div([html.Hr(), table],
-                        style={"marginTop":"8px"})
+
+        saltmarsh_div = render_table(
+            df_sm,
+            "No saltmars and muflat affected by Aquaculture."
+        )
+
+        return eunis_div, saltmarsh_div
 
     
-# Callback to compute the vessel route affection to eunis:    
+# Callback to compute the vessel route affection to eunis and saltmarshes:    
     @app.callback(
         Output("mgmt-vessel-eunis", "children"),
-        Input("mgmt-table", "children"),   # único trigger
+        Output("mgmt-vessel-saltmarshes", "children"),
+        Input("mgmt-table", "children"),   # disparador: tabs listos
         State("mgmt-study-area-dropdown", "value"),
         State("mgmt-vessel", "children"),
         State("mgmt-vessel-upload", "children"),
         prevent_initial_call=True
     )
-    def fill_vessel_eunis(_tabs_ready, area, mgmt_v, mgmt_vu):
+    def fill_vessel_tabs(_tabs_ready, area, mgmt_v, mgmt_vu):
         if not _tabs_ready:
             raise PreventUpdate
-        try:
-            # pasa aquí el nombre EXACTO de tu campo de hábitat
-            df = activity_eunis_table(area, mgmt_v, mgmt_vu, label_col="AllcombD")
 
+        # helpers para no repetir
+        def render_table(df, empty_text):
+            if df is None or df.empty:
+                return html.Div(empty_text, className="text-muted", style={"padding": "8px"})
+            table = dash_table.DataTable(
+                columns=[{"name": c, "id": c} for c in df.columns],
+                data=df.to_dict("records"),
+                sort_action="native", filter_action="native", page_action="none",
+                style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+                style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+                style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+                style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+            )
+            return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+
+        try:
+            df_eu = activity_eunis_table(area, mgmt_v, mgmt_vu, label_col="AllcombD")
+            df_sm = activity_saltmarsh_table(area, mgmt_v, mgmt_vu)
         except Exception as e:
             import traceback; traceback.print_exc()
-            return html.Div(f"Error generating table: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
+            err = html.Div(f"Error generating tables: {e}",
+                        style={"color":"crimson","whiteSpace":"pre-wrap"})
+            # devolver SIEMPRE dos salidas
+            return err, err
 
-        if df is None or df.empty:
-            return html.Div("No EUNIS habitats affected by vessel",
-                            className="text-muted", style={"padding":"8px"})
-
-        table = dash_table.DataTable(
-            columns=[{"name": c, "id": c} for c in df.columns],
-            data=df.to_dict("records"),
-            sort_action="native", filter_action="native", page_action="none",
-            style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
-            style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
-            style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
-            style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
+        eunis_div = render_table(
+            df_eu,
+            "No EUNIS habitats affected by New Vessel Routes."
         )
-        return html.Div([html.Hr(), table],
-                        style={"marginTop":"8px"})
+
+        saltmarsh_div = render_table(
+            df_sm,
+            "No saltmars and muflat affected by New Vessel Routes."
+        )
+
+        return eunis_div, saltmarsh_div
     
-# Callback to compute the defence affection to eunis:    
+# Callback to compute the defence affection to eunis and saltmarshes:    
     @app.callback(
         Output("mgmt-defence-eunis", "children"),
-        Input("mgmt-table", "children"),   # único trigger
+        Output("mgmt-defence-saltmarshes", "children"),
+        Input("mgmt-table", "children"),   # disparador: tabs listos
         State("mgmt-study-area-dropdown", "value"),
         State("mgmt-defence", "children"),
         State("mgmt-defence-upload", "children"),
         prevent_initial_call=True
     )
-    def fill_defence_eunis(_tabs_ready, area, mgmt_d, mgmt_du):
+    def fill_defence_tabs(_tabs_ready, area, mgmt_d, mgmt_du):
         if not _tabs_ready:
             raise PreventUpdate
-        try:
-            # pasa aquí el nombre EXACTO de tu campo de hábitat
-            df = activity_eunis_table(area, mgmt_d, mgmt_du, label_col="AllcombD")
 
+        # helpers para no repetir
+        def render_table(df, empty_text):
+            if df is None or df.empty:
+                return html.Div(empty_text, className="text-muted", style={"padding": "8px"})
+            table = dash_table.DataTable(
+                columns=[{"name": c, "id": c} for c in df.columns],
+                data=df.to_dict("records"),
+                sort_action="native", filter_action="native", page_action="none",
+                style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+                style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+                style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+                style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+            )
+            return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+
+        try:
+            df_eu = activity_eunis_table(area, mgmt_d, mgmt_du, label_col="AllcombD")
+            df_sm = activity_saltmarsh_table(area, mgmt_d, mgmt_du)
         except Exception as e:
             import traceback; traceback.print_exc()
-            return html.Div(f"Error generating table: {e}", style={"color":"crimson","whiteSpace":"pre-wrap"})
+            err = html.Div(f"Error generating tables: {e}",
+                        style={"color":"crimson","whiteSpace":"pre-wrap"})
+            # devolver SIEMPRE dos salidas
+            return err, err
 
-        if df is None or df.empty:
-            return html.Div("No EUNIS habitats affected by defence",
-                            className="text-muted", style={"padding":"8px"})
-
-        table = dash_table.DataTable(
-            columns=[{"name": c, "id": c} for c in df.columns],
-            data=df.to_dict("records"),
-            sort_action="native", filter_action="native", page_action="none",
-            style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
-            style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
-            style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
-            style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}],
+        eunis_div = render_table(
+            df_eu,
+            "No EUNIS habitats affected by Defence."
         )
-        return html.Div([html.Hr(), table],
-                        style={"marginTop":"8px"})
+
+        saltmarsh_div = render_table(
+            df_sm,
+            "No saltmars and muflat affected by Defence."
+        )
+
+        return eunis_div, saltmarsh_div
 
