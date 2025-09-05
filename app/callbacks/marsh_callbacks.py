@@ -9,7 +9,6 @@ from dash import Input, Output, State, html, dcc, callback_context  # Dash core
 import dash  # tipado de la app
 from dash.exceptions import PreventUpdate  # evitar actualizaciones
 import dash_bootstrap_components as dbc  # componentes Bootstrap
-from matplotlib.colors import ListedColormap, BoundaryNorm  # colores matplotlib
 import matplotlib.pyplot as plt  # dibujar PNGs
 import plotly.express as px  # gráficas interactivas
 import numpy as np  # numérico
@@ -190,7 +189,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     dcc.Loading(  # contenedor con spinner
                         id="loading-opsa",  # id
                         type="dot",  # tipo de spinner
-                        color='#103e95',
+                        color='#2c3e50',
                         children=[  # hijos
                             #html.Legend("Ocean Physical Stock Account compilation: summary by habitat type", className='mt-4', id='opsa-legend', hidden=True),
                             html.Div(id="opsa-chart", style={'marginTop':'20px'}),
@@ -278,10 +277,27 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
-                    html.Legend("What economic activity you want to establish?"),
+                    html.Legend("In wich study area you want to simulate?"),
+                    html.Div(
+                        style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
+                        children=dcc.Dropdown(
+                                id="mgmt-study-area-dropdown",  # id
+                                options=[  # opciones
+                                    {"label":"Santander Coast", "value": "Santander"},
+                                    {"label":"North Sea", "value":"North_Sea"},
+                                    {"label":"Irish Sea", "value": "Irish_Sea"},
+                                    {"label":"Urdaibai Estuary","value":"Urdaibai_Estuary"},
+                                    {"label":"Cadiz Bay","value":"Cadiz_Bay"},
+                                ],
+                                placeholder="Select Study Area",  # ayuda
+                                className='dropdown-text',  # clase css,
+                                searchable=False
+                        )
+                    ),
+                    html.Legend("What economic activity you want to establish?", style={'display':'flex', 'marginTop':'25px'}),
                     html.Div(
                         id='activity-checklist',
-                        style={'display': 'flex', 'flexDirection': 'column', 'gap': '10px', 'width': '100%'},
+                        style={'display': 'flex', 'flexDirection': 'column', 'gap': '15px', 'width': '100%'},
                         children=[
 
                             html.Div(
@@ -290,7 +306,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='wind-farm',
-                                        options=[{"label": "Wind Farm", "value": "wind_farm"}],
+                                        options=[{"label": "Wind Farm", "value": "wind_farm", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='wind-farm-draw', n_clicks=0, disabled=True,
@@ -298,7 +314,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     dcc.Upload(                                                      # componente para subir ficheros
                                         id="wind-farm-file",                                         # id del upload
                                         multiple=False,                                              # un único fichero
-                                        accept="",                                                   # ← permitir cualquier tipo (validamos en callback)
+                                        accept="",                                                   # permitir cualquier tipo (validamos en callback)
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",    # clases base (borde, etc.)
                                         children=html.Div(id="wind-farm-file-label")                 # etiqueta visible                                                                                                                 
@@ -313,7 +329,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='aquaculture',
-                                        options=[{"label": "Aquaculture", "value": "aquaculture"}],
+                                        options=[{"label": "Aquaculture", "value": "aquaculture", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0', 'width': '100%'}
                                     ),
                                     html.Button("Draw", id='aquaculture-draw', n_clicks=0, disabled=True,
@@ -335,7 +351,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='vessel',
-                                        options=[{"label": "New Vessel Rounte", "value": "new_vessel_route"}],
+                                        options=[{"label": "New Vessel Route", "value": "new_vessel_route", "disabled" : True}],
                                         value=[], style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
@@ -347,7 +363,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",
                                         children=html.Div(id="vessel-file-label")                                        
-                                        )
+                                    )
                                 ]
                             ),
 
@@ -357,7 +373,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children=[
                                     dbc.Checklist(
                                         id='defence',
-                                        options=[{"label": "Defence", "value": "defence"}],
+                                        options=[{"label": "Defence", "value": "defence", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
                                     html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
@@ -374,7 +390,74 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             ),
                         ]
                     ),
-
+                    html.Div(  # fila de botones
+                        style={'display':'flex','gap':'10px','alignItems':'center', 'marginTop':'25px'},  # estilos
+                        children=[  # hijos
+                            html.Button(  # botón Run
+                                html.Span("Run"),  # texto
+                                id="mgmt-run-button",  # id
+                                n_clicks=0,  # contador
+                                disabled=True,  # deshabilitado al inicio
+                                className='btn btn-outline-primary'  # clase css
+                                #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
+                            ),
+                            html.Button(  # botón Reset
+                                html.Span("Reset"),  # texto
+                                id="mgmt-reset-button",  # id
+                                n_clicks=0,  # contador
+                                className='btn btn-outline-primary',  # clase css
+                                disabled=True  # deshabilitado al inicio
+                            )
+                        ]
+                    ),
+                    dcc.Loading(
+                        id="loading'mgmt",
+                        type="dot",
+                        color='#2c3e50',
+                        children=[
+                            html.Legend("Economic activities affection to ecosystems", className="mt-4", id="mgmt-legend-affection", hidden=True),
+                            html.Div(id="mgmt-table", style={'marginTop': '20px'}),
+                            html.Div(
+                                id='mgmt-button-bar',
+                                style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
+                                children=[
+                                    html.Button(  # botón info
+                                        [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Management scenarios info")],
+                                        id='mgmt-info-button',  # id
+                                        className='btn btn-outline-primary',
+                                        hidden=True,  # oculto al inicio
+                                        n_clicks=0  # contador
+                                    ),
+                                    html.Div(  # contenedor de descarga
+                                        [
+                                            html.Button(  # botón de descarga
+                                                [html.Img(src='/assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")], 
+                                                id='mgmt-results',  # id
+                                                hidden=True,  # oculto al inicio
+                                                n_clicks=0,  # contador
+                                                className='btn btn-outline-primary'
+                                            ),
+                                            dcc.Download(id='mgmt-download')  # componente de descarga
+                                        ]
+                                    ),
+                                    html.Button(
+                                        html.Span(["➜ ", "Climate Change scenarios"]),  # texto
+                                        id="mgmt-scenarios-button",  # id
+                                        n_clicks=0,  # contador
+                                        className='btn btn-outline-primary',  # clase css
+                                        hidden=True
+                                    ),
+                                    html.Button(
+                                        html.Span(["➜ ", "Current situation"]),  # texto
+                                        id="mgmt-current-button",  # id
+                                        n_clicks=0,  # contador
+                                        className='btn btn-outline-primary',  # clase css
+                                        hidden=True
+                                    ),
+                                ]
+                            )
+                        ]   
+                    )
                 ], style={'padding':'20px'})
 
         elif tab == 'tab-saltmarsh':
@@ -454,7 +537,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     dcc.Loading(  # contenedor con spinner
                         id="loading",  # id
                         type="dot",  # tipo de spinner
-                        color='#103e95',
+                        color='#2c3e50',
                         children=[  # hijos
                             html.Legend("Habitat distribution and accretion statistics", className='mt-4', id='saltmarsh-legend', hidden=True),
                             html.Div(id="saltmarsh-chart", style={'marginTop':'20px'}),  # contenedor de gráficas
