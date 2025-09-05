@@ -26,13 +26,26 @@ except Exception:
 # Some useful functions to process the data:
 
 # Function to find the best UTM CRS in case the user aoi has a non proyected CRS
-def best_utm_crs(file:str) -> CRS:
+def best_utm_crs(aoi:None) -> CRS:
     """Elige una UTM en función del centroide (lat/lon)."""
-    if file.endswith(".parquet"):
-        gdf= gpd.read_parquet(file)
-    elif (file.endswith(".json") or file.endswith(".geojson")):
-        gdf = gpd.read_file(file)
-    g_ll = gdf.to_crs(4326) if (gdf.crs and gdf.crs.to_epsg() != 4326) else gdf
+    # if file.endswith(".parquet"):
+    #     gdf= gpd.read_parquet(file)
+    # elif (file.endswith(".json") or file.endswith(".geojson")):
+    #     gdf = gpd.read_file(file)
+    if isinstance(aoi, gpd.GeoDataFrame):
+        aoi_gdf = aoi
+    # --- 2. Si es ruta a fichero ---
+    elif isinstance(aoi, str):
+        if not (aoi.endswith(".json") or aoi.endswith(".parquet") or aoi.endswith(".geojson")):
+            raise ValueError("The selected file is not a supported format (.json, .geojson, .parquet)")
+        if aoi.endswith(".parquet"):
+            aoi_gdf = gpd.read_parquet(aoi)
+        else:
+            aoi_gdf = gpd.read_file(aoi)
+    else:
+        raise TypeError("Parameter 'aoi' must be a GeoDataFrame or a path to a supported file")
+    
+    g_ll = aoi_gdf.to_crs(4326) if (aoi_gdf.crs and aoi_gdf.crs.to_epsg() != 4326) else aoi_gdf
     c = g_ll.unary_union.centroid
     lon, lat = c.x, c.y
     zone = int((lon + 180) // 6) + 1
@@ -57,17 +70,30 @@ def create_grid(aoi = None, grid_size = 1000):
     returns: a GeoDataFrame of grid polygons
     """
 
-    # We add a conditional to check file format
-    if not (aoi.endswith(".json") or aoi.endswith(".parquet") or aoi.endswith(".geojson")):
-        raise ValueError("The selected file is not a .json or .parquet file!")
+    # # We add a conditional to check file format
+    # if not (aoi.endswith(".json") or aoi.endswith(".parquet") or aoi.endswith(".geojson")):
+    #     raise ValueError("The selected file is not a .json or .parquet file!")
     
-    # Read the file:
-    if aoi.endswith(".parquet"):
-        aoi_gdf= gpd.read_parquet(aoi)
-    elif aoi.endswith(".json"):
-        aoi_gdf = gpd.read_file(aoi)
-    elif aoi.endswith(".geojson"):
-        aoi_gdf = gpd.read_file(aoi)
+    # # Read the file:
+    # if aoi.endswith(".parquet"):
+    #     aoi_gdf= gpd.read_parquet(aoi)
+    # elif aoi.endswith(".json"):
+    #     aoi_gdf = gpd.read_file(aoi)
+    # elif aoi.endswith(".geojson"):
+    #     aoi_gdf = gpd.read_file(aoi)
+
+    if isinstance(aoi, gpd.GeoDataFrame):
+        aoi_gdf = aoi
+    # --- 2. Si es ruta a fichero ---
+    elif isinstance(aoi, str):
+        if not (aoi.endswith(".json") or aoi.endswith(".parquet") or aoi.endswith(".geojson")):
+            raise ValueError("The selected file is not a supported format (.json, .geojson, .parquet)")
+        if aoi.endswith(".parquet"):
+            aoi_gdf = gpd.read_parquet(aoi)
+        else:
+            aoi_gdf = gpd.read_file(aoi)
+    else:
+        raise TypeError("Parameter 'aoi' must be a GeoDataFrame or a path to a supported file")
 
 
     # Ensure a projected CRS (meters)
@@ -161,6 +187,22 @@ def to_multipolygon(obj: Union[gpd.GeoDataFrame, gpd.GeoSeries, Polygon, MultiPo
             parts.extend(list(part.geoms))
     return MultiPolygon(parts) if parts else MultiPolygon([])
 
+# Function to get the WKT string annd geodataframe of the selected coutirries EEZ:
+def country_eez(
+        country_name:str
+) -> Tuple[str, gpd.GeoDataFrame]:
+    eez_path = r"./results/EVA/world_eez.parquet"
+    eez_file = gpd.read_parquet(eez_path)
+    filtered_eez = eez_file[eez_file.SOVEREIGN1 == country_name]
+
+    from shapely.wkt import dumps as wkt_dumps
+    aoi_gdf = filtered_eez.to_crs(epsg=4326)
+    geom = aoi_gdf.geometry.iloc[0]
+    geom_s = geom.simplify(0.005, preserve_topology=True)
+    wkt_str = wkt_dumps(geom_s, rounding_precision=6)
+
+    return wkt_str, filtered_eez
+
 
 
 # --------------------- EVA Assessment Questions ----------------------------------------------------
@@ -169,7 +211,6 @@ def to_multipolygon(obj: Union[gpd.GeoDataFrame, gpd.GeoSeries, Polygon, MultiPo
 def aq1(
      aoi: str,                       # ruta al area de interes (json o parquet)
      species: List[str],             # list of species names
-    #  grid_size: int,                  # size of the rectangular grid in meters
      grid: gpd.GeoDataFrame,
      min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
      cut_lrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
@@ -289,12 +330,12 @@ def aq1(
 
 
 # Testing AQ1:
-aoi = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria.geojson"
-grid_size = 3000
-grid = create_grid(aoi = aoi, grid_size=grid_size)
-aq1_gdf = aq1(aoi, ["Spartina", "Anas", "Halimione"], grid= grid, min_grid_per=5, cut_lrf=30, span_years=50)
+# aoi = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria.geojson"
+# grid_size = 3000
+# grid = create_grid(aoi = aoi, grid_size=grid_size)
+# aq1_gdf = aq1(aoi, ["Spartina", "Anas", "Halimione"], grid= grid, min_grid_per=5, cut_lrf=30, span_years=50)
 
-aq1_gdf.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test_aq1.geojson")
+# aq1_gdf.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test_aq1.geojson")
 
 
 # Assessment Question 2: abundance of Locally Rare Features (I could not find the way of retrieving abundance data from pyobis)
@@ -302,7 +343,23 @@ def aq2():
     return 
 
 # Assessment Question 5: presence of Nationally Rare Features/Species
-# def aq5(
-        
-# ) -> pd.DataFrame
+def aq5(
+    # aoi: str,
+    country_name: str,
+    grid_size:int,
+    # grid: gpd.GeoDataFrame,
+    # min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
+    # cut_nrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
+    # span_years: int 
+
+) -> gpd.GeoDataFrame:
+    
+    eez_wkt, eez_gdf = country_eez(country_name=country_name)
+
+    eez_grid = create_grid(eez_gdf, grid_size=grid_size)
+    return  eez_grid
+
+eez_grid_test = aq5("Spain", 10000)
+
+eez_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
 
