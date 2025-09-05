@@ -197,9 +197,14 @@ def country_eez(
 
     from shapely.wkt import dumps as wkt_dumps
     aoi_gdf = filtered_eez.to_crs(epsg=4326)
-    geom = aoi_gdf.geometry.iloc[0]
-    geom_s = geom.simplify(0.005, preserve_topology=True)
-    wkt_str = wkt_dumps(geom_s, rounding_precision=6)
+    # geom = aoi_gdf.geometry.iloc[0]
+    # geom_s = geom.simplify(0.005, preserve_topology=True)
+
+    minx, miny, maxx, maxy = aoi_gdf.total_bounds
+
+    bbox = box(minx, miny, maxx, maxy)
+
+    wkt_str = wkt_dumps(bbox, rounding_precision=6)
 
     return wkt_str, filtered_eez
 
@@ -211,7 +216,7 @@ def country_eez(
 def aq1(
      aoi: str,                       # ruta al area de interes (json o parquet)
      species: List[str],             # list of species names
-     grid: gpd.GeoDataFrame,
+     assessment_grid: gpd.GeoDataFrame,
      min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
      cut_lrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
      span_years: int                  # Time span of the occurrence data for the assesment in years
@@ -268,7 +273,7 @@ def aq1(
     lrs_array = []
 
     # Create a column where we will aggregate the EV values of Locally Rare Species:
-    grid["aggregation"] = 0
+    assessment_grid["aggregation"] = 0
 
     # Bucle para iterar sobre la lista de especies y definir si son LRF o no:
     for specie in species:
@@ -295,28 +300,28 @@ def aq1(
             occ_gdf_proj = occ_gdf.to_crs(metric_crs)
 
             # Grid intersecting with occurrence:
-            intersect = gpd.sjoin(grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
-            occ_grid = grid.loc[intersect.index.unique()].copy()
+            intersect = gpd.sjoin(assessment_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
+            occ_grid = assessment_grid.loc[intersect.index.unique()].copy()
 
             # If the percentage is less than the threshold to do the assessment pass:
-            print(f"Numero de grids {specie}:{len(grid)}; Numero de grids con occurrence data {specie}: {len(occ_grid)}")
-            if ((len(occ_grid)/len(grid))*100) < min_grid_per:
+            print(f"Numero de grids {specie}:{len(assessment_grid)}; Numero de grids con occurrence data {specie}: {len(occ_grid)}")
+            if ((len(occ_grid)/len(assessment_grid))*100) < min_grid_per:
                 print(f"El porcentaje de celdas con datos es demasiado pequeno para hacer el assessment con {specie}. Continuamos con la siguinte especie!")
                 pass
-            elif ((len(occ_grid)/len(grid))*100) >= min_grid_per:
+            elif ((len(occ_grid)/len(assessment_grid))*100) >= min_grid_per:
                 print(f"El porcentaje de celdas con datos es adecuado, la especie {specie} se incluye en el assessment")
                 pass
 
             # Check if the species is Locally Rare Species or not based on the threshold passed by the user:
-            if ((len(occ_grid)/len(grid))*100) < cut_lrf:
+            if ((len(occ_grid)/len(assessment_grid))*100) < cut_lrf:
                 print(f"La especie/taxon {specie} es Locally Rare Feature!")
                 lrs_array.append(specie)
 
                 # Add a value of 5 into a column 'aggregation' where the the especies is present
-                grid.loc[occ_grid.index, "aggregation"] += 5
+                assessment_grid.loc[occ_grid.index, "aggregation"] += 5
                 pass
 
-            elif ((len(occ_grid)/len(grid))*100) >= cut_lrf:
+            elif ((len(occ_grid)/len(assessment_grid))*100) >= cut_lrf:
                 print(f"La especie/taxon {specie} NO es Locally Rare Feature!")
                 pass
 
@@ -324,42 +329,136 @@ def aq1(
             pass
 
     # Average the value with the number of Locally Rare Features
-    grid['aq1'] = grid["aggregation"]/len(lrs_array)
+    assessment_grid['aq1'] = assessment_grid["aggregation"]/len(lrs_array)
 
-    return grid
+    return assessment_grid
 
 
 # Testing AQ1:
-# aoi = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria.geojson"
-# grid_size = 3000
-# grid = create_grid(aoi = aoi, grid_size=grid_size)
+aoi = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria.geojson"
+grid_size = 5000
+grid = create_grid(aoi = aoi, grid_size=grid_size)
 # aq1_gdf = aq1(aoi, ["Spartina", "Anas", "Halimione"], grid= grid, min_grid_per=5, cut_lrf=30, span_years=50)
 
 # aq1_gdf.to_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria_test_aq1.geojson")
 
 
 # Assessment Question 2: abundance of Locally Rare Features (I could not find the way of retrieving abundance data from pyobis)
-def aq2():
-    return 
+def aq2(): return 
 
 # Assessment Question 5: presence of Nationally Rare Features/Species
 def aq5(
-    # aoi: str,
+    aoi: str,
+    species: List[str],
     country_name: str,
     grid_size:int,
-    # grid: gpd.GeoDataFrame,
-    # min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
-    # cut_nrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
-    # span_years: int 
+    assessment_grid: gpd.GeoDataFrame,
+    min_grid_per: int,             # minimum percercentage of grids that need to have data to do the assessment (computed with each species).
+    cut_nrf: int,                   # threshold percentage used to define a species as Locally Rare Species. Less or equal to this threshold will be defined as Locally Rare.
+    span_years: int 
 
 ) -> gpd.GeoDataFrame:
     
+    # We add a conditional to check file format
+    if not (aoi.endswith(".json") or aoi.endswith(".parquet") or aoi.endswith(".geojson")):
+        raise ValueError("The selected file is not a .json or .parquet file!")
+    
+    # Read the file:
+    if aoi.endswith(".parquet"):
+        aoi_gdf= gpd.read_parquet(aoi)
+    elif aoi.endswith(".json"):
+        aoi_gdf = gpd.read_file(aoi)
+    elif aoi.endswith(".geojson"):
+        aoi_gdf = gpd.read_file(aoi)
+
+    # Ensure a projected CRS (meters)
+    if aoi_gdf.crs.is_projected:
+        #gdf_m = aoi_gdf
+        metric_crs = aoi_gdf.crs
+    else:
+        metric_crs = best_utm_crs(aoi)
+    
+    # Get EEZ WKT and geodataframe. The EEZ WKT is the BBOX of the EEZ to not break the OBIS API
     eez_wkt, eez_gdf = country_eez(country_name=country_name)
+    print(eez_wkt)
 
+    # Create the grid on the EEZ area
     eez_grid = create_grid(eez_gdf, grid_size=grid_size)
-    return  eez_grid
 
-eez_grid_test = aq5("Spain", 10000)
+    # Set up the occurrence data start and end date:
+    end_date = datetime.now()
+    start_date = end_date - relativedelta(years=span_years)
 
-eez_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
+    # Array to store the Nationally Rare Species:
+    nrs_array = []
+
+    # Restore the column 'aggregation' where we will aggregate the EV values of Nationally Rare Species:
+    assessment_grid["aggregation"] = 0
+
+    # Bucle para iterar sobre la lista de especies y definir si son LRF o no:
+    for specie in species:
+
+        # Intentamos bajarnos los datos, si no hay datos de esa especie pasamos a la siguiente especie:
+        try:
+            # Download the species occurrence data from pyobis (we will use the occurrence data of the last 10 years):
+            occ_data = occurrences.search(scientificname=specie, geometry=eez_wkt, startdate=start_date.strftime("%Y-%m-%d"), enddate=end_date.strftime("%Y-%m-%d")).execute()
+
+            # Drop duplicates and keep just the fields 'scientificName', 'geodeicDatum' (Coordinate System), 'datasetID', Latitude and Longitude
+            fil_occ_data = occ_data.drop_duplicates(subset=["decimalLatitude", "decimalLongitude"], keep="first")
+            filtered_occ_data = fil_occ_data[["scientificName", "datasetID", "decimalLatitude", "decimalLongitude"]]
+
+            # Create geometry of the occurrence data
+            geometry = [Point(xy) for xy in zip(filtered_occ_data['decimalLongitude'], filtered_occ_data['decimalLatitude'])]
+
+            # Create the occurrence geodataframe:
+            occ_gdf = gpd.GeoDataFrame(filtered_occ_data, geometry=geometry)
+
+            # Establish the Coordinate System to EPSG:4326 (it has to be equal to geodeticDatum):
+            occ_gdf.set_crs("EPSG:4326", allow_override=True, inplace=True)
+
+            # Project the occ_gdf into the aoi CRS:
+            occ_gdf_proj = occ_gdf.to_crs(metric_crs)
+
+            # Project eez_grid:
+            eez_grid = eez_grid.to_crs(metric_crs)
+
+            # Grid intersecting with occurrence:
+            eez_intersect = gpd.sjoin(eez_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
+            eez_occ_grid = eez_grid.loc[eez_intersect.index.unique()].copy()
+
+            # If the percentage is less than the threshold to do the assessment pass:
+            print(f"Numero de grids {specie}:{len(eez_grid)}; Numero de grids con occurrence data {specie}: {len(eez_occ_grid)}")
+            if ((len(eez_occ_grid)/len(eez_grid))*100) < min_grid_per:
+                print(f"El porcentaje de celdas con datos es demasiado pequeno para hacer el assessment con {specie}. Continuamos con la siguinte especie!")
+                pass
+            elif ((len(eez_occ_grid)/len(eez_grid))*100) >= min_grid_per:
+                print(f"El porcentaje de celdas con datos es adecuado, la especie {specie} se incluye en el assessment")
+                pass
+
+            # Check if the species is Nationally Rare Species or not based on the threshold passed by the user:
+            if ((len(eez_occ_grid)/len(eez_grid))*100) < cut_nrf:
+                print(f"La especie/taxon {specie} es Nationally Rare Feature!")
+                nrs_array.append(specie)
+
+                # Add a value of 5 into a column 'aggregation' where the the especies is present in the AOI grid
+                intersect = gpd.sjoin(assessment_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
+                occ_grid = assessment_grid.loc[intersect.index.unique()].copy()
+                assessment_grid.loc[occ_grid.index, "aggregation"] += 5
+                pass
+
+            elif ((len(occ_grid)/len(eez_grid))*100) >= cut_nrf:
+                print(f"La especie/taxon {specie} NO es Nationally Rare Feature!")
+                pass
+
+        except KeyError:
+            pass
+
+    # Average the value with the number of Locally Rare Features
+    assessment_grid['aq5'] = assessment_grid["aggregation"]/len(nrs_array)
+
+    return  assessment_grid
+
+aq5_grid_test = aq5(aoi=aoi, species = ["Spartina", "Anas", "Halimione"], country_name= "Spain", grid_size= grid_size, assessment_grid=grid, min_grid_per=0, cut_nrf=20, span_years=30)
+
+aq5_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
 
