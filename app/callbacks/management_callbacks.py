@@ -176,6 +176,18 @@ def _build_saltmarsh_scenarios_layout(area: str,
             selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
         )
 
+    # Sum all activities geometries for Total affection:
+    def _as_list(x):
+        if x is None:
+            return []
+        if isinstance(x, list):
+            return x
+        return [x]
+
+    total_children = (_as_list(mgmt_w)  + _as_list(mgmt_a)  + _as_list(mgmt_v)  + _as_list(mgmt_d))
+    total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))
+
+
     return dcc.Tabs(
         id="mgmt-scenarios-tabs-main", value="wind",
         children=[
@@ -183,6 +195,7 @@ def _build_saltmarsh_scenarios_layout(area: str,
             activity_panel("Aquaculture",  "aquaculture",mgmt_a,  mgmt_au),
             activity_panel("Vessel Routes","vessel",     mgmt_v,  mgmt_vu),
             activity_panel("Defence",      "defence",    mgmt_d,  mgmt_du),
+            activity_panel("Total",        "total",      total_children, total_upload_children)
         ]
     )
 
@@ -367,6 +380,7 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
                     style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     children=[_subtabs("defence")]),
+                    
         ]
     )
 
@@ -1086,6 +1100,7 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-info-button", "hidden", allow_duplicate=True),
         Output("mgmt-results", "hidden", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
+        Output("mgmt-current-button", "hidden", allow_duplicate=True),
         Input("mgmt-reset-button", "n_clicks"),
         State("wind-farm", "options"),
         State("aquaculture", "options"),
@@ -1111,7 +1126,7 @@ def register_management_callbacks(app: dash.Dash):
             [], [], [], [], # values de los 4 checklists
             default_view,   # viewport
             True,           # deshabilitar botón reset
-            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True, True
+            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True, True, True
         )
     
 # Callback to enable run when any drawn or layer has a children:

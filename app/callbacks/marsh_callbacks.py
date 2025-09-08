@@ -422,7 +422,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
                                 children=[
                                     html.Button(  # botón info
-                                        [html.Img(src='/assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Management scenarios info")],
+                                        [html.Img(src='/assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Management scenarios info")],
                                         id='mgmt-info-button',  # id
                                         className='btn btn-outline-primary',
                                         hidden=True,  # oculto al inicio
@@ -431,7 +431,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     html.Div(  # contenedor de descarga
                                         [
                                             html.Button(  # botón de descarga
-                                                [html.Img(src='/assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")], 
+                                                [html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download results")], 
                                                 id='mgmt-results',  # id
                                                 hidden=True,  # oculto al inicio
                                                 n_clicks=0,  # contador
