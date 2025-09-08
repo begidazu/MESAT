@@ -47,57 +47,6 @@ SCEN_LABEL = {
 }
 SCEN_KEYS = ["regional_rcp45", "regional_rcp85", "global_rcp45"]
 
-# Function to build tabs of saltmarsh scenario affection:
-# def _build_saltmarsh_scenarios_layout(area: str):
-#     def scenario_tabs(activity_key: str):
-#         # años por cada escenario (solo si existe en esa área)
-#         scen_tabs = []
-#         for scen in SCEN_KEYS:
-#             if not saltmarsh_scenario_available(area, scen):
-#                 continue
-#             years = saltmarsh_scenario_years(area, scen)
-#             scen_tabs.append(
-#                 dcc.Tab(
-#                     label=SCEN_LABEL[scen], value=scen,
-#                     children=[
-#                         dcc.Tabs(
-#                             id=f"mgmt-scen-{activity_key}-years-{scen}",
-#                             value=(years[0] if years else None),
-#                             children=[dcc.Tab(label=y, value=y) for y in years],
-#                             style={"padding": "0.25rem 0.5rem"}
-#                         ),
-#                     ],
-#                     style={"padding":"0.5rem 0.75rem"},
-#                     selected_style={"padding":"0.5rem 0.75rem"}
-#                 )
-#             )
-#         return dcc.Tabs(
-#             id=f"mgmt-scen-{activity_key}-scenarios",
-#             value=(SCEN_KEYS[0] if scen_tabs else None),
-#             children=scen_tabs,
-#             style={"marginBottom":"0.5rem"}
-#         )
-
-#     def activity_panel(label, key):
-#         return dcc.Tab(
-#             label=label, value=key,
-#             children=[
-#                 scenario_tabs(key),
-#                 html.Div(id=f"mgmt-scen-{key}-table")  # un único contenedor por actividad
-#             ],
-#             style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
-#             selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
-#         )
-
-#     return dcc.Tabs(
-#         id="mgmt-scenarios-tabs-main", value="wind",
-#         children=[
-#             activity_panel("Wind Farms",  "wind"),
-#             activity_panel("Aquaculture","aquaculture"),
-#             activity_panel("Vessel Routes","vessel"),
-#             activity_panel("Defence","defence"),
-#         ]
-#     )
 def _render_table(df, empty_text):
     if df is None or df.empty:
         return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
@@ -386,7 +335,6 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
                     children=[_subtabs("total")])                 
         ]
     )
-
 
 # Definis los callbacks que vienen de la app para el tab-management:
 def register_management_callbacks(app: dash.Dash):
@@ -1499,8 +1447,6 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
         Output("mgmt-current-button", "hidden", allow_duplicate=True),
-        # opcional: re-sincronizar el disabled del botón de escenarios
-        # Output("mgmt-scenarios-button", "disabled", allow_duplicate=True),
         Input("mgmt-current-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
         prevent_initial_call=True
@@ -1518,3 +1464,15 @@ def register_management_callbacks(app: dash.Dash):
             True,   # oculto botón "Current"
             # opcional: not saltmarsh_enabled
         )
+    
+# Add management activity legend:
+    @app.callback(
+        Output("mgmt-legend-div", "hidden", allow_duplicate=True),
+        Input("tabs", "value"),
+        prevent_initial_call=True
+    )
+    def clear_overlay_on_tab_change(tab_value):
+        if tab_value == "tab-management":
+            return False            # limpiar overlay al salir del tab
+        else:
+            return True
