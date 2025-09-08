@@ -1004,3 +1004,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return False, store  # no mostrar más en esta sesión si marcó la casilla
         return True, store       # de lo contrario, mostrar
 
+
+    # Callback to open the welcome modal when they click the ? button:
+
+    @app.callback(
+        Output("welcome-modal", "is_open", allow_duplicate=True),
+        Input("help-btn", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def welcome_callback_button(click):
+        if click:
+            return True

@@ -92,27 +92,71 @@ def create_layout():  # definir función que construye el layout
                                 id='tab-content',  # id del contenedor
                                 className="flex-grow-1 overflow-auto p-2 bg-white rounded shadow-sm"  # estilos
                             ),
-                            html.Div(  # pie con enlaces
-                                className="p-2 mt-auto",  # padding y empujar abajo
-                                children=[  # enlaces
-                                    # --- enlace a paper (añado 'footer-link' y mantengo el emoji con 'footer-icon') ---
-                                    html.A( # enlace a paper
-                                        [html.Span('📄', className="me-1 footer-icon"), "Access the methodology"],  # icono + texto
-                                        id='method-link',
-                                        href='https://doi.org/10.1016/j.scitotenv.2024.178164',  # url del paper
-                                        target='_blank',  # abrir en nueva pestaña
-                                        className="d-flex align-items-center text-decoration-none text-dark mb-1 footer-link"  # añado 'footer-link' para tamaño
+                            # html.Div(  # pie con enlaces
+                            #     className="p-2 mt-auto",  # padding y empujar abajo
+                            #     children=[  # enlaces
+                            #         # --- enlace a paper (añado 'footer-link' y mantengo el emoji con 'footer-icon') ---
+                            #         html.A( # enlace a paper
+                            #             [html.Span('📄', className="me-1 footer-icon"), "Access the methodology"],  # icono + texto
+                            #             id='method-link',
+                            #             href='https://doi.org/10.1016/j.scitotenv.2024.178164',  # url del paper
+                            #             target='_blank',  # abrir en nueva pestaña
+                            #             className="d-flex align-items-center text-decoration-none text-dark mb-1 footer-link"  # añado 'footer-link' para tamaño
+                            #         ),
+
+                            #         # --- enlace a GitHub (mismo patrón: 'footer-icon' y 'footer-link') ---
+                            #         html.A(  # enlace a repo
+                            #             [html.Img(src='/assets/logos/github-mark.png', className="me-1 footer-icon"), "Access the code"],  # icono + texto
+                            #             id='code-link',
+                            #             href='https://github.com/begidazu/PhD_Web_App',  # url del repo
+                            #             target='_blank',  # abrir en nueva pestaña
+                            #             className="d-flex align-items-center text-decoration-none text-dark footer-link"  # añado 'footer-link' para tamaño
+                            #         )
+                            #     ]
+                            # )
+                            html.Div(
+                                className="p-2 mt-auto d-flex justify-content-between align-items-stretch",
+                                style={"minHeight": "56px"},  # altura mínima del footer
+                                children=[
+                                    # bloque de enlaces a la izquierda (en columna)
+                                    html.Div(
+                                        [
+                                            html.A(
+                                                [html.Span('📄', className="me-1 footer-icon"), "Access the methodology"],
+                                                id='method-link',
+                                                href='https://doi.org/10.1016/j.scitotenv.2024.178164',
+                                                target='_blank',
+                                                className="d-flex align-items-center text-decoration-none text-dark mb-1 footer-link"
+                                            ),
+                                            html.A(
+                                                [html.Img(src='/assets/logos/github-mark.png', className="me-1 footer-icon"), "Access the code"],
+                                                id='code-link',
+                                                href='https://github.com/begidazu/PhD_Web_App',
+                                                target='_blank',
+                                                className="d-flex align-items-center text-decoration-none text-dark footer-link"
+                                            ),
+                                        ],
+                                        className="d-flex flex-column",
                                     ),
 
-                                    # --- enlace a GitHub (mismo patrón: 'footer-icon' y 'footer-link') ---
-                                    html.A(  # enlace a repo
-                                        [html.Img(src='/assets/logos/github-mark.png', className="me-1 footer-icon"), "Access the code"],  # icono + texto
-                                        id='code-link',
-                                        href='https://github.com/begidazu/PhD_Web_App',  # url del repo
-                                        target='_blank',  # abrir en nueva pestaña
-                                        className="d-flex align-items-center text-decoration-none text-dark footer-link"  # añado 'footer-link' para tamaño
-                                    )
-                                ]
+                                    # botón de ayuda a la derecha (mismo alto que el bloque de la izquierda)
+                                    dbc.Button(
+                                        "?",
+                                        id="help-btn",
+                                        n_clicks=0,
+                                        outline=True,
+                                        color='primary',
+                                        className="fw-bold d-flex justify-content-center align-items-center",
+                                        style={
+                                            "height": "100%",         # ocupa todo el alto del footer
+                                            "aspectRatio": "1 / 1",   # cuadrado perfecto
+                                            "padding": 0,
+                                            "lineHeight": "1",
+                                            'borderRadius': "50%",
+                                            "fontSize": "2rem"
+                                        },
+                                    ),
+                                ],
                             )
                         ]
                     ),
