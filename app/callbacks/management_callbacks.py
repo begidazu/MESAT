@@ -176,6 +176,18 @@ def _build_saltmarsh_scenarios_layout(area: str,
             selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
         )
 
+    # Sum all activities geometries for Total affection:
+    def _as_list(x):
+        if x is None:
+            return []
+        if isinstance(x, list):
+            return x
+        return [x]
+
+    total_children = (_as_list(mgmt_w)  + _as_list(mgmt_a)  + _as_list(mgmt_v)  + _as_list(mgmt_d))
+    total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))
+
+
     return dcc.Tabs(
         id="mgmt-scenarios-tabs-main", value="wind",
         children=[
@@ -183,6 +195,7 @@ def _build_saltmarsh_scenarios_layout(area: str,
             activity_panel("Aquaculture",  "aquaculture",mgmt_a,  mgmt_au),
             activity_panel("Vessel Routes","vessel",     mgmt_v,  mgmt_vu),
             activity_panel("Defence",      "defence",    mgmt_d,  mgmt_du),
+            activity_panel("TOTAL",        "total",      total_children, total_upload_children)
         ]
     )
 
@@ -367,6 +380,10 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
                     style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     children=[_subtabs("defence")]),
+            dcc.Tab(label="TOTAL", value="total",
+                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+                    children=[_subtabs("total")])                 
         ]
     )
 
@@ -1086,6 +1103,7 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-info-button", "hidden", allow_duplicate=True),
         Output("mgmt-results", "hidden", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
+        Output("mgmt-current-button", "hidden", allow_duplicate=True),
         Input("mgmt-reset-button", "n_clicks"),
         State("wind-farm", "options"),
         State("aquaculture", "options"),
@@ -1111,7 +1129,7 @@ def register_management_callbacks(app: dash.Dash):
             [], [], [], [], # values de los 4 checklists
             default_view,   # viewport
             True,           # deshabilitar botón reset
-            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True, True
+            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True, True, True
         )
     
 # Callback to enable run when any drawn or layer has a children:
@@ -1365,6 +1383,76 @@ def register_management_callbacks(app: dash.Dash):
             try:
                 df_sm = activity_saltmarsh_table(area, mgmt_d, mgmt_du)
                 saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Defence.")
+            except Exception:
+                import traceback; traceback.print_exc()
+                saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+        else:
+            # El subtab estará disabled; aún así devolvemos un placeholder inocuo
+            saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
+
+        return eunis_div, saltmarsh_div
+    
+    @app.callback(
+        Output("mgmt-total-eunis", "children"),
+        Output("mgmt-total-saltmarshes", "children"),
+        Input("mgmt-table", "children"),
+        State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-wind", "children"),
+        State("mgmt-wind-upload", "children"),
+        State("mgmt-aquaculture", "children"),
+        State("mgmt-aquaculture-upload", "children"),
+        State("mgmt-vessel", "children"),
+        State("mgmt-vessel-upload", "children"),
+        State("mgmt-defence", "children"),
+        State("mgmt-defence-upload", "children"),
+        prevent_initial_call=True
+    )
+    def fill_total_tabs(_tabs_ready, area, mgmt_w, mgmt_wu, mgmt_a, mgmt_au, mgmt_v, mgmt_vu, mgmt_d, mgmt_du):
+        if not _tabs_ready:
+            raise PreventUpdate
+        
+        # Sum all activities geometries for Total affection:
+        def _as_list(x):
+            if x is None:
+                return []
+            if isinstance(x, list):
+                return x
+            return [x]
+
+        total_children = (_as_list(mgmt_w)  + _as_list(mgmt_a)  + _as_list(mgmt_v)  + _as_list(mgmt_d))
+        total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))
+
+        def render_table(df, empty_text):
+            if df is None or df.empty:
+                return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
+            table = dash_table.DataTable(
+                columns=[{"name": c, "id": c} for c in df.columns],
+                data=df.to_dict("records"),
+                sort_action="native", filter_action="native", page_action="none",
+                style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+                style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+                style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+                style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+            )
+            return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+
+        # --- EUNIS (solo si está disponible para el área) ---
+        if eunis_available(area):
+            try:
+                # Compute statistics on the total geometries:
+                df_eu = activity_eunis_table(area, total_children, total_upload_children, label_col="AllcombD")
+                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Wind Farms.")
+            except Exception:
+                import traceback; traceback.print_exc()
+                eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+        else:
+            eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
+
+        # --- SALTMARSH (solo si está disponible para el área) ---
+        if saltmarsh_available(area):
+            try:
+                df_sm = activity_saltmarsh_table(area, total_children, total_upload_children)
+                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Wind Farms.")
             except Exception:
                 import traceback; traceback.print_exc()
                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
