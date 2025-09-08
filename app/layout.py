@@ -116,8 +116,121 @@ def create_layout():  # definir función que construye el layout
                                     # Layers where we store the uploaded files:
                                     dl.FeatureGroup(id="mgmt-wind-upload", children=[]),  # capa para los datos subidos (Wind)
                                     dl.FeatureGroup(id="mgmt-aquaculture-upload", children=[]),  # capa para los datos subidos (Aquaculture)
-                                    dl.FeatureGroup(id="mgmt-vessel-upload", children=[]),# capa para los datos subidos (Vessel Routes)
-                                    dl.FeatureGroup(id="mgmt-defence-upload", children=[])# capa para los datos subidos (Defence)
+                                    dl.FeatureGroup(id="mgmt-vessel-upload", children=[]), # capa para los datos subidos (Vessel Routes)
+                                    dl.FeatureGroup(id="mgmt-defence-upload", children=[]), # capa para los datos subidos (Defence)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                    # LayersControl to add the information useful to delimit economic activity areas. THIS IS IN TEST MODE:
+                                        # Botón con el icono (bajo el EditControl)
+                                    # html.Button(
+                                    #     id="layers-btn",
+                                    #     className="btn btn-outline-primary",   # estilos abajo
+                                    #     n_clicks=0,
+                                    #     title="Layers",
+                                    #     children=html.Img(src="/assets/logos/layers.png", className="layers-icon"),
+                                    # ),
+
+                                    dbc.Button(
+                                        html.I(className="bi bi-layers", style={"fontSize": "1.6rem", "lineHeight": 1}),
+                                        id="layers-btn",
+                                        color="light",
+                                        n_clicks=0,
+                                        className="shadow-sm border rounded-1 position-absolute d-flex align-items-center justify-content-center",
+                                        style={"left": "10px", "top": "78px", "zIndex": 1000, "width": "46px", "height": "46px"},
+                                    ),
+                                    # html.Div(
+                                    #     id="layer-menu",
+                                    #     className="layers-panel",
+                                    #     children=[
+                                    #         html.Div("Layers", className="lm-header"),   # título siempre visible
+                                    #         html.Div(                                   # cuerpo que se despliega al hover
+                                    #             [
+                                    #                 html.Div("Human activities", className="lm-group-title"),
+                                    #                 dcc.Checklist(
+                                    #                     id="chk-human",
+                                    #                     options=[
+                                    #                         {"label": "HA 1", "value": "mgmt-ha-1"},
+                                    #                         {"label": "HA 2", "value": "mgmt-ha-2"},
+                                    #                     ],
+                                    #                     value=[],
+                                    #                     className="lm-checklist",
+                                    #                 ),
+                                    #                 html.Div("Fishery", className="lm-group-title"),
+                                    #                 dcc.Checklist(
+                                    #                     id="chk-fish",
+                                    #                     options=[
+                                    #                         {"label": "Effort",   "value": "mgmt-fish-effort"},
+                                    #                         {"label": "Closures", "value": "mgmt-fish-closures"},
+                                    #                     ],
+                                    #                     value=[],
+                                    #                     className="lm-checklist",
+                                    #                 ),
+                                    #             ],
+                                    #             className="lm-body",
+                                    #         ),
+                                    #     ],
+                                    # )
+                                    html.Div(
+                                        id="layer-menu",
+                                        className="card shadow-sm position-absolute collapse",
+                                        style={"left":"10px","top":"128px","zIndex":1000,"minWidth":"260px"},
+                                        children=[
+                                            html.Div("Layers", className="card-header py-2 fw-bold text-uppercase"),
+                                            html.Div(
+                                                [
+                                                    html.Div("Human activities", className="fw-semibold mb-1", style={"fontSize":"0.95rem"}),  # un poco más grande
+                                                    dbc.Checklist(
+                                                        id="chk-human",
+                                                        options=[
+                                                            {"label": html.Span("HA 1", style={"fontSize":"0.8rem"}), "value": "mgmt-ha-1"},
+                                                            {"label": html.Span("HA 2", style={"fontSize":"0.8rem"}), "value": "mgmt-ha-2"},
+                                                        ],
+                                                        value=[],
+                                                        switch=True,
+                                                        className="mb-2",
+                                                    ),
+
+                                                    html.Div("Fishery", className="fw-semibold mb-1 mt-2", style={"fontSize":"0.95rem"}),
+                                                    dbc.Checklist(
+                                                        id="chk-fish",
+                                                        options=[
+                                                            {"label": html.Span("Effort",   style={"fontSize":"0.8rem"}), "value": "mgmt-fish-effort"},
+                                                            {"label": html.Span("Closures", style={"fontSize":"0.8rem"}), "value": "mgmt-fish-closures"},
+                                                        ],
+                                                        value=[],
+                                                        switch=True,
+                                                    ),
+                                                ],
+                                                className="card-body py-2"
+                                            ),
+                                        ],
+                                    )
+
+
+
+
+
+
+
+
+
+
+
+
 
                                 ]
                             ),

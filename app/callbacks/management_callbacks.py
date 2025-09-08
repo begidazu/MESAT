@@ -1476,3 +1476,77 @@ def register_management_callbacks(app: dash.Dash):
             return False            # limpiar overlay al salir del tab
         else:
             return True
+        
+# Add LayerGroup with the additional information for management activities location selection.
+    # @app.callback(
+    #     Output("mgmt-layers-control", "children"),
+    #     Output("mgmt-layers-control", "style"),
+    #     Input("tabs", "value"),
+    #     State("mgmt-layers-control", "children"),
+    #     prevent_initial_call=False
+    # )
+    # def toggle_mgmt_layers(tab_value, current_children):
+    #     if tab_value == "tab-management":
+    #         overlays = [
+    #             # Grupo 1: Human activities
+    #             dl.Overlay(
+    #                 name="Human activities", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-ha-1"),
+    #                     dl.LayerGroup(id="mgmt-ha-2"),
+    #                     # añade más capas del grupo aquí…
+    #                 ])
+    #             ),
+    #             # Grupo 2: Fishery
+    #             dl.Overlay(
+    #                 name="Fishery", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-fish-effort"),
+    #                     dl.LayerGroup(id="mgmt-fish-closures"),
+    #                     # …
+    #                 ])
+    #             ),
+    #             # Grupo 3: (otro)
+    #             dl.Overlay(
+    #                 name="Environmental", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-env-mpas"),
+    #                     dl.LayerGroup(id="mgmt-env-habitats"),
+    #                 ])
+    #             ),
+    #         ]
+    #         return overlays, {}                # visible
+    #     # al salir de management:
+    #     return [], {"display": "none", 'pointer-events': 'none'}         # oculto y sin hijos
+
+
+    @app.callback(
+        Output("layer-menu", "className"),
+        Input("layers-btn", "n_clicks"),
+        prevent_initial_call=False
+    )
+    def toggle_layers_panel(n):
+        base = "card shadow-sm position-absolute collapse"
+        return f"{base} show" if (n or 0) % 2 == 1 else base
+    
+    @app.callback(
+        Output("mgmt-ha-1", "children"),
+        Output("mgmt-ha-2", "children"),
+        Output("mgmt-fish-effort", "children"),
+        Output("mgmt-fish-closures", "children"),
+        Input("chk-human", "value"),
+        Input("chk-fish", "value"),
+        prevent_initial_call=False
+    )
+    def toggle_sub_layers(human_vals, fish_vals):
+        active = set((human_vals or []) + (fish_vals or []))
+
+        def on(layer_id, component):
+            return [component] if layer_id in active else []
+
+        return (
+            on("mgmt-ha-1", dl.GeoJSON(id="ha1")),          # <-- tu capa
+            on("mgmt-ha-2", dl.GeoJSON(id="ha2")),
+            on("mgmt-fish-effort",   dl.GeoJSON(id="feff")),
+            on("mgmt-fish-closures", dl.GeoJSON(id="fclo")),
+        )
