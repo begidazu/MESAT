@@ -134,6 +134,12 @@ def create_layout():  # definir función que construye el layout
                                             "fontSize": "2rem"
                                         },
                                     ),
+                                    # tooltip (hover info for help-btn)
+                                    dbc.Tooltip(
+                                        "Open Welcome modal",  # el texto del hover
+                                        target="help-btn",  # id del botón al que se engancha
+                                        placement="top",   # posición del tooltip (top, bottom, left, right)
+                                    )
                                 ],
                             )
                         ]
