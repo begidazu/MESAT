@@ -458,7 +458,9 @@ def aq5(
 
     return  assessment_grid
 
-aq5_grid_test = aq5(aoi=aoi, species = ["Spartina", "Delphinus delphis", "Halimione"], country_name= "Spain", grid_size= 50000, assessment_grid=grid, min_grid_per=0, cut_nrf=25, span_years=30)
+# Assessment Question 7:
 
-aq5_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
+# aq5_grid_test = aq5(aoi=aoi, species = ["Spartina", "Delphinus delphis", "Halimione"], country_name= "Spain", grid_size= 50000, assessment_grid=grid, min_grid_per=0, cut_nrf=25, span_years=10)
+
+# aq5_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
 
