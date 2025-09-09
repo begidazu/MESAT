@@ -13,7 +13,7 @@ from shapely.geometry import box, Point, Polygon, MultiPolygon, GeometryCollecti
 from shapely import wkb, wkt
 import matplotlib.pyplot as plt
 from pyobis.occurrences import occurrences
-from pyobis import taxa
+
 try:
     from shapely.validation import make_valid   # Shapely ≥2.0
     _has_make_valid = True
@@ -307,23 +307,22 @@ def aq1(
             print(f"Numero de grids {specie}:{len(assessment_grid)}; Numero de grids con occurrence data {specie}: {len(occ_grid)}")
             if ((len(occ_grid)/len(assessment_grid))*100) < min_grid_per:
                 print(f"El porcentaje de celdas con datos es demasiado pequeno para hacer el assessment con {specie}. Continuamos con la siguinte especie!")
-                pass
+                continue
             elif ((len(occ_grid)/len(assessment_grid))*100) >= min_grid_per:
                 print(f"El porcentaje de celdas con datos es adecuado, la especie {specie} se incluye en el assessment")
-                pass
 
-            # Check if the species is Locally Rare Species or not based on the threshold passed by the user:
-            if ((len(occ_grid)/len(assessment_grid))*100) < cut_lrf:
-                print(f"La especie/taxon {specie} es Locally Rare Feature!")
-                lrs_array.append(specie)
+                # Check if the species is Locally Rare Species or not based on the threshold passed by the user:
+                if ((len(occ_grid)/len(assessment_grid))*100) < cut_lrf:
+                    print(f"La especie/taxon {specie} es Locally Rare Feature!")
+                    lrs_array.append(specie)
 
-                # Add a value of 5 into a column 'aggregation' where the the especies is present
-                assessment_grid.loc[occ_grid.index, "aggregation"] += 5
-                pass
+                    # Add a value of 5 into a column 'aggregation' where the the especies is present
+                    assessment_grid.loc[occ_grid.index, "aggregation"] += 5
+                    continue
 
-            elif ((len(occ_grid)/len(assessment_grid))*100) >= cut_lrf:
-                print(f"La especie/taxon {specie} NO es Locally Rare Feature!")
-                pass
+                elif ((len(occ_grid)/len(assessment_grid))*100) >= cut_lrf:
+                    print(f"La especie/taxon {specie} NO es Locally Rare Feature!")
+                    continue
 
         except KeyError:
             pass
@@ -385,6 +384,9 @@ def aq5(
     # Create the grid on the EEZ area
     eez_grid = create_grid(eez_gdf, grid_size=grid_size)
 
+    # Project eez_grid:
+    eez_grid = eez_grid.to_crs(metric_crs)
+
     # Set up the occurrence data start and end date:
     end_date = datetime.now()
     start_date = end_date - relativedelta(years=span_years)
@@ -413,14 +415,13 @@ def aq5(
             # Create the occurrence geodataframe:
             occ_gdf = gpd.GeoDataFrame(filtered_occ_data, geometry=geometry)
 
+            occ_gdf.to_parquet(os.path.join( r"C:\Users\beñat.egidazu\Desktop\Tests\EVA", f"{specie}_occurence.parquet"))
+
             # Establish the Coordinate System to EPSG:4326 (it has to be equal to geodeticDatum):
             occ_gdf.set_crs("EPSG:4326", allow_override=True, inplace=True)
 
             # Project the occ_gdf into the aoi CRS:
             occ_gdf_proj = occ_gdf.to_crs(metric_crs)
-
-            # Project eez_grid:
-            eez_grid = eez_grid.to_crs(metric_crs)
 
             # Grid intersecting with occurrence:
             eez_intersect = gpd.sjoin(eez_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
@@ -430,25 +431,24 @@ def aq5(
             print(f"Numero de grids {specie}:{len(eez_grid)}; Numero de grids con occurrence data {specie}: {len(eez_occ_grid)}")
             if ((len(eez_occ_grid)/len(eez_grid))*100) < min_grid_per:
                 print(f"El porcentaje de celdas con datos es demasiado pequeno para hacer el assessment con {specie}. Continuamos con la siguinte especie!")
-                pass
+                continue
             elif ((len(eez_occ_grid)/len(eez_grid))*100) >= min_grid_per:
                 print(f"El porcentaje de celdas con datos es adecuado, la especie {specie} se incluye en el assessment")
-                pass
 
-            # Check if the species is Nationally Rare Species or not based on the threshold passed by the user:
-            if ((len(eez_occ_grid)/len(eez_grid))*100) < cut_nrf:
-                print(f"La especie/taxon {specie} es Nationally Rare Feature!")
-                nrs_array.append(specie)
+                # Check if the species is Nationally Rare Species or not based on the threshold passed by the user:
+                if ((len(eez_occ_grid)/len(eez_grid))*100) < cut_nrf:
+                    print(f"La especie/taxon {specie} es Nationally Rare Feature!")
+                    nrs_array.append(specie)
 
-                # Add a value of 5 into a column 'aggregation' where the the especies is present in the AOI grid
-                intersect = gpd.sjoin(assessment_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
-                occ_grid = assessment_grid.loc[intersect.index.unique()].copy()
-                assessment_grid.loc[occ_grid.index, "aggregation"] += 5
-                pass
+                    # Add a value of 5 into a column 'aggregation' where the the especies is present in the AOI grid
+                    intersect = gpd.sjoin(assessment_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
+                    occ_grid = assessment_grid.loc[intersect.index.unique()].copy()
+                    assessment_grid.loc[occ_grid.index, "aggregation"] += 5
+                    continue
 
-            elif ((len(occ_grid)/len(eez_grid))*100) >= cut_nrf:
-                print(f"La especie/taxon {specie} NO es Nationally Rare Feature!")
-                pass
+                elif ((len(eez_occ_grid)/len(eez_grid))*100) >= cut_nrf:
+                    print(f"La especie/taxon {specie} NO es Nationally Rare Feature!")
+                    continue
 
         except KeyError:
             pass
@@ -458,7 +458,7 @@ def aq5(
 
     return  assessment_grid
 
-aq5_grid_test = aq5(aoi=aoi, species = ["Spartina", "Anas", "Halimione"], country_name= "Spain", grid_size= grid_size, assessment_grid=grid, min_grid_per=0, cut_nrf=20, span_years=30)
+aq5_grid_test = aq5(aoi=aoi, species = ["Spartina", "Delphinus delphis", "Halimione"], country_name= "Spain", grid_size= 50000, assessment_grid=grid, min_grid_per=0, cut_nrf=25, span_years=30)
 
 aq5_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
 
