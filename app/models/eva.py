@@ -252,11 +252,9 @@ def aq1(
 
     # Ensure a projected CRS (meters)
     if aoi_gdf.crs.is_projected:
-        #gdf_m = aoi_gdf
         metric_crs = aoi_gdf.crs
     else:
         metric_crs = best_utm_crs(aoi)
-        #gdf_m = aoi_gdf.to_crs(metric_crs)
 
     # Set up the occurrence data start and end date:
     end_date = datetime.now()
@@ -372,7 +370,6 @@ def aq5(
 
     # Ensure a projected CRS (meters)
     if aoi_gdf.crs.is_projected:
-        #gdf_m = aoi_gdf
         metric_crs = aoi_gdf.crs
     else:
         metric_crs = best_utm_crs(aoi)
@@ -415,8 +412,6 @@ def aq5(
             # Create the occurrence geodataframe:
             occ_gdf = gpd.GeoDataFrame(filtered_occ_data, geometry=geometry)
 
-            occ_gdf.to_parquet(os.path.join( r"C:\Users\beñat.egidazu\Desktop\Tests\EVA", f"{specie}_occurence.parquet"))
-
             # Establish the Coordinate System to EPSG:4326 (it has to be equal to geodeticDatum):
             occ_gdf.set_crs("EPSG:4326", allow_override=True, inplace=True)
 
@@ -458,9 +453,85 @@ def aq5(
 
     return  assessment_grid
 
-# Assessment Question 7:
+# Assessment Question 7: Feature number presence-absence
+def aq7(
+    aoi: str,
+    species: List[str],
+    assessment_grid: gpd.GeoDataFrame,
+    span_years: int
+) -> gpd.GeoDataFrame:
+    
+    # We add a conditional to check file format
+    if not (aoi.endswith(".json") or aoi.endswith(".parquet") or aoi.endswith(".geojson")):
+        raise ValueError("The selected file is not a .json or .parquet file!")
+    
+    # Read the file:
+    if aoi.endswith(".parquet"):
+        aoi_gdf= gpd.read_parquet(aoi)
+    elif aoi.endswith(".json"):
+        aoi_gdf = gpd.read_file(aoi)
+    elif aoi.endswith(".geojson"):
+        aoi_gdf = gpd.read_file(aoi)
 
-# aq5_grid_test = aq5(aoi=aoi, species = ["Spartina", "Delphinus delphis", "Halimione"], country_name= "Spain", grid_size= 50000, assessment_grid=grid, min_grid_per=0, cut_nrf=25, span_years=10)
+    # Ensure a projected CRS (meters)
+    if aoi_gdf.crs.is_projected:
+        metric_crs = aoi_gdf.crs
+    else:
+        metric_crs = best_utm_crs(aoi)
 
-# aq5_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
+    # Convert Area of Interest to 4326 EPSG as obis data is mainly on that Coordinate System. Also simplify the polygon.
+    from shapely.wkt import dumps as wkt_dumps
+    aoi_gdf = aoi_gdf.to_crs(epsg=4326)
+    geom = aoi_gdf.geometry.iloc[0]
+    geom_s = geom.simplify(0.005, preserve_topology=True)
+    wkt_str = wkt_dumps(geom_s, rounding_precision=6)
+
+    print(wkt_str)
+    # Set up the occurrence data start and end date:
+    end_date = datetime.now()
+    start_date = end_date - relativedelta(years=span_years)
+
+    # Restore the column 'aggregation' where we will aggregate the EV values of Nationally Rare Species:
+    assessment_grid["aggregation"] = 0
+
+    for specie in species:
+
+        # Intentamos bajarnos los datos, si no hay datos de esa especie pasamos a la siguiente especie:
+        try:
+            # Download the species occurrence data from pyobis (we will use the occurrence data of the last 10 years):
+            occ_data = occurrences.search(scientificname=specie, geometry=wkt_str, startdate=start_date.strftime("%Y-%m-%d"), enddate=end_date.strftime("%Y-%m-%d")).execute()
+
+            # Drop duplicates and keep just the fields 'scientificName', 'geodeicDatum' (Coordinate System), 'datasetID', Latitude and Longitude
+            fil_occ_data = occ_data.drop_duplicates(subset=["decimalLatitude", "decimalLongitude"], keep="first")
+            filtered_occ_data = fil_occ_data[["scientificName", "datasetID", "decimalLatitude", "decimalLongitude"]]
+
+            # Create geometry of the occurrence data
+            geometry = [Point(xy) for xy in zip(filtered_occ_data['decimalLongitude'], filtered_occ_data['decimalLatitude'])]
+
+            # Create the occurrence geodataframe:
+            occ_gdf = gpd.GeoDataFrame(filtered_occ_data, geometry=geometry)
+
+            # Establish the Coordinate System to EPSG:4326 (it has to be equal to geodeticDatum):
+            occ_gdf.set_crs("EPSG:4326", allow_override=True, inplace=True)
+
+            # Project the occ_gdf into the aoi CRS:
+            occ_gdf_proj = occ_gdf.to_crs(metric_crs)
+
+            # Grid intersecting with occurrence:
+            grid_intersect = gpd.sjoin(grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
+            occ_grid_intersect = grid.loc[grid_intersect.index.unique()].copy()
+            assessment_grid.loc[occ_grid_intersect.index, "aggregation"] += 5
+
+        except KeyError:
+                pass
+
+    # Average the value with the number of Locally Rare Features
+    assessment_grid['aq7'] = assessment_grid["aggregation"]/len(species)
+
+    return assessment_grid
+
+
+aq7_grid_test = aq7(aoi=aoi, species = ["Spartina", "Delphinus delphis", "Halimione", "Sparus aurata", "Diplodus"], assessment_grid=grid, span_years=30)
+
+aq7_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
 
