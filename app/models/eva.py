@@ -757,7 +757,7 @@ def mutualistic_symbiotic_presence(
     return  assessment_grid
 
 
-aq7_grid_test = mutualistic_symbiotic_presence(aoi=aoi, mss_species= ["Spartina", "Delphinus delphis", "Halimione", "Diplodus"], assessment_grid=grid, span_years=30)
+# aq7_grid_test = mutualistic_symbiotic_presence(aoi=aoi, mss_species= ["Spartina", "Delphinus delphis", "Halimione", "Diplodus"], assessment_grid=grid, span_years=30)
 
-aq7_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
+# aq7_grid_test.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\eez_grisd_test.parquet")
 
