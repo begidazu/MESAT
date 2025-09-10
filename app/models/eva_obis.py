@@ -19,6 +19,9 @@ from pyobis.occurrences import occurrences
 class AQUtils:
     @staticmethod
     def load_aoi(aoi: Union[str, gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
+        """
+        Reads the area of interest file and returns a gpd.GeoDataFrame. Supported input formats: .json, .geojson, .parquet.
+        """
         if isinstance(aoi, gpd.GeoDataFrame):
             return aoi
         if not aoi.endswith((".json", ".geojson", ".parquet")):
@@ -27,6 +30,9 @@ class AQUtils:
 
     @staticmethod
     def ensure_metric_crs(gdf: gpd.GeoDataFrame, aoi: Union[str, gpd.GeoDataFrame]) -> Tuple[gpd.GeoDataFrame, CRS]:
+        """
+        Ensures a gpd.GeoDataFrame coordinate system is projected reproyecting it into the best UTM coordinate system in case it is in a non-proyected coordinate system. 
+        """
         if gdf.crs and gdf.crs.is_projected:
             return gdf, gdf.crs
         metric_crs = best_utm_crs(aoi)
@@ -35,11 +41,16 @@ class AQUtils:
     @staticmethod
     def get_obis_occurrences(specie: str, wkt_geom: str, start_date: str, end_date: str) -> gpd.GeoDataFrame:
         """
-        Igual que en tu código original (sin “limpieza extra”):
-        - Descarga de OBIS
-        - Drop duplicates por lat/lon
-        - Selección de columnas esperadas
-        - Construcción de puntos y CRS EPSG:4326
+        Downloads species occurrence data in the area of interest during the selected timeframe in the EPSG:4326 coordinate system.
+
+        Params:
+            specie: specie name
+            wkt_geom:  a WKT string of the area of interest where we want to download the occurrence data
+            start_date: start date in %Y-%m-%d format
+            end_date:  end date in %Y-%m-%d format
+        
+        Returns:
+        A gpd.GeoDataFrame with the occurrence points of the specie. From the points with same lat/long the function keeps the first point. 
         """
         occ_data = occurrences.search(
             scientificname=specie,
@@ -58,7 +69,9 @@ class AQUtils:
 
 
 def best_utm_crs(aoi: Union[str, gpd.GeoDataFrame]) -> CRS:
-    """Elige UTM por el centroide del AOI en lat/lon."""
+    """
+    Choses the best UTM coordinate system for the area of interest based on the centroid of the AOI
+    """
     aoi_gdf = AQUtils.load_aoi(aoi)
     g_ll = aoi_gdf.to_crs(4326) if (aoi_gdf.crs and aoi_gdf.crs.to_epsg() != 4326) else aoi_gdf
     c = g_ll.unary_union.centroid
@@ -69,7 +82,9 @@ def best_utm_crs(aoi: Union[str, gpd.GeoDataFrame]) -> CRS:
 
 
 def create_grid(aoi: Union[str, gpd.GeoDataFrame], grid_size: int = 1000) -> gpd.GeoDataFrame:
-    """Crea un grid cuadrado que cubre el AOI y filtra por intersección con el AOI."""
+    """
+    Creates a grid that covers the area of interest and filters the grid to keep the grids that intersect with the AOI
+    """
     aoi_gdf = AQUtils.load_aoi(aoi)
     gdf_m, metric_crs = AQUtils.ensure_metric_crs(aoi_gdf, aoi)
 
@@ -84,7 +99,9 @@ def create_grid(aoi: Union[str, gpd.GeoDataFrame], grid_size: int = 1000) -> gpd
 
 
 def ensure_grid_crs(grid: gpd.GeoDataFrame, target_crs: CRS) -> gpd.GeoDataFrame:
-    """Asegura que el grid está en el CRS objetivo (si no, reproyecta)."""
+    """
+    Ensures the grid is with the objective CRS
+    """
     if grid.crs is None:
         raise ValueError("assessment_grid sin CRS.")
     if grid.crs != target_crs:
@@ -92,14 +109,16 @@ def ensure_grid_crs(grid: gpd.GeoDataFrame, target_crs: CRS) -> gpd.GeoDataFrame
     return grid
 
 
-def safe_sjoin_polys_points(polys: gpd.GeoDataFrame, points: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """Inner sjoin con predicate='intersects' y manejo de índices únicos."""
-    hits = gpd.sjoin(polys, points[["geometry"]], how="inner", predicate="intersects")
-    return polys.loc[hits.index.unique()].copy()
+# def safe_sjoin_polys_points(polys: gpd.GeoDataFrame, points: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+#     """Inner sjoin con predicate='intersects' y manejo de índices únicos."""
+#     hits = gpd.sjoin(polys, points[["geometry"]], how="inner", predicate="intersects")
+#     return polys.loc[hits.index.unique()].copy()
 
 
 def wkt_from_first_geom(aoi_gdf_4326: gpd.GeoDataFrame, simplify_tol: float = 0.005) -> str:
-    """Replica exactamente tu forma original de construir el WKT: primera geometría + simplify."""
+    """
+    Converts the area of interest geometries into a WKT string that will be used to download OBIS data
+    """
     geom = aoi_gdf_4326.geometry.iloc[0]
     geom_s = geom.simplify(simplify_tol, preserve_topology=True)
     return wkt_dumps(geom_s, rounding_precision=6)
@@ -117,7 +136,22 @@ def locally_rare_features_presence(
     cut_lrf: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    """AQ1: presencia de Localmente Raras (LRF), replicando el cálculo original."""
+    """
+    AQ1: presence of Locally Rare Features (LRF). Returns 'aq1' column in the assessment grid with an indicator of LRF presence/absence based on the selected parameters.
+
+    The function downloads the OBIS data for all the included species in the AOI and with the selected timespan (presence to presence - span_years), check if the occurrence data covers a minimum threshold of the assessment grid: if it has a minimum coverage the specie is included in computation, if not the function passes to the next specie. Then, the LRF are added into a list where the species with lower grid coverage than cut_lrf are included. Finally, it computes an indicator (0 to 5, very low yo very high) with a score of LRF presence/absence based on the LRF species list. This score is computed as the average of presence/absence scores where a value of 5 is given to a cell when a LRF is present and a 0 when it is absent, repeating the process for all species and averaging the final score with the lenght of the LRF species list.
+    
+    Params:
+        aoi: area of interest path
+        species: list of species names to include in the assessment
+        assessment_grid: gpd.GeoDataFrame where the assessement is conducted
+        min_grid_per: minimum gri coverage needed to include the species in the assessment
+        cut_lrf: cutoff to consider a specie as locally rare feature or not
+        span_years: time span of the downloaded occurence data from the present (e.g. span_years = 10 will download occurrence data from present to present-10 years).
+
+    Returns:
+    Returns a gpd.GeoDataFrame with a 'aq1' column with the score (0 to 5, worse to best) of LRF presence/absence.
+    """
     aoi_gdf_4326 = AQUtils.load_aoi(aoi).to_crs(4326)
     _, metric_crs = AQUtils.ensure_metric_crs(aoi_gdf_4326, aoi)
     assessment_grid = ensure_grid_crs(assessment_grid, metric_crs)
@@ -166,7 +200,24 @@ def nationally_rare_feature_presence(
     cut_nrf: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    """AQ5: presencia de Nacionalmente Raras (NRF), replicando tu cálculo original con EEZ por bbox."""
+    """
+    AQ5: presence of Nationally Rare Features (LRF). Returns 'aq5' column in the assessment grid with an indicator of NRF presence/absence based on the selected parameters.
+
+    The function downloads the OBIS data for all the included species in the Exclusive Economic Zone of the selected country and with the selected timespan (presence to presence - span_years), checks if the occurrence data covers a minimum threshold of the assessment grid: if it has a minimum coverage the specie is included in computation, if not the function passes to the next specie. Then, a grid on the EEZ is created with the grid_size selected by the user. The NRF are added into a list where the species with lower grid coverage (on the EEZ grid) than cut_nrf are included. Finally, it computes an indicator in the assessment grid (0 to 5, very low yo very high) with a score of NRF presence/absence based on the NRF species list. This score is computed as the average of presence/absence scores where a value of 5 is given to a cell when a NRF is present and a 0 when it is absent, repeating the process for all species and averaging the final score with the lenght of the NRF species list.
+    
+    Params:
+        aoi: area of interest path
+        species: list of species names to include in the assessment
+        country_name: name of the country where the AOI is located
+        grid_size: size of the grid in meters to be used in the EEZ of the country
+        assessment_grid: gpd.GeoDataFrame where the assessement is conducted
+        min_grid_per: minimum gri coverage needed to include the species in the assessment
+        cut_lrf: cutoff to consider a specie as locally rare feature or not
+        span_years: time span of the downloaded occurence data from the present (e.g. span_years = 10 will download occurrence data from present to present-10 years).
+
+    Returns:
+    Returns a gpd.GeoDataFrame with a 'aq5' column with the score (0 to 5, worse to best) of NRF presence/absence.
+    """
     eez_path = "./results/EVA/world_eez.parquet"
     eez_file = gpd.read_parquet(eez_path)
     eez_gdf_4326 = eez_file[eez_file.SOVEREIGN1 == country_name].to_crs(4326)
@@ -227,9 +278,19 @@ def feature_number_presence(
     span_years: int
 ) -> gpd.GeoDataFrame:
     """
-    AQ7: número de features (presencia/ausencia).
-    Se restaura el patrón original: WKT de la primera geometría + try/except KeyError
-    alrededor de la descarga y el procesado por especie.
+    AQ7, AQ10, AQ12 and/or AQ14: presence of Feature Number (AQ7), Ecologically Significant Features (AQ10), Habitat Forming Species/Biogenic Habitats (AQ12) and/ or Mutualistic-Symbiotic Species (AQ14). Returns 'aq7', 'aq10', 'aq12' and/or 'aq14' column in the assessment grid with an indicator of FN, ESF, HFS/BH and/or MSS presence/absence based on the selected parameters.
+
+    Same logic of the AQ1 function with the lists of FN, ESF, HFS/BH and/or MSS.
+    
+    Params:
+        aoi: area of interest path
+        species: list of species names to include in the assessment
+        assessment_grid: gpd.GeoDataFrame where the assessement is conducted
+        min_grid_per: minimum gri coverage needed to include the species in the assessment
+        span_years: time span of the downloaded occurence data from the present (e.g. span_years = 10 will download occurrence data from present to present-10 years).
+
+    Returns:
+    Returns a gpd.GeoDataFrame with 'aq7', 'aq10', 'aq12' and/or 'aq14' column with the score (0 to 5, worse to best) of FN, ESF, HFS/BH and/or MSS presence/absence.
     """
     aoi_gdf_4326 = AQUtils.load_aoi(aoi).to_crs(4326)
     _, metric_crs = AQUtils.ensure_metric_crs(aoi_gdf_4326, aoi)
