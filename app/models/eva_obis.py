@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from typing import List, Tuple, Union, Iterable, Dict
+from typing import List, Tuple, Union, Dict
 
 import numpy as np
 import geopandas as gpd
@@ -223,6 +223,7 @@ def feature_number_presence(
     aoi: str,
     species: List[str],
     assessment_grid: gpd.GeoDataFrame,
+    min_grid_per: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
     """
@@ -254,6 +255,12 @@ def feature_number_presence(
 
             grid_intersect = gpd.sjoin(assessment_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
             occ_grid_intersect = assessment_grid.loc[grid_intersect.index.unique()].copy()
+
+            # percentage of grid ocurrence:
+            percent = (len(occ_grid_intersect) / len(assessment_grid)) * 100 if len(assessment_grid) else 0.0
+            if percent < min_grid_per:
+                continue
+
             assessment_grid.loc[occ_grid_intersect.index, "aggregation"] += 5
 
         except KeyError:
@@ -271,9 +278,10 @@ def ecologically_significant_features_presence(
     aoi: str,
     esf_species: List[str],
     assessment_grid: gpd.GeoDataFrame,
+    min_grid_per: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    out = feature_number_presence(aoi, esf_species, assessment_grid, span_years)
+    out = feature_number_presence(aoi, esf_species, assessment_grid, min_grid_per, span_years)
     out["aq10"] = out.pop("aq7")
     return out
 
@@ -282,9 +290,10 @@ def habitat_forming_presence(
     aoi: str,
     hfs_bh_species: List[str],
     assessment_grid: gpd.GeoDataFrame,
+    min_grid_per: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    out = feature_number_presence(aoi, hfs_bh_species, assessment_grid, span_years)
+    out = feature_number_presence(aoi, hfs_bh_species, assessment_grid, min_grid_per, span_years)
     out["aq12"] = out.pop("aq7")
     return out
 
@@ -293,9 +302,10 @@ def mutualistic_symbiotic_presence(
     aoi: str,
     mss_species: List[str],
     assessment_grid: gpd.GeoDataFrame,
+    min_grid_per: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    out = feature_number_presence(aoi, mss_species, assessment_grid, span_years)
+    out = feature_number_presence(aoi, mss_species, assessment_grid, min_grid_per, span_years)
     out["aq14"] = out.pop("aq7")
     return out
 
@@ -307,6 +317,7 @@ def mutualistic_symbiotic_presence(
 def run_selected_assessments(
     aoi_path: str,
     grid: gpd.GeoDataFrame,
+    min_grid_per: int,
     span_years: int,
     params: Dict[str, Dict]
 ) -> gpd.GeoDataFrame:
@@ -329,6 +340,7 @@ def run_selected_assessments(
         results = func(
             aoi=aoi_path,
             assessment_grid=results,
+            min_grid_per=min_grid_per, 
             span_years=span_years,
             **func_args
         )
@@ -338,20 +350,21 @@ def run_selected_assessments(
 # Testing the optimized functions:
 aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria.geojson"
 ass_grid_size = 1000
+min_grid_per = 1
 grid = create_grid(aoi_path, grid_size=ass_grid_size)
 general_species = ["Spartina", "Halimione", "Diplodus", "Delphinus delphis", "Sparus", "Sardina"]
 
 params = {
     "aq1": {
         "species": general_species,
-        "min_grid_per": 1,
+        #"min_grid_per": 1,
         "cut_lrf": 99
     },
     "aq5": {
         "species": general_species,
         "country_name": "Spain",
         "grid_size": 10000,
-        "min_grid_per": 1,
+        #"min_grid_per": 1,
         "cut_nrf": 99
     },
     "aq7": {
@@ -371,6 +384,7 @@ params = {
 result = run_selected_assessments(
     aoi_path=aoi_path,
     grid=grid,
+    min_grid_per = min_grid_per,
     span_years=30,
     params=params
 )
