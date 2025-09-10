@@ -6,8 +6,9 @@ from typing import List, Tuple, Union, Dict
 
 import numpy as np
 import geopandas as gpd
+import h3
 from pyproj import CRS
-from shapely.geometry import box, Point
+from shapely.geometry import box, Point, Polygon
 from shapely.wkt import dumps as wkt_dumps
 from pyobis.occurrences import occurrences
 
@@ -81,7 +82,7 @@ def best_utm_crs(aoi: Union[str, gpd.GeoDataFrame]) -> CRS:
     return CRS.from_epsg(epsg)
 
 
-def create_grid(aoi: Union[str, gpd.GeoDataFrame], grid_size: int = 1000) -> gpd.GeoDataFrame:
+def create_quadrat_grid(aoi: Union[str, gpd.GeoDataFrame], grid_size: int = 1000) -> gpd.GeoDataFrame:
     """
     Creates a grid that covers the area of interest and filters the grid to keep the grids that intersect with the AOI
     """
@@ -97,6 +98,49 @@ def create_grid(aoi: Union[str, gpd.GeoDataFrame], grid_size: int = 1000) -> gpd
     cells = gpd.GeoDataFrame(grid_cells, columns=['geometry'], crs=metric_crs)
     return cells[cells.intersects(gdf_m.unary_union)].copy()
 
+def create_h3_grid(aoi: str, h3_resolution: int) -> gpd.GeoDataFrame:
+    """
+    Generates a GeoDataFrame of H3 cells that intersect with the AOI. Input AOI path file accepted formats are .json, .geojson and .parquet.
+    """
+    resolution = int(h3_resolution)
+    if not (0 <= resolution <= 15):
+        raise ValueError("resolution debe estar entre 0 y 15 (entero).")
+
+    aoi = AQUtils.load_aoi(aoi)
+    aoi = aoi.to_crs(4326) if aoi.crs else aoi.set_crs(4326)
+
+    geoms = aoi.geometry.explode(index_parts=False)
+    if geoms.empty:
+        return gpd.GeoDataFrame(columns=["h3", "geometry"], crs="EPSG:4326")
+
+    union_geom = geoms.unary_union
+    if union_geom.is_empty:
+        return gpd.GeoDataFrame(columns=["h3", "geometry"], crs="EPSG:4326")
+
+    # Get polygons to generate H3 cells
+    polygons = [poly for geom in geoms if not geom.is_empty and geom.geom_type in ("Polygon", "MultiPolygon") for poly in (geom.geoms if geom.geom_type == "MultiPolygon" else [geom])]
+
+    cells = set()
+    for poly in polygons:
+
+        if hasattr(poly, "has_z") and poly.has_z:
+            poly = Polygon(
+                [(x, y) for x, y, *_ in np.asarray(poly.exterior.coords)],
+                holes=[[(x, y) for x, y, *_ in np.asarray(r.coords)] for r in poly.interiors]
+            )
+        cells.update(h3.geo_to_cells(poly, res=resolution))
+
+    if not cells:
+        return gpd.GeoDataFrame(columns=["h3", "geometry"], crs="EPSG:4326")
+
+    all_cells = {neighbor for cell in cells for neighbor in h3.grid_disk(cell, k=5)}
+
+    hex_geoms = [(cid, Polygon([(lon, lat) for lat, lon in h3.cell_to_boundary(cid)])) for cid in all_cells]
+
+    hex_df = gpd.GeoDataFrame(hex_geoms, columns=["h3", "geometry"], crs="EPSG:4326")
+
+    return hex_df[hex_df.intersects(union_geom)].reset_index(drop=True)
+
 
 def ensure_grid_crs(grid: gpd.GeoDataFrame, target_crs: CRS) -> gpd.GeoDataFrame:
     """
@@ -107,12 +151,6 @@ def ensure_grid_crs(grid: gpd.GeoDataFrame, target_crs: CRS) -> gpd.GeoDataFrame
     if grid.crs != target_crs:
         return grid.to_crs(target_crs)
     return grid
-
-
-# def safe_sjoin_polys_points(polys: gpd.GeoDataFrame, points: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-#     """Inner sjoin con predicate='intersects' y manejo de índices únicos."""
-#     hits = gpd.sjoin(polys, points[["geometry"]], how="inner", predicate="intersects")
-#     return polys.loc[hits.index.unique()].copy()
 
 
 def wkt_from_first_geom(aoi_gdf_4326: gpd.GeoDataFrame, simplify_tol: float = 0.005) -> str:
@@ -231,7 +269,7 @@ def nationally_rare_feature_presence(
     aoi_gdf_4326 = AQUtils.load_aoi(aoi).to_crs(4326)
     _, metric_crs = AQUtils.ensure_metric_crs(aoi_gdf_4326, aoi)
 
-    eez_grid = create_grid(eez_gdf_4326, grid_size=grid_size).to_crs(metric_crs)
+    eez_grid = create_quadrat_grid(eez_gdf_4326, grid_size=grid_size).to_crs(metric_crs)
     assessment_grid = ensure_grid_crs(assessment_grid, metric_crs)
 
     end_date = datetime.now()
@@ -412,7 +450,8 @@ def run_selected_assessments(
 aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria.geojson"
 ass_grid_size = 1000
 min_grid_per = 1
-grid = create_grid(aoi_path, grid_size=ass_grid_size)
+#grid = create_quadrat_grid(aoi_path, grid_size=ass_grid_size)
+grid = create_h3_grid(aoi_path, 6)
 general_species = ["Spartina", "Halimione", "Diplodus", "Delphinus delphis", "Sparus", "Sardina"]
 
 params = {
@@ -451,3 +490,4 @@ result = run_selected_assessments(
 )
 
 result.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\optimized_test.parquet")
+
