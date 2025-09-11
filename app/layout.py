@@ -200,18 +200,55 @@ def create_layout():  # definir función que construye el layout
                                                     dbc.AccordionItem(  # primer grupo: Human activities
                                                         title="Human activities",  # texto de cabecera con flecha a la derecha
                                                         class_name="layers-acc-item",  # clase para márgenes del item
-                                                        children=[  # contenido cuando el grupo está desplegado
-                                                            dbc.Checklist(  # switches del grupo Human
-                                                                id="chk-human",  # mantener id original para callbacks existentes
-                                                                options=[  # opciones que encienden capas
-                                                                    {"label": html.Span("HA 1", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-1"},  # etiqueta + valor
-                                                                    {"label": html.Span("HA 2", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-2"},  # etiqueta + valor
-                                                                ],
-                                                                value=[],  # sin selección por defecto
-                                                                switch=True,  # estilo tipo interruptor
-                                                                className="mb-1",  # pequeño margen inferior
+                                                        children=[
+                                                            dbc.Accordion(
+                                                                start_collapsed = True,
+                                                                always_open = True,
+                                                                children = [
+                                                                    dbc.AccordionItem(
+                                                                        title="Wind Farms",
+                                                                        children=[
+                                                                            dbc.Checklist(
+                                                                                id="mgmt-wind-farm-info",
+                                                                                options=[
+                                                                                    {
+                                                                                        "label": html.Span(  # contenedor del label
+                                                                                            [  # hijos del label
+                                                                                                html.A(  # hacer el texto un enlace real
+                                                                                                    "Wind Farm Points",  # texto clicable
+                                                                                                    href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/8201070b-4b0b-4d54-8910-abcea5dce57f",  # url destino
+                                                                                                    target="_blank",  # abrir en nueva pestaña
+                                                                                                    rel="noopener noreferrer"
+                                                                                                )
+                                                                                            ],
+                                                                                            style={"fontSize": "0.9rem"}  # tamaño del texto
+                                                                                        ),
+                                                                                        "value": "mgmt-wf-points"  # valor del switch
+                                                                                    },
+                                                                                    {"label": html.Span("Wind Farm Polygons", style={"fontSize": "0.9rem"}), "value": "mgmt-wf-polygons"},
+                                                                                    {"label": html.Span("Technical Suitability", style={"fontSize": "0.9rem"}), "value": "mgmt-wf-tech-suit"}
+                                                                                ],
+                                                                                value=[],
+                                                                                switch=True
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ]
                                                             )
-                                                        ],
+                                                            
+                                                        ]
+                                                        # children=[  # contenido cuando el grupo está desplegado
+                                                        #     dbc.Checklist(  # switches del grupo Human
+                                                        #         id="chk-human",  # mantener id original para callbacks existentes
+                                                        #         options=[  # opciones que encienden capas
+                                                        #             {"label": html.Span("HA 1", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-1"},  # etiqueta + valor
+                                                        #             {"label": html.Span("HA 2", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-2"},  # etiqueta + valor
+                                                        #         ],
+                                                        #         value=[],  # sin selección por defecto
+                                                        #         switch=True,  # estilo tipo interruptor
+                                                        #         className="mb-1",  # pequeño margen inferior
+                                                        #     )
+                                                        # ],
                                                     ),
                                                     dbc.AccordionItem(  # segundo grupo: Fishery
                                                         title="Fishery",  # cabecera con flecha
