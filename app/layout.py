@@ -149,6 +149,7 @@ def create_layout():  # definir función que construye el layout
                                         id="layers-btn",
                                         color="light",
                                         n_clicks=0,
+                                        disabled = True,
                                         className="shadow-sm border rounded-1 position-absolute d-flex align-items-center justify-content-center",
                                         style={"left": "10px", "top": "78px", "zIndex": 1000, "width": "46px", "height": "46px"},
                                     ),
@@ -189,34 +190,46 @@ def create_layout():  # definir función que construye el layout
                                         className="card shadow-sm position-absolute collapse",
                                         style={"left":"10px","top":"128px","zIndex":1000,"minWidth":"260px"},
                                         children=[
-                                            html.Div("Layers", className="card-header py-2 fw-bold text-uppercase"),
-                                            html.Div(
-                                                [
-                                                    html.Div("Human activities", className="fw-semibold mb-1", style={"fontSize":"0.95rem"}),  # un poco más grande
-                                                    dbc.Checklist(
-                                                        id="chk-human",
-                                                        options=[
-                                                            {"label": html.Span("HA 1", style={"fontSize":"0.8rem"}), "value": "mgmt-ha-1"},
-                                                            {"label": html.Span("HA 2", style={"fontSize":"0.8rem"}), "value": "mgmt-ha-2"},
+                                            html.Div("Additional information", className="card-header py-2 fw-bold text-uppercase"),
+                                            dbc.Accordion(  # crear contenedor acordeón para grupos plegables
+                                                id="layers-accordion",  # id del acordeón para CSS/depuración
+                                                always_open=True,  # permitir varios grupos abiertos a la vez
+                                                start_collapsed=True,  # iniciar todos los grupos cerrados
+                                                className="layers-accordion",  # clase para estilos finos
+                                                children=[  # lista de grupos del acordeón
+                                                    dbc.AccordionItem(  # primer grupo: Human activities
+                                                        title="Human activities",  # texto de cabecera con flecha a la derecha
+                                                        class_name="layers-acc-item",  # clase para márgenes del item
+                                                        children=[  # contenido cuando el grupo está desplegado
+                                                            dbc.Checklist(  # switches del grupo Human
+                                                                id="chk-human",  # mantener id original para callbacks existentes
+                                                                options=[  # opciones que encienden capas
+                                                                    {"label": html.Span("HA 1", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-1"},  # etiqueta + valor
+                                                                    {"label": html.Span("HA 2", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-2"},  # etiqueta + valor
+                                                                ],
+                                                                value=[],  # sin selección por defecto
+                                                                switch=True,  # estilo tipo interruptor
+                                                                className="mb-1",  # pequeño margen inferior
+                                                            )
                                                         ],
-                                                        value=[],
-                                                        switch=True,
-                                                        className="mb-2",
                                                     ),
-
-                                                    html.Div("Fishery", className="fw-semibold mb-1 mt-2", style={"fontSize":"0.95rem"}),
-                                                    dbc.Checklist(
-                                                        id="chk-fish",
-                                                        options=[
-                                                            {"label": html.Span("Effort",   style={"fontSize":"0.8rem"}), "value": "mgmt-fish-effort"},
-                                                            {"label": html.Span("Closures", style={"fontSize":"0.8rem"}), "value": "mgmt-fish-closures"},
+                                                    dbc.AccordionItem(  # segundo grupo: Fishery
+                                                        title="Fishery",  # cabecera con flecha
+                                                        class_name="layers-acc-item",  # clase para márgenes del item
+                                                        children=[  # contenido al abrir el grupo
+                                                            dbc.Checklist(  # switches del grupo Fishery
+                                                                id="chk-fish",  # mantener id original para callbacks existentes
+                                                                options=[  # opciones de pesca
+                                                                    {"label": html.Span("Effort", style={"fontSize": "0.9rem"}), "value": "mgmt-fish-effort"},  # esfuerzo pesquero
+                                                                    {"label": html.Span("Closures", style={"fontSize": "0.9rem"}), "value": "mgmt-fish-closures"},  # cierres
+                                                                ],
+                                                                value=[],  # sin selección por defecto
+                                                                switch=True,  # estilo interruptor
+                                                            )
                                                         ],
-                                                        value=[],
-                                                        switch=True,
                                                     ),
                                                 ],
-                                                className="card-body py-2"
-                                            ),
+                                            )
                                         ],
                                     )
 

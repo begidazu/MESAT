@@ -1468,14 +1468,15 @@ def register_management_callbacks(app: dash.Dash):
 # Add management activity legend:
     @app.callback(
         Output("mgmt-legend-div", "hidden", allow_duplicate=True),
+        Output("layers-btn", "disabled"),
         Input("tabs", "value"),
         prevent_initial_call=True
     )
     def clear_overlay_on_tab_change(tab_value):
         if tab_value == "tab-management":
-            return False            # limpiar overlay al salir del tab
+            return False, False            # limpiar overlay al salir del tab
         else:
-            return True
+            return True, True
         
 # Add LayerGroup with the additional information for management activities location selection.
     # @app.callback(
