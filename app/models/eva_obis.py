@@ -4,6 +4,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from typing import List, Tuple, Union, Dict
 
+import os
 import numpy as np
 import geopandas as gpd
 import h3
@@ -288,7 +289,7 @@ def nationally_rare_feature_presence(
 
         if occ_gdf.empty:
             continue
-
+        
         occ_gdf_proj = occ_gdf.to_crs(metric_crs)
 
         # porcentaje sobre grid de la EEZ
@@ -313,7 +314,8 @@ def feature_number_presence(
     species: List[str],
     assessment_grid: gpd.GeoDataFrame,
     min_grid_per: int,
-    span_years: int
+    span_years: int,
+    target_col: str = "aq7"
 ) -> gpd.GeoDataFrame:
     """
     AQ7, AQ10, AQ12 and/or AQ14: presence of Feature Number (AQ7), Ecologically Significant Features (AQ10), Habitat Forming Species/Biogenic Habitats (AQ12) and/ or Mutualistic-Symbiotic Species (AQ14). Returns 'aq7', 'aq10', 'aq12' and/or 'aq14' column in the assessment grid with an indicator of FN, ESF, HFS/BH and/or MSS presence/absence based on the selected parameters.
@@ -349,7 +351,8 @@ def feature_number_presence(
             )
             if occ_gdf is None or occ_gdf.empty:
                 continue
-
+            
+            occ_gdf.to_parquet(os.path.join (r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", f"{specie.replace(' ', '_')}.parquet"))
             occ_gdf_proj = occ_gdf.to_crs(metric_crs)
 
             grid_intersect = gpd.sjoin(assessment_grid, occ_gdf_proj[["geometry"]], how="inner", predicate="intersects")
@@ -369,7 +372,7 @@ def feature_number_presence(
             # Evita que una especie problemática rompa toda la AQ
             continue
 
-    assessment_grid["aq7"] = (assessment_grid["aggregation"] / len(species)) if species else 0
+    assessment_grid[target_col] = (assessment_grid["aggregation"] / len(species)) if species else 0
     return assessment_grid
 
 
@@ -380,9 +383,7 @@ def ecologically_significant_features_presence(
     min_grid_per: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    out = feature_number_presence(aoi, esf_species, assessment_grid, min_grid_per, span_years)
-    out["aq10"] = out.pop("aq7")
-    return out
+    return feature_number_presence(aoi, esf_species, assessment_grid, min_grid_per, span_years, target_col="aq10")
 
 
 def habitat_forming_presence(
@@ -392,9 +393,7 @@ def habitat_forming_presence(
     min_grid_per: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    out = feature_number_presence(aoi, hfs_bh_species, assessment_grid, min_grid_per, span_years)
-    out["aq12"] = out.pop("aq7")
-    return out
+    return feature_number_presence(aoi, hfs_bh_species, assessment_grid, min_grid_per, span_years, target_col="aq12")
 
 
 def mutualistic_symbiotic_presence(
@@ -404,9 +403,7 @@ def mutualistic_symbiotic_presence(
     min_grid_per: int,
     span_years: int
 ) -> gpd.GeoDataFrame:
-    out = feature_number_presence(aoi, mss_species, assessment_grid, min_grid_per, span_years)
-    out["aq14"] = out.pop("aq7")
-    return out
+    return feature_number_presence(aoi, mss_species, assessment_grid, min_grid_per, span_years, target_col="aq14")
 
 
 # ================================================================
@@ -447,47 +444,55 @@ def run_selected_assessments(
 
 
 # Testing the optimized functions:
-aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\cantabria.geojson"
+aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria\BBT_Gulf_of_Biscay.parquet"
 ass_grid_size = 1000
-min_grid_per = 1
+min_grid_per = 0
 #grid = create_quadrat_grid(aoi_path, grid_size=ass_grid_size)
-grid = create_h3_grid(aoi_path, 6)
-general_species = ["Spartina", "Halimione", "Diplodus", "Delphinus delphis", "Sparus", "Sardina"]
+grid = create_h3_grid(aoi_path, 9)
+
+# List of LRF, RRF, NRF, ESF, HFS/BH & MSS for each ecosystem component:
+lrf_species = []
+rrf_species = ["Zostera noltii"]
+nrf_species = ["Zostera noltii"]
+esf_species = ["Halimione", "Juncus", "Spartina", "Zostera noltii"]
+hfs_bh_species = ["Halimione", "Juncus", "Phragmites", "Spartina", "Zostera noltii"]
+mss_species = []
+all_species = ["Halimione", "Juncus", "Phragmites", "Spartina", "Zostera noltii"]
 
 params = {
-    "aq1": {
-        "species": general_species,
-        #"min_grid_per": 1,
-        "cut_lrf": 99
-    },
+    # "aq1": {
+    #     "species": lrf_species,
+    #     #"min_grid_per": 1,
+    #     "cut_lrf": 99
+    # },
     "aq5": {
-        "species": general_species,
+        "species": nrf_species,
         "country_name": "Spain",
         "grid_size": 10000,
         #"min_grid_per": 1,
         "cut_nrf": 99
     },
     "aq7": {
-        "species": general_species
+        "species": all_species
     },
     "aq10": {
-        "esf_species": ["Spartina", "Halimione", "Diplodus", "Sardina"]
+        "esf_species": esf_species
     },
     "aq12": {
-        "hfs_bh_species": ["Spartina", "Halimione"]
-    },
-    "aq14": {
-        "mss_species": ["Diplodus"]
+        "hfs_bh_species": hfs_bh_species
     }
+    # "aq14": {
+    #     "mss_species": mss_species
+    # }
 }
 
 result = run_selected_assessments(
     aoi_path=aoi_path,
     grid=grid,
     min_grid_per = min_grid_per,
-    span_years=30,
+    span_years=15,
     params=params
 )
 
-result.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA\optimized_test.parquet")
+result.to_parquet(os.path.join (r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "angiosperms.parquet"))
 
