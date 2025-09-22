@@ -120,6 +120,10 @@ def create_layout():  # definir función que construye el layout
                                     dl.FeatureGroup(id="mgmt-defence-upload", children=[]), # capa para los datos subidos (Defence)
 
 
+                                    # Layers where we store the additional info for activities:
+                                    dl.LayerGroup(id="dynamic-overlays"),
+
+
 
 
 
@@ -959,6 +963,8 @@ def create_layout():  # definir función que construye el layout
                     dcc.Store(id="aquaculture-file-store"),                    # store para Aquaculture
                     dcc.Store(id="vessel-file-store"),                         # store para Vessel Route
                     dcc.Store(id="defence-file-store"),                        # store para Defence
+                    # almacen para los layer de activities additional information
+                    dcc.Store(id="layer-order", data=[]),
 
 
                     # modal de bienvenida
