@@ -1,18 +1,7 @@
-# from pathlib import PurePosixPath
-# from geopandas import gpd
-# from dataclasses import dataclass
-# from typing import Optional
-# import rasterio as rio
-# import matplotlib.pyplot as plt
-# import numpy as np
-# import os
-# from eva_obis import create_h3_grid, create_quadrat_grid
-# import pyproj
-
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 import math, os, pyproj
 import numpy as np
@@ -160,7 +149,6 @@ class EVA_MPAEU:
         self,
         taxon_ids: List[int],
         assessment_grid: gpd.GeoDataFrame,
-        #min_grid_per: int,
         cut_lrf: int,
         target_col: str = "aq1",
     ) -> Tuple[gpd.GeoDataFrame, List[int], List[int], List[int]]:
@@ -218,6 +206,85 @@ class EVA_MPAEU:
             list(dict.fromkeys(skipped_ids)),
             list(dict.fromkeys(lrf_ids)),
         )
+    
+    def nationally_rare_feature_presence(
+        self,
+        taxon_ids: List[int],              # lista de taxon IDs (WoRMS)
+        country_name: str,                 # país para filtrar la EEZ (columna SOVEREIGN1)
+        grid_size: int,                    # tamaño de celda (m) para la grid de EEZ
+        assessment_grid: gpd.GeoDataFrame, # grid de evaluación donde escribir aq5
+        cut_nrf: int,                      # umbral (%) por debajo del cual el taxón es NRF
+        target_col: str = "aq5",
+        eez_path: str = "./results/EVA/world_eez.parquet",  # misma ruta que en eva_obis.py
+    ) -> Tuple[gpd.GeoDataFrame, List[int], List[int], List[int]]:
+        """
+        AQ5 (NRF) con MPAEU:
+        1) Construye grid de la EEZ del país (grid_size).
+        2) Para cada taxón MPAEU: calcula % de celdas con presencia en la EEZ.
+        3) Si % < min_grid_per → descarta. Si % < cut_nrf → taxón es NRF.
+        4) Para taxones NRF, suma +5 en 'assessment_grid' donde haya presencia.
+        5) 'aq5' = aggregation / nº de taxones NRF.
+        Devuelve: (results, included_ids, skipped_ids, nrf_ids)
+        """
+        # --- 1) Preparar EEZ del país y su grid ---
+        eez_file = gpd.read_parquet(eez_path)
+        eez_gdf_4326 = eez_file[eez_file["SOVEREIGN1"] == country_name].to_crs(4326)
+        if eez_gdf_4326.empty:
+            raise ValueError(f"No se encontró EEZ para '{country_name}' en {eez_path}")
+
+        # grid de la EEZ al estilo eva_obis (usa tu util existente)
+        eez_grid = create_quadrat_grid(eez_gdf_4326, grid_size=grid_size)
+
+        results = assessment_grid.copy()
+        results["aggregation"] = 0
+
+        included_ids: List[int] = []
+        skipped_ids:  List[int] = []
+        nrf_ids:      List[int] = []
+
+        total_eez_cells = len(eez_grid)
+
+        for taxonid in taxon_ids:
+            # --- 2) Leer raster MPAEU (presencia binaria con NaN fuera de máscara) ---
+            try:
+                _, presence, extent, raster_crs = MPAEU_AWS_Utils.native_bound_prediction(
+                    taxonid,
+                    self.model,
+                    self.method,
+                    self.scenario,
+                    presence_threshold=self.presence_threshold,
+                )
+            except Exception:
+                skipped_ids.append(taxonid)
+                continue
+
+            included_ids.append(taxonid)
+
+            try:
+                # --- 3) Cobertura % en la EEZ (en nº de celdas con ≥1 píxel presente) ---
+                eez_idxs = self._present_indices(eez_grid, presence, extent, raster_crs)
+                coverage_pct = (len(eez_idxs) / total_eez_cells) * 100 if total_eez_cells else 0.0
+
+                if coverage_pct < cut_nrf:
+                    # Es NRF → sumar en AOI/assessment_grid
+                    nrf_ids.append(taxonid)
+                    ass_idxs = self._present_indices(results, presence, extent, raster_crs)
+                    if ass_idxs:
+                        results.loc[ass_idxs, "aggregation"] += 5
+
+            except Exception:
+                # lectura OK, fallo en cruce → no mover a skipped
+                continue
+
+        den = len(nrf_ids) or 1
+        results[target_col] = results["aggregation"] / den
+
+        return (
+            results,
+            list(dict.fromkeys(included_ids)),
+            list(dict.fromkeys(skipped_ids)),
+            list(dict.fromkeys(nrf_ids)),
+        )
 
 
     def feature_number_presence(
@@ -260,31 +327,86 @@ class EVA_MPAEU:
         results[target_col] = results["aggregation"] / den
 
         return results, list(dict.fromkeys(included_ids)), list(dict.fromkeys(skipped_ids))
-    
-    
+
+    def ecologically_significant_features_presence(
+        self,
+        taxon_ids: List[int],
+        assessment_grid: gpd.GeoDataFrame,
+    ) -> Tuple[gpd.GeoDataFrame, List[int], List[int]]:
+        """AQ10 = mismo calculo que AQ7 pero con los ecologically significant features."""
+        return self.feature_number_presence(taxon_ids, assessment_grid, target_col="aq10")
+
+    def habitat_forming_presence(
+        self,
+        taxon_ids: List[int],
+        assessment_grid: gpd.GeoDataFrame,
+    ) -> Tuple[gpd.GeoDataFrame, List[int], List[int]]:
+        """AQ12 = mismo calculo que AQ7 pero escribe con loa habitat forming species."""
+        return self.feature_number_presence(taxon_ids, assessment_grid, target_col="aq12")
+
+    def mutualistic_symbiotic_presence(
+        self,
+        taxon_ids: List[int],
+        assessment_grid: gpd.GeoDataFrame,
+    ) -> Tuple[gpd.GeoDataFrame, List[int], List[int]]:
+        """AQ14 = mismo calculo que AQ7 pero escribe con loa mutualistic symbiotic species."""
+        return self.feature_number_presence(taxon_ids, assessment_grid, target_col="aq14")
 
 
-# Ejemplo de uso:
-aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria\BBT_Gulf_of_Biscay.parquet"
-grid = create_h3_grid(aoi=aoi_path, h3_resolution=9)
-lrf_id_list = [495082]
-esf_id_list = [145092, 145367, 145782]
-hfs_bh_id_list = [145108, 1659019, 145579, 145540, 182742, 145728, 144020, 145735]
-all_ids = esf_id_list + hfs_bh_id_list
+# --- Dispatcher: necesita una instancia eva, y NO metas assessment_grid en params ---
+def run_selected_assessments(
+    eva: EVA_MPAEU,              # instancia
+    grid: gpd.GeoDataFrame,      # assessment grid base
+    params: Dict[str, Dict],     # NO incluir assessment_grid dentro de cada dict
+) -> gpd.GeoDataFrame:
+    function_map = {
+        "aq1":  eva.locally_rare_features_presence,
+        "aq5":  eva.nationally_rare_feature_presence,
+        "aq7":  eva.feature_number_presence,
+        "aq10": eva.ecologically_significant_features_presence,
+        "aq12": eva.habitat_forming_presence,
+        "aq14": eva.mutualistic_symbiotic_presence,
+    }
 
+    results = grid.copy()
+    for aq_key, func_args in params.items():
+        func = function_map.get(aq_key)
+        if not func:
+            print(f"AVISO: AQ desconocido '{aq_key}', se omite.")
+            continue
+        print(f"Running {aq_key}...")
+        # inyecta el results actual como assessment_grid
+        results, *rest = func(assessment_grid=results, **func_args)
+    return results
 
-# Instancia con tu config (se aplica a todas las AQs)
-eva = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog",
-                presence_threshold=80.0, all_touched=True, pad_factor=0.5)
+# ================================================================
+# Testing / ejemplos (solo si se ejecuta este fichero directamente)
+# ================================================================
+if __name__ == "__main__":
+    aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria\BBT_Gulf_of_Biscay.parquet"
+    grid = create_h3_grid(aoi_path, 9)
 
-# AQ1
-result_gdf, included, skipped, lrfs = eva.locally_rare_features_presence(taxon_ids=lrf_id_list, assessment_grid=grid, cut_lrf=5)
+    lrf_id_list  = [495082]
+    nrf_id_list  = [495082, 145092, 145367, 145782]
+    esf_id_list  = [145092, 145367, 145782]
+    hfs_bh_id_list = [145108, 1659019, 145579, 145540, 182742, 145728, 144020, 145735]
+    mss_id_list  = [495082, 145092]
 
-# AQ7
-# result_gdf, included, skipped = eva.feature_number_presence(taxon_ids=all_ids, assessment_grid=grid)
+    all_ids = lrf_id_list + nrf_id_list + esf_id_list + hfs_bh_id_list + mss_id_list
+    all_ids_unique = list(dict.fromkeys(all_ids))  # dedupe conservando orden
 
-print("Incluidos (leídos de S3):", included)
-print("Saltados (no en S3 o error):", skipped)
-print("Locally Rare Features:", lrfs)
+    # instancia con tus parámetros (ajusta el threshold si quieres)
+    eva = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog", presence_threshold=80.0)
 
-result_gdf.to_parquet(os.path.join (r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae_esf_test_mpaeu.parquet"))
+    # OJO: aquí ya no pases assessment_grid dentro de cada dict
+    params = {
+        "aq1":  {"taxon_ids": lrf_id_list, "cut_lrf": 20},
+        "aq5":  {"taxon_ids": nrf_id_list, "country_name": "Spain", "grid_size": 10_000, "cut_nrf": 5},
+        "aq7":  {"taxon_ids": all_ids_unique},
+        "aq10": {"taxon_ids": esf_id_list},
+        "aq12": {"taxon_ids": hfs_bh_id_list},
+        "aq14": {"taxon_ids": mss_id_list},
+    }
+
+    result = run_selected_assessments(eva=eva, grid=grid, params=params)
+    result.to_parquet(os.path.join(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae.parquet"))
