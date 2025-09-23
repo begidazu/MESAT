@@ -443,55 +443,35 @@ def run_selected_assessments(
     return results
 
 
-# # Testing the optimized functions:
-# aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria\BBT_Gulf_of_Biscay.parquet"
-# ass_grid_size = 1000
-# min_grid_per = 0
-# #grid = create_quadrat_grid(aoi_path, grid_size=ass_grid_size)
-# grid = create_h3_grid(aoi_path, 9)
+# ================================================================
+# Testing / ejemplos (solo si se ejecuta este fichero directamente)
+# ================================================================
+if __name__ == "__main__":
+    aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria\BBT_Gulf_of_Biscay.parquet"
+    min_grid_per = 0
+    grid = create_h3_grid(aoi_path, 9)
 
-# # List of LRF, RRF, NRF, ESF, HFS/BH & MSS for each ecosystem component:
-# lrf_species = []
-# rrf_species = ["Zostera noltii"]
-# nrf_species = ["Zostera noltii"]
-# esf_species = ["Codium tomentosum", "Dictyota dichotoma", "Plocamium cartilagineum"]
-# hfs_bh_species = ["Corallina officinalis", "Cystoseira baccata", "Gelidium corneum", "Halidrys siliquosa", "Halopteris scoparia", "Laminaria ochroleuca", "Mesophyllum", "Saccorhiza polyschides"]
-# mss_species = []
-# all_species = lrf_species + rrf_species + nrf_species + esf_species + hfs_bh_species + mss_species
-# params = {
-#     # "aq1": {
-#     #     "species": lrf_species,
-#     #     #"min_grid_per": 1,
-#     #     "cut_lrf": 99
-#     # },
-#     # "aq5": {
-#     #     "species": nrf_species,
-#     #     "country_name": "Spain",
-#     #     "grid_size": 10000,
-#     #     #"min_grid_per": 1,
-#     #     "cut_nrf": 99
-#     # },
-#     "aq7": {
-#         "species": all_species
-#     },
-#     "aq10": {
-#         "esf_species": esf_species
-#     },
-#     "aq12": {
-#         "hfs_bh_species": hfs_bh_species
-#     }
-#     # "aq14": {
-#     #     "mss_species": mss_species
-#     # }
-# }
+    lrf_species = []
+    rrf_species = ["Zostera noltii"]
+    nrf_species = ["Zostera noltii"]
+    esf_species = ["Codium tomentosum", "Dictyota dichotoma", "Plocamium cartilagineum"]
+    hfs_bh_species = ["Corallina officinalis", "Cystoseira baccata", "Gelidium corneum", "Halidrys siliquosa",
+                      "Halopteris scoparia", "Laminaria ochroleuca", "Mesophyllum", "Saccorhiza polyschides"]
+    mss_species = []
+    all_species = lrf_species + rrf_species + nrf_species + esf_species + hfs_bh_species + mss_species
 
-# result = run_selected_assessments(
-#     aoi_path=aoi_path,
-#     grid=grid,
-#     min_grid_per = min_grid_per,
-#     span_years=15,
-#     params=params
-# )
+    params = {
+        "aq7": {"species": all_species},
+        "aq10": {"esf_species": esf_species},
+        "aq12": {"hfs_bh_species": hfs_bh_species},
+    }
 
-# result.to_parquet(os.path.join (r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae.parquet"))
+    result = run_selected_assessments(
+        aoi_path=aoi_path,
+        grid=grid,
+        min_grid_per=min_grid_per,
+        span_years=15,
+        params=params,
+    )
 
+    result.to_parquet(os.path.join(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae.parquet"))
