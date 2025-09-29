@@ -6,6 +6,10 @@ from typing import List, Tuple, Optional, Dict
 import math, os, pyproj
 import numpy as np
 import geopandas as gpd
+import pandas as pd
+import s3fs
+import pyarrow as pa
+import pyarrow.dataset as ds
 import rasterio as rio
 from shapely.geometry import box
 from rasterio.features import geometry_mask
@@ -44,15 +48,32 @@ class MPAEU_AWS_Utils:
         return f"/vsis3/{key}"
     
     @staticmethod
-    def native_bound_prediction(taxonid: int, model: str, method: str, scenario: str, presence_threshold: float = 80):
+    def mpaeu_presence_threshold_p10(taxonid: int, model: str = "mpaeu") -> int:
+        path = (f"mpaeu-dist/results/species/taxonid={taxonid}/model={model}/metrics/"
+                f"taxonid={taxonid}_model={model}_what=thresholds.parquet")  # carpeta-dataset
+        fs = s3fs.S3FileSystem(anon=True)
+
+        # Fijamos el schema para que 'model' sea string en todos los parts:
+        schema = pa.schema([("model", pa.string()), ("p10", pa.float64())])
+
+        dset = ds.dataset(path, filesystem=fs, format="parquet", schema=schema)
+        table = dset.to_table(columns=["model", "p10"])
+        df = table.to_pandas()
+        s = df.loc[df["model"] == "ensemble", "p10"]
+        return int(round(s.iloc[0] * 100)) if not s.empty else None
+    
+    @staticmethod
+    def fit_regions_prediction(taxonid: int, model: str, method: str, scenario: str, presence_threshold: float = 50):
         """Obtiene las native bounds de la predicción y asigna presencia/ausencia usando un umbral fijo de 50"""
         mask_model = "mpaeu_mask_cog"
         predic_path = MPAEU_AWS_Utils.mpaeu_tif_vsis3(taxonid, model, method, scenario)
         mask_path = MPAEU_AWS_Utils.mpaeu_tif_mask_vsis3(taxonid, model, mask_model)
+        presence_threshold = MPAEU_AWS_Utils.mpaeu_presence_threshold_p10(taxonid, model)
+        print(f"[{taxonid}] presence_threshold (p10) = {presence_threshold}")
         with rio.Env(**MPAEU_AWS_Utils.get_env_kwargs()):
             with rio.open(predic_path) as src, rio.open(mask_path) as mask:
                 prediction = src.read(1, masked=True)
-                prediction_mask = mask.read(1, masked=True)
+                prediction_mask = mask.read(3, masked=True)
                 masked_prediction = np.where(prediction_mask==1, prediction, np.nan)
                 masked_presence = np.where(masked_prediction>=presence_threshold, 1, np.where(masked_prediction<presence_threshold, 0, np.nan))
                 left, bottom, right, top = src.bounds
@@ -65,7 +86,7 @@ class EVA_MPAEU:
     model: str = "mpaeu"
     method: str = "ensemble"
     scenario: str = "current_cog"
-    presence_threshold: float = 80.0
+    presence_threshold: float = 50.0
     all_touched: bool = True         
     pad_factor: float = 0.5          # “medio píxel” de margen alrededor de cada celda
 
@@ -172,8 +193,8 @@ class EVA_MPAEU:
         for taxonid in taxon_ids:
             # leer raster presencia
             try:
-                _, presence, extent, raster_crs = MPAEU_AWS_Utils.native_bound_prediction(
-                    taxonid, self.model, self.method, self.scenario, presence_threshold=self.presence_threshold
+                _, presence, extent, raster_crs = MPAEU_AWS_Utils.fit_regions_prediction(
+                    taxonid, self.model, self.method, self.scenario#, presence_threshold=self.presence_threshold
                 )
             except Exception as e:
                 # print(f"[{taxonid}] ERROR leyendo raster: {e!r}")
@@ -247,12 +268,12 @@ class EVA_MPAEU:
         for taxonid in taxon_ids:
             # --- 2) Leer raster MPAEU (presencia binaria con NaN fuera de máscara) ---
             try:
-                _, presence, extent, raster_crs = MPAEU_AWS_Utils.native_bound_prediction(
+                _, presence, extent, raster_crs = MPAEU_AWS_Utils.fit_regions_prediction(
                     taxonid,
                     self.model,
                     self.method,
                     self.scenario,
-                    presence_threshold=self.presence_threshold,
+                   # presence_threshold=self.presence_threshold,
                 )
             except Exception:
                 skipped_ids.append(taxonid)
@@ -306,8 +327,8 @@ class EVA_MPAEU:
         for taxonid in taxon_ids:
             # leer raster presencia
             try:
-                _, presence, extent, raster_crs = MPAEU_AWS_Utils.native_bound_prediction(
-                    taxonid, self.model, self.method, self.scenario, presence_threshold=self.presence_threshold
+                _, presence, extent, raster_crs = MPAEU_AWS_Utils.fit_regions_prediction(
+                    taxonid, self.model, self.method, self.scenario#, presence_threshold=self.presence_threshold
                 )
             except Exception as e:
                 skipped_ids.append(taxonid)
@@ -396,12 +417,12 @@ if __name__ == "__main__":
     all_ids_unique = list(dict.fromkeys(all_ids))  # dedupe conservando orden
 
     # instancia con tus parámetros (ajusta el threshold si quieres)
-    eva = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog", presence_threshold=80.0)
+    eva = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog")
 
     # OJO: aquí ya no pases assessment_grid dentro de cada dict
     params = {
-        "aq1":  {"taxon_ids": lrf_id_list, "cut_lrf": 20},
-        "aq5":  {"taxon_ids": nrf_id_list, "country_name": "Spain", "grid_size": 10_000, "cut_nrf": 5},
+        "aq1":  {"taxon_ids": lrf_id_list, "cut_lrf": 99},
+        "aq5":  {"taxon_ids": nrf_id_list, "country_name": "Spain", "grid_size": 10_000, "cut_nrf": 99},
         "aq7":  {"taxon_ids": all_ids_unique},
         "aq10": {"taxon_ids": esf_id_list},
         "aq12": {"taxon_ids": hfs_bh_id_list},
@@ -410,3 +431,4 @@ if __name__ == "__main__":
 
     result = run_selected_assessments(eva=eva, grid=grid, params=params)
     result.to_parquet(os.path.join(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae.parquet"))
+
