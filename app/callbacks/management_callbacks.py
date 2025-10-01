@@ -47,57 +47,6 @@ SCEN_LABEL = {
 }
 SCEN_KEYS = ["regional_rcp45", "regional_rcp85", "global_rcp45"]
 
-# Function to build tabs of saltmarsh scenario affection:
-# def _build_saltmarsh_scenarios_layout(area: str):
-#     def scenario_tabs(activity_key: str):
-#         # años por cada escenario (solo si existe en esa área)
-#         scen_tabs = []
-#         for scen in SCEN_KEYS:
-#             if not saltmarsh_scenario_available(area, scen):
-#                 continue
-#             years = saltmarsh_scenario_years(area, scen)
-#             scen_tabs.append(
-#                 dcc.Tab(
-#                     label=SCEN_LABEL[scen], value=scen,
-#                     children=[
-#                         dcc.Tabs(
-#                             id=f"mgmt-scen-{activity_key}-years-{scen}",
-#                             value=(years[0] if years else None),
-#                             children=[dcc.Tab(label=y, value=y) for y in years],
-#                             style={"padding": "0.25rem 0.5rem"}
-#                         ),
-#                     ],
-#                     style={"padding":"0.5rem 0.75rem"},
-#                     selected_style={"padding":"0.5rem 0.75rem"}
-#                 )
-#             )
-#         return dcc.Tabs(
-#             id=f"mgmt-scen-{activity_key}-scenarios",
-#             value=(SCEN_KEYS[0] if scen_tabs else None),
-#             children=scen_tabs,
-#             style={"marginBottom":"0.5rem"}
-#         )
-
-#     def activity_panel(label, key):
-#         return dcc.Tab(
-#             label=label, value=key,
-#             children=[
-#                 scenario_tabs(key),
-#                 html.Div(id=f"mgmt-scen-{key}-table")  # un único contenedor por actividad
-#             ],
-#             style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
-#             selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
-#         )
-
-#     return dcc.Tabs(
-#         id="mgmt-scenarios-tabs-main", value="wind",
-#         children=[
-#             activity_panel("Wind Farms",  "wind"),
-#             activity_panel("Aquaculture","aquaculture"),
-#             activity_panel("Vessel Routes","vessel"),
-#             activity_panel("Defence","defence"),
-#         ]
-#     )
 def _render_table(df, empty_text):
     if df is None or df.empty:
         return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
@@ -330,7 +279,6 @@ def _to_geojson_from_parquet(path):
     return {"type": "FeatureCollection", "features": []}          # devolver vacío si no hay geometría detectable
 
 # Function to build tabs where we will store the management scenarios affection graphs:
-
 def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
 
     def _subtabs(slug):
@@ -361,6 +309,23 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
             ]
         )
 
+# Function to create the layers of the additional information for the economic activities:
+def make_additional_layer(key, z_index):
+    # Ejemplos: reemplaza URLs reales
+    if key == "A":
+        tile = dl.WMSTileLayer(
+            url="https://.../wms", layers="...", transparent=True,
+            format="image/png", zIndex=z_index
+        )
+    else:  # key == "B"
+        tile = dl.TileLayer(  # WMTS como plantilla de URL
+            url="https://.../wmts?...&TileMatrix={z}&TileRow={y}&TileCol={x}",
+            zIndex=z_index
+        )
+    # Envolvemos en Overlay para que aparezca en el LayersControl
+    return dl.Overlay(name=key, checked=True, children=tile, id=f"ov-{key}")
+
+
     return dcc.Tabs(
         id="mgmt-main-tabs", value="wind",
         children=[
@@ -386,7 +351,6 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
                     children=[_subtabs("total")])                 
         ]
     )
-
 
 # Definis los callbacks que vienen de la app para el tab-management:
 def register_management_callbacks(app: dash.Dash):
@@ -1499,8 +1463,6 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
         Output("mgmt-current-button", "hidden", allow_duplicate=True),
-        # opcional: re-sincronizar el disabled del botón de escenarios
-        # Output("mgmt-scenarios-button", "disabled", allow_duplicate=True),
         Input("mgmt-current-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
         prevent_initial_call=True
@@ -1517,4 +1479,91 @@ def register_management_callbacks(app: dash.Dash):
             False,  # muestro botón "Scenarios"
             True,   # oculto botón "Current"
             # opcional: not saltmarsh_enabled
+        )
+    
+# Add management activity legend:
+    @app.callback(
+        Output("mgmt-legend-div", "hidden", allow_duplicate=True),
+        Output("layers-btn", "disabled"),
+        Input("tabs", "value"),
+        prevent_initial_call=True
+    )
+    def clear_overlay_on_tab_change(tab_value):
+        if tab_value == "tab-management":
+            return False, False            # limpiar overlay al salir del tab
+        else:
+            return True, True
+        
+# Add LayerGroup with the additional information for management activities location selection.
+    # @app.callback(
+    #     Output("mgmt-layers-control", "children"),
+    #     Output("mgmt-layers-control", "style"),
+    #     Input("tabs", "value"),
+    #     State("mgmt-layers-control", "children"),
+    #     prevent_initial_call=False
+    # )
+    # def toggle_mgmt_layers(tab_value, current_children):
+    #     if tab_value == "tab-management":
+    #         overlays = [
+    #             # Grupo 1: Human activities
+    #             dl.Overlay(
+    #                 name="Human activities", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-ha-1"),
+    #                     dl.LayerGroup(id="mgmt-ha-2"),
+    #                     # añade más capas del grupo aquí…
+    #                 ])
+    #             ),
+    #             # Grupo 2: Fishery
+    #             dl.Overlay(
+    #                 name="Fishery", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-fish-effort"),
+    #                     dl.LayerGroup(id="mgmt-fish-closures"),
+    #                     # …
+    #                 ])
+    #             ),
+    #             # Grupo 3: (otro)
+    #             dl.Overlay(
+    #                 name="Environmental", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-env-mpas"),
+    #                     dl.LayerGroup(id="mgmt-env-habitats"),
+    #                 ])
+    #             ),
+    #         ]
+    #         return overlays, {}                # visible
+    #     # al salir de management:
+    #     return [], {"display": "none", 'pointer-events': 'none'}         # oculto y sin hijos
+
+
+    @app.callback(
+        Output("layer-menu", "className"),
+        Input("layers-btn", "n_clicks"),
+        prevent_initial_call=False
+    )
+    def toggle_layers_panel(n):
+        base = "card shadow-sm position-absolute collapse"
+        return f"{base} show" if (n or 0) % 2 == 1 else base
+    
+    @app.callback(
+        Output("mgmt-ha-1", "children"),
+        Output("mgmt-ha-2", "children"),
+        Output("mgmt-fish-effort", "children"),
+        Output("mgmt-fish-closures", "children"),
+        Input("chk-human", "value"),
+        Input("chk-fish", "value"),
+        prevent_initial_call=False
+    )
+    def toggle_sub_layers(human_vals, fish_vals):
+        active = set((human_vals or []) + (fish_vals or []))
+
+        def on(layer_id, component):
+            return [component] if layer_id in active else []
+
+        return (
+            on("mgmt-ha-1", dl.GeoJSON(id="ha1")),          # <-- tu capa
+            on("mgmt-ha-2", dl.GeoJSON(id="ha2")),
+            on("mgmt-fish-effort",   dl.GeoJSON(id="feff")),
+            on("mgmt-fish-closures", dl.GeoJSON(id="fclo")),
         )
