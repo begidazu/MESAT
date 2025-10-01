@@ -106,6 +106,10 @@ class EVA_MPAEU:
     def _transform_from_extent(extent: Tuple[float, float, float, float], width: int, height: int):
         xmin, ymin, xmax, ymax = extent
         return rio.transform.from_bounds(xmin, ymin, xmax, ymax, width=width, height=height)
+    
+    @staticmethod
+    def _extrapolate_to_nodata_grid():
+        return
 
     # ------------- núcleo de cruce raster-celdas -------------
 
@@ -208,14 +212,11 @@ class EVA_MPAEU:
                 idxs = self._present_indices(results, presence, extent, raster_crs)
                 coverage_pct = (len(idxs) / total_cells) * 100 if total_cells else 0.0
 
-                # if coverage_pct < min_grid_per:
-                #     continue
                 if coverage_pct < cut_lrf:
                     lrf_ids.append(taxonid)
                     if idxs:
                         results.loc[idxs, "aggregation"] += 5
             except Exception as e:
-                # print(f"[{taxonid}] ERROR procesando celdas: {e!r}")
                 pass
 
         den = len(lrf_ids) or 1
@@ -432,3 +433,8 @@ if __name__ == "__main__":
     result = run_selected_assessments(eva=eva, grid=grid, params=params)
     result.to_parquet(os.path.join(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae.parquet"))
 
+# import geopandas as gpd
+# import os
+
+# buffer = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\coastline_20km_buffer_4326.shp")
+# bufferparquet = buffer.to_parquet(os.path.join(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS", "coastline_20km_buffer_4326.parquet"))
