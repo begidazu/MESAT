@@ -78,13 +78,15 @@ def create_layout():  # definir función que construye el layout
                         children=[  # hijos de la barra lateral
                             dcc.Tabs(  # tabs principales
                                 id='tabs',  # id de tabs
-                                value='tab-saltmarsh',  # tab seleccionada por defecto
+                                value='tab-management',  # tab seleccionada por defecto
                                 className="tabs mb-2",  # clases CSS
                                 children=[  # pestañas
-                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),  # tab 1
-                                    dcc.Tab(label='Fish Stocks',          value='tab-fishstock'),  # tab 2
+                                    dcc.Tab(label='Management Scenarios', value='tab-management'),  # tab 1
+                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),  # tab 2
                                     dcc.Tab(label='Physical Accounts',    value='tab-physical'),  # tab 3
-                                    dcc.Tab(label='Management Scenarios', value='tab-management'),  # tab 4
+                                    dcc.Tab(label='EVA-MPAEU Overscale', value='tab-eva-overscale'),  # tab 4
+                                    dcc.Tab(label='Fish Stocks', value='tab-fishstock'),  # tab 5 
+                                    
                                 ],
                                 style={'fontWeight': 'bold'}  # estilo de fuente
                             ),

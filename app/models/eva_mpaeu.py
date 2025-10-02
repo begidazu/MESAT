@@ -535,7 +535,7 @@ if __name__ == "__main__":
 
     params = {
         "aq1":  {"taxon_ids": lrf_id_list, "cut_lrf": 100},
-        "aq5":  {"taxon_ids": nrf_id_list, "country_name": "Spain", "grid_size": 10_000, "cut_nrf": 100},
+        "aq5":  {"taxon_ids": nrf_id_list, "country_name": "Spain", "grid_size": 10000, "cut_nrf": 100},
         "aq7":  {"taxon_ids": all_ids_unique},
         "aq10": {"taxon_ids": esf_id_list},
         "aq12": {"taxon_ids": hfs_bh_id_list},

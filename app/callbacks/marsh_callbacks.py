@@ -137,6 +137,92 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             # mientras tanto, un placeholder:
             return html.Div("Fish Stocks — coming soon", key=key, style={'padding':'20px'})
         
+        elif tab == "tab-eva-overscale":
+            return html.Div(
+                key=key,
+                children=[
+                    html.Div(
+                        id='eva-mpaeu-div',
+                        style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
+                        children=[
+                            html.Div(
+                                id='acronyms-div',
+                                children=[
+                                    html.Legend(html.B("Acronyms:")),
+                                    html.H5(html.Ul(
+                                        children=[
+                                            html.Li(["LRF: ", "Locally Rare Features"]),
+                                            html.Li(["NRF: ", "Natinally Rare Features"]),
+                                            html.Li(["ESF: ", "Ecollogically Significant Features"]),
+                                            html.Li(["HFS-BH: ", "Habitat Forming Species - Biogenic Habitats"]),
+                                            html.Li(["MSS: ", "Mutualistic or Symbiotic Species"])
+                                        ]
+                                    ))
+                                ]
+                            ),
+                            html.Div(
+                                id='functional-groups-div',
+                                className='d-flex flex-column',
+                                children=[
+                                    html.Legend(html.B("Functional Groups Configuration:")),
+                                    html.Div(
+                                        className="input-group mb-3",
+                                        children=[
+                                            dcc.Input(
+                                                id="fg",
+                                                type="text",
+                                                placeholder="Add Functional Group",  # usa value en vez de placeholder para medir
+                                                readOnly=True,
+                                                className="form-control",
+                                                style={"width": "70%"},  # NO crecer al 100%
+                                            ),
+                                            html.Button(
+                                                "+",
+                                                id="add-functional-group",
+                                                n_clicks=0,
+                                                className="btn btn-outline-primary",
+                                                style={"width": "64px"}  # ancho fijo del botón (48–56px va bien)
+                                            ),
+                                            dbc.Tooltip(
+                                                "Add functional group",  # el texto del hover
+                                                target="add-functional-group",  # id del botón al que se engancha
+                                                placement="bottom",   # posición del tooltip (top, bottom, left, right)
+                                            )
+                                        ],
+                                    ),
+                                    html.Div(id="fg-list-container", className="mt-2 w-100", style = {'gap': '15px'})
+                                    # html.Div(
+                                    #     id = 'fg-list-div',
+                                    #     style = {'gap': '15px'},
+                                    #     children = []
+                                    # )
+                                    
+                                ]
+                            ),
+                            html.Div(
+                                id='grid-config-div',
+                                children = [
+
+                                ]
+                            ),
+                            html.Div(
+                                id = 'area-selection-div',
+                                children = [
+
+                                ]
+                            ),
+                            html.Div(
+                                id = 'buttons-div',
+                                children = [
+
+                                ]
+                            )
+                        ]
+                    )
+
+                ],
+                style={'padding':'20px'})
+        
         elif tab == "tab-physical":
             # return physical_layout(key)
             return html.Div(
