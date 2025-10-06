@@ -289,21 +289,22 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                             dbc.Col(
                                                 html.Div(
                                                     [
-                                                        dbc.Input(
+                                                        dcc.Input(
                                                             id='eva-overscale-h3-level',
                                                             type="number", min=0, max=15, step=1,
                                                             placeholder="H3 Grid Level",
-                                                            className="mb-2",
+                                                            className="form-control mb-2",
                                                             disabled=False
                                                         ),
                                                         dbc.Tooltip(
                                                             "H3 Level. Decreasing cell size from 0 to 15",
                                                             target="eva-overscale-h3-level", placement="auto"
                                                         ),
-                                                        dbc.Input(
+                                                        dcc.Input(
                                                             id='eva-overscale-quadrat-size',
                                                             type="number", min=250, max=5000, step=250,
                                                             placeholder="Quadrat Grid Size in meters",
+                                                            className="form-control",
                                                             disabled=True
                                                         ),
                                                         dbc.Tooltip(
@@ -320,6 +321,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     ),
                                 ]
                             ),
+
+                            # Assessment Grid Size store:
+                            dcc.Store(id="ag-size-store"),
 
 
                             html.Div(

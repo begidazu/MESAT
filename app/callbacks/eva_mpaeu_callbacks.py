@@ -294,17 +294,24 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
 
             return new_children
         
+        # Callback to get Assessment grid radio option:
         @app.callback(
             Output("eva-overscale-h3-level", "disabled"),
             Output("eva-overscale-quadrat-size", "disabled"),
             Input("opt-radio", "value"),
-            prevent_initial_call = True
         )
-        def assessment_grid_config(ag_option):
-            if ag_option == "h3":
-                return False, True
-            elif ag_option == "quadrat":
-                return True, False
-            else:
-                raise PreventUpdate
+        def toggle_inputs(opt):
+            return (opt != "h3", opt != "quadrat")
+        
+        # Callback to send Assessment Grid size to store (and update Div to show the value):
+        @app.callback(
+            Output("ag-size-store", "data"),
+            Input("eva-overscale-h3-level", "value"),
+            Input("eva-overscale-quadrat-size", "value"),
+            State("opt-radio", "value"),
+        )
+        def update_store_from_grid_inputs(h3_val, q_val, opt):
+            selected = h3_val if opt == "h3" else q_val
+            data = {"type": opt, "h3": h3_val, "quadrat": q_val, "size": selected}
+            return data
 
