@@ -24,6 +24,37 @@ def _none_if_empty(v):
 def _get_prop(node, key, default=None):
     return (node or {}).get("props", {}).get(key, default)
 
+# Check if group configuration is complete:
+def _is_group_complete(cfg: dict) -> bool:
+    if not cfg:
+        return False
+
+    if not cfg.get("name"): return False
+    if not cfg.get("eez_country"): return False
+    if cfg.get("eez_grid_size") in (None, ""): return False
+
+    lrf = cfg.get("lrf", {}) or {}
+    nrf = cfg.get("nrf", {}) or {}
+
+    lrf_ids = lrf.get("taxon_ids") or []
+    nrf_ids = nrf.get("taxon_ids") or []
+    esf_ids = cfg.get("esf_taxon_ids") or []
+    hfsbh_ids = cfg.get("hfsbh_taxon_ids") or []
+    mss_ids = cfg.get("mss_taxon_ids") or []
+
+    any_list = any([lrf_ids, nrf_ids, esf_ids, hfsbh_ids, mss_ids])
+    if not any_list:
+        return False
+
+    if lrf_ids and lrf.get("threshold_pct") in (None, ""):
+        return False
+    if nrf_ids and nrf.get("threshold_pct") in (None, ""):
+        return False
+
+    return True
+
+
+# Main Callback function:
 def register_eva_mpaeu_callbacks(app: dash.Dash):
 
         @app.callback(
@@ -225,6 +256,43 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             if not is_open:
                 raise PreventUpdate
             return False
+        
+        @app.callback(
+            Output("fg-button-container", "children", allow_duplicate=True),
+            Input("fg-configs", "data"),
+            State("fg-button-container", "children"),
+            prevent_initial_call=True
+        )
+        def colorize_group_buttons(cfgs, btn_children):
+            btn_children = btn_children or []
+            cfgs = cfgs or {}
+
+            new_children = []
+            for child in btn_children:
+                cid = _get_prop(child, "id")
+                if isinstance(cid, dict) and cid.get("type") == "fg-button":
+                    idx = cid.get("index")
+                    cfg = cfgs.get(str(idx), {})
+                    complete = _is_group_complete(cfg)
+
+                    label = _get_prop(child, "children", f"Group {idx}")
+                    n_clicks = _get_prop(child, "n_clicks", 0)
+
+                    className = "btn w-100 "
+                    className += "btn-outline-success" if complete else "btn-outline-danger"
+
+                    new_children.append(
+                        html.Button(
+                            label,
+                            id=cid,
+                            n_clicks=n_clicks,
+                            className=className.strip()
+                        )
+                    )
+                else:
+                    new_children.append(child)
+
+            return new_children
         
         # Callback to test that the functional group configuration has been saved correctly:
         # @app.callback(
