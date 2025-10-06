@@ -293,7 +293,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                             id='eva-overscale-h3-level',
                                                             type="number", min=0, max=15, step=1,
                                                             placeholder="H3 Grid Level",
-                                                            className="mb-2"
+                                                            className="mb-2",
+                                                            disabled=False
                                                         ),
                                                         dbc.Tooltip(
                                                             "H3 Level. Decreasing cell size from 0 to 15",
@@ -303,6 +304,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                             id='eva-overscale-quadrat-size',
                                                             type="number", min=250, max=5000, step=250,
                                                             placeholder="Quadrat Grid Size in meters",
+                                                            disabled=True
                                                         ),
                                                         dbc.Tooltip(
                                                             "Quadrat grid size. Min 250, max 5000. Use multiples of 250",

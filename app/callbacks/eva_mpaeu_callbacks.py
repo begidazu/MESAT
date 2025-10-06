@@ -293,4 +293,18 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                     new_children.append(child)
 
             return new_children
+        
+        @app.callback(
+            Output("eva-overscale-h3-level", "disabled"),
+            Output("eva-overscale-quadrat-size", "disabled"),
+            Input("opt-radio", "value"),
+            prevent_initial_call = True
+        )
+        def assessment_grid_config(ag_option):
+            if ag_option == "h3":
+                return False, True
+            elif ag_option == "quadrat":
+                return True, False
+            else:
+                raise PreventUpdate
 
