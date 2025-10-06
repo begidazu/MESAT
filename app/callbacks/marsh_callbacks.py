@@ -232,8 +232,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     dbc.Tooltip("Type group name", target="fg-input-name", placement="auto"),
                                                     dbc.Col(dbc.Input(id="fg-input-eez", type="text", placeholder="EEZ country"), md=4),
                                                     dbc.Tooltip("Target EEZ country name", target="fg-input-eez", placement="auto"),
-                                                    dbc.Col(dbc.Input(id="fg-input-eez-grid-size", type= "number", placeholder="EEZ grid size", min=0, max=10000, step=1), md=4),
-                                                    dbc.Tooltip("Target EEZ grid size to evaluate NRF rareness (in m if quadratic grid or level 0-15 if hexagonal H3 grid)", target="fg-input-eez-grid-size", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-input-eez-grid-size", type= "number", placeholder="EEZ grid size", min=10000, max=50000, step=10000), md=4),
+                                                    dbc.Tooltip("Target EEZ grid size to evaluate NRF rareness (in m)", target="fg-input-eez-grid-size", placement="auto"),
                                                 ),
                                                 row3(
                                                     dbc.Col(dbc.Input(id="fg-lrf-taxonid", type="text", placeholder="LRF Taxon IDs"), md=4),
@@ -325,6 +325,46 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             # Assessment Grid Size store:
                             dcc.Store(id="ag-size-store"),
 
+
+                            # Run, Download and Info buttons:
+                            html.Div(
+                                id='eva-overscale-button-bar',
+                                style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
+                                children=[
+                                    html.Button(  # botón Run
+                                        html.Span("Run"),
+                                        id="eva-overscale-run-button",
+                                        n_clicks=0,
+                                        disabled=True,
+                                        className='btn btn-outline-primary'  
+                                    ),
+                                    html.Button(  # botón Reset
+                                        html.Span("Reset"),
+                                        id="eva-overscale-reset-button",
+                                        n_clicks=0,
+                                        className='btn btn-outline-primary',
+                                        disabled=False
+                                    ),
+                                    html.Div(  # contenedor de descarga
+                                        [
+                                            html.Button(  # botón de descarga
+                                                [html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")], 
+                                                id='eva-overscale-results',  # id
+                                                disabled=True,  # oculto al inicio
+                                                n_clicks=0,  # contador
+                                                className='btn btn-outline-primary'
+                                            ),
+                                            dcc.Download(id='mgmt-download')  # componente de descarga
+                                        ]
+                                    ),
+                                    html.Button(  # botón info
+                                        [html.Img(src='/assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
+                                        id='eva-overscale-info-button',
+                                        className='btn btn-outline-primary',
+                                        n_clicks=0  # contador
+                                    )
+                                ]
+                            ),
 
                             html.Div(
                                 id = 'area-selection-div',

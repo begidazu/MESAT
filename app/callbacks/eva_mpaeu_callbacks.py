@@ -97,8 +97,8 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
         @app.callback(
             Output("fg-config-modal", "is_open", allow_duplicate=True),
             Output("fg-modal-title", "children"),
-            Output("fg-selected-index", "data"),
-            Output("fg-last-click-ts", "data"),  # actualizar el último timestamp usado
+            Output("fg-selected-index", "data", allow_duplicate= True),
+            Output("fg-last-click-ts", "data", allow_duplicate=True),  # actualizar el último timestamp usado
             Input({"type": "fg-button", "index": ALL}, "n_clicks_timestamp"),
             Input("add-functional-group", "n_clicks"),   # para poder ignorar su trigger
             State("fg-last-click-ts", "data"),
@@ -130,7 +130,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             return True, f"Configure Group {i}", i, max_ts
 
         @app.callback(
-            Output("fg-configs", "data"),
+            Output("fg-configs", "data", allow_duplicate=True),
             Output("fg-config-modal", "is_open", allow_duplicate=True),         # cerrar modal
             Output("fg-button-container", "children", allow_duplicate=True),    # renombrar botón
             Output("fg-button-tooltips", "children", allow_duplicate=True),     # actualizar tooltip
@@ -296,22 +296,86 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
         
         # Callback to get Assessment grid radio option:
         @app.callback(
-            Output("eva-overscale-h3-level", "disabled"),
-            Output("eva-overscale-quadrat-size", "disabled"),
+            Output("eva-overscale-h3-level", "disabled", allow_duplicate=True),
+            Output("eva-overscale-quadrat-size", "disabled", allow_duplicate=True),
             Input("opt-radio", "value"),
+            prevent_initial_call = True
         )
         def toggle_inputs(opt):
             return (opt != "h3", opt != "quadrat")
         
         # Callback to send Assessment Grid size to store (and update Div to show the value):
         @app.callback(
-            Output("ag-size-store", "data"),
+            Output("ag-size-store", "data", allow_duplicate=True),
             Input("eva-overscale-h3-level", "value"),
             Input("eva-overscale-quadrat-size", "value"),
-            State("opt-radio", "value"),
+            Input("opt-radio", "value"),   # ← antes era State
+            prevent_initial_call=True
         )
         def update_store_from_grid_inputs(h3_val, q_val, opt):
             selected = h3_val if opt == "h3" else q_val
-            data = {"type": opt, "h3": h3_val, "quadrat": q_val, "size": selected}
-            return data
+            return {"type": opt, "h3": h3_val, "quadrat": q_val, "size": selected}
+        
+        # Callback to enable and disable Run button:
+        @app.callback(
+            Output("eva-overscale-run-button", "disabled", allow_duplicate=True),
+            Input("fg-configs", "data"),
+            Input("ag-size-store", "data"),
+            State("fg-button-container", "children"),
+            prevent_initial_call = True
+        )
+        def toggle_run_button(cfgs, ag, btn_children):
+            # 1) Existing groups
+            idxs = []
+            for child in (btn_children or []):
+                cid = _get_prop(child, "id")
+                if isinstance(cid, dict) and cid.get("type") == "fg-button":
+                    idxs.append(str(cid.get("index")))
+            if not idxs:
+                return True  # no hay grupos
+
+            # 2) Valid Grid Size:
+            ag_ok = bool(ag) and ag.get("type") in ("h3", "quadrat") and ag.get("size") not in (None, "")
+            if not ag_ok:
+                return True
+
+            # 3) All groups complete:
+            cfgs = cfgs or {}
+            all_complete = all(_is_group_complete(cfgs.get(i)) for i in idxs)
+            return not all_complete
+        
+        # Callback to reset all:
+        @app.callback(
+            Output("fg-configs", "data"),
+            Output("fg-selected-index", "data"),
+            Output("fg-last-click-ts", "data"),
+            Output("fg-button-container", "children", allow_duplicate=True),
+            Output("fg-button-tooltips", "children", allow_duplicate=True),
+            Output("opt-radio", "value"),
+            Output("eva-overscale-h3-level", "value", allow_duplicate=True),
+            Output("eva-overscale-quadrat-size", "value", allow_duplicate=True),
+            Output("eva-overscale-h3-level", "disabled"),
+            Output("eva-overscale-quadrat-size", "disabled"),
+            Output("ag-size-store", "data"),
+            Output("eva-overscale-run-button", "disabled"),
+            Input("eva-overscale-reset-button", "n_clicks"),
+            prevent_initial_call=True
+        )
+        def reset_all(n):
+            if not n:
+                raise PreventUpdate
+            return (
+                {},           # fg-configs
+                None,         # fg-selected-index
+                0,            # fg-last-click-ts
+                [],           # fg-button-container 
+                [],           # fg-button-tooltips
+                "h3",         # radio por default
+                None,         # h3 value
+                None,         # quadrat value
+                False,        # h3 enabled
+                True,         # quadrat disabled
+                {},           # ag-size-store empty
+                True,         # Run disabled
+            )
 
