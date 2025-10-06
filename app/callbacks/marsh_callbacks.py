@@ -33,6 +33,14 @@ row_style = {
         'columnGap': '12px',
         'width': '100%',
     }
+fg_row_style = {
+    'display': 'grid',
+    'gridTemplateColumns': 'repeat(3, minmax(0, 1fr))',
+    'gap': '12px',
+    'alignItems': 'center',
+    'justifyItems': 'stretch',
+    'width': '100%',
+}
 
 def _acc_tif_from_class_tif(class_tif):  # localizar tif de acreción emparejado
     base, ext = os.path.splitext(class_tif)  # separar base y extensión
@@ -113,6 +121,15 @@ def _png_grafico_accretion(titulo, etiquetas, valores):  # crear PNG de acreció
     buf.seek(0)  # rebobinar
     return buf  # devolver
 
+# Functions to style the EVA Overscale Modal:
+def row3(*cols):
+    cols = list(cols)
+    while len(cols) < 3:
+        cols.append(dbc.Col(html.Div(), md=4))   # Col vacío mantiene el hueco/alineación
+    return dbc.Row(cols, className="g-2 mb-2", align="center")
+
+
+
 # =============================
 # Registro de callbacks
 # =============================
@@ -146,21 +163,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
                         children=[
                             html.Div(
-                                id='acronyms-div',
-                                children=[
-                                    html.Legend(html.B("Acronyms:")),
-                                    html.H5(html.Ul(
-                                        children=[
-                                            html.Li(["LRF: ", "Locally Rare Features"]),
-                                            html.Li(["NRF: ", "Natinally Rare Features"]),
-                                            html.Li(["ESF: ", "Ecollogically Significant Features"]),
-                                            html.Li(["HFS-BH: ", "Habitat Forming Species - Biogenic Habitats"]),
-                                            html.Li(["MSS: ", "Mutualistic or Symbiotic Species"])
-                                        ]
-                                    ))
-                                ]
-                            ),
-                            html.Div(
                                 id='functional-groups-div',
                                 className='d-flex flex-column',
                                 children=[
@@ -190,12 +192,73 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                             )
                                         ],
                                     ),
-                                    html.Div(id="fg-list-container", className="mt-2 w-100", style = {'gap': '15px'})
-                                    # html.Div(
-                                    #     id = 'fg-list-div',
-                                    #     style = {'gap': '15px'},
-                                    #     children = []
-                                    # )
+                                    html.Div(id="fg-list-container", className="mt-2 w-100", style = {'gap': '15px'}),
+                                    html.Div(id = "fg-button-container", className="mt-2 w-100", style=fg_row_style),
+                                    html.Div(id = "fg-button-tooltips", className="mt-2 w-100"),
+                                    
+                                    # Stores: 
+                                    dcc.Store(id="fg-selected-index"),
+                                    dcc.Store(id="fg-last-click-ts", data=0),
+                                    # Modal reutilizable
+                                    dbc.Modal(
+                                        id="fg-config-modal",
+                                        is_open=False,
+                                        size="xl",
+                                        children=[
+                                            dbc.ModalHeader(dbc.ModalTitle(id="fg-modal-title")),
+                                            dbc.ModalBody([
+                                                html.Div(
+                                                    id='acronyms-div',
+                                                    children=[
+                                                        html.Legend("Acronyms:"),
+                                                        html.H5(html.Ul(
+                                                            children=[
+                                                                html.Li(["LRF: ", "Locally Rare Features"]),
+                                                                html.Li(["NRF: ", "Natinally Rare Features"]),
+                                                                html.Li(["ESF: ", "Ecollogically Significant Features"]),
+                                                                html.Li(["HFS-BH: ", "Habitat Forming Species - Biogenic Habitats"]),
+                                                                html.Li(["MSS: ", "Mutualistic or Symbiotic Species"])
+                                                            ]
+                                                        ))
+                                                    ]
+                                                ),
+                                                html.Legend("Group Configuration:"),
+                                                # inputs de configuración (ejemplo básico)
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-input-name", type="text", placeholder="Group name"), md=4),
+                                                    dbc.Tooltip("Type group name", target="fg-input-name", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-input-eez", type="text", placeholder="EEZ country"), md=4),
+                                                    dbc.Tooltip("Target EEZ country name", target="fg-input-eez", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-input-eez-grid-size", type= "number", placeholder="EEZ grid size", min=250, max=10000, step=50), md=4),
+                                                    dbc.Tooltip("Target EEZ grid size to evaluate NRF rareness (in m)", target="fg-input-eez-grid-size", placement="auto"),
+                                                ),
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-lrf-taxonid", type="text", placeholder="LRF Taxon IDs"), md=4),
+                                                    dbc.Tooltip("LRF taxon ID list, separated by commas", target="fg-lrf-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-lrf-threshold", type= "number", placeholder="LRF threshold (%)", min=0, max=100, step=1), md=4),
+                                                    dbc.Tooltip("Percentage of grid cells to consider a taxon as LRF or not", target="fg-lrf-threshold", placement="auto"),
+                                                ),
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-nrf-taxonid", type="text", placeholder="NRF Taxon IDs"), md=4),
+                                                    dbc.Tooltip("NRF taxon ID list, separated by commas", target="fg-nrf-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-nrf-threshold", type= "number", placeholder="NRF threshold (%)", min=0, max=100, step=1), md=4),
+                                                    dbc.Tooltip("Percentage of grid cells over the EEZ grid to consider a taxon as NRF or not", target="fg-nrf-threshold", placement="auto"),
+                                                ),
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-esf-taxonid", type="text", placeholder="ESF Taxon IDs"), md=4),
+                                                    dbc.Tooltip("ESF taxon ID list, separated by commas", target="fg-esf-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-hfsbh-taxonid", type="text", placeholder="HFS-BH Taxon IDs"), md=4),
+                                                    dbc.Tooltip("HFSBH taxon ID list, separated by commas", target="fg-hfsbh-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-mss-taxonid", type= "text", placeholder="MSS Taxon IDs"), md=4),
+                                                    dbc.Tooltip("MSS taxon ID list, separated by commas", target="fg-mss-taxonid", placement="auto"),
+                                                )
+                                            ]),
+                                            dbc.ModalFooter([
+                                                dbc.Button("Save", id="fg-modal-save", n_clicks=0, className="btn btn-primary"),
+                                                dbc.Button("Close", id="fg-modal-close", n_clicks=0, className="ms-2")
+                                            ])
+                                        ], scrollable=True, centered= True
+                                    )
                                     
                                 ]
                             ),
