@@ -265,12 +265,61 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     
                                 ]
                             ),
+
                             html.Div(
                                 id='grid-config-div',
-                                children = [
-
+                                children=[
+                                    html.Legend("Assessment Grid Configuration:"),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dcc.RadioItems(
+                                                    id="opt-radio",
+                                                    options=[
+                                                        {"label": " Hexagonal H3 Grid", "value": "h3"},
+                                                        {"label": " Quadrat Grid", "value": "quadrat"},
+                                                    ],
+                                                    value="h3",
+                                                    className="d-flex flex-column gap-2",
+                                                    inputClassName="form-check-input",
+                                                    labelClassName="form-check-label",
+                                                ),
+                                                xs=12, md=6,
+                                            ),
+                                            dbc.Col(
+                                                html.Div(
+                                                    [
+                                                        dbc.Input(
+                                                            id='eva-overscale-h3-level',
+                                                            type="number", min=0, max=15, step=1,
+                                                            placeholder="H3 Grid Level",
+                                                            className="mb-2"
+                                                        ),
+                                                        dbc.Tooltip(
+                                                            "H3 Level. Decreasing cell size from 0 to 15",
+                                                            target="eva-overscale-h3-level", placement="auto"
+                                                        ),
+                                                        dbc.Input(
+                                                            id='eva-overscale-quadrat-size',
+                                                            type="number", min=250, max=5000, step=250,
+                                                            placeholder="Quadrat Grid Size in meters",
+                                                        ),
+                                                        dbc.Tooltip(
+                                                            "Quadrat grid size. Min 250, max 5000. Use multiples of 250",
+                                                            target="eva-overscale-quadrat-size", placement="auto"
+                                                        ),
+                                                    ],
+                                                    className="w-100"
+                                                ),
+                                                xs=12, md=6,
+                                            ),
+                                        ],
+                                        className="g-3 align-items-start" 
+                                    ),
                                 ]
                             ),
+
+
                             html.Div(
                                 id = 'area-selection-div',
                                 children = [
@@ -285,8 +334,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             ),
 
                             # Test button to download functional group configuration as JSON:
-                            # dcc.Download(id="download-fg-configs"),
-                            # dbc.Button("Descargar JSON", id="btn-download-fg", className="mt-2"),
+
+
                         ]
                     )
 

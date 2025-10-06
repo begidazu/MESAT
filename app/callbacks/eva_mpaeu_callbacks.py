@@ -293,17 +293,4 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                     new_children.append(child)
 
             return new_children
-        
-        # Callback to test that the functional group configuration has been saved correctly:
-        # @app.callback(
-        #     Output("download-fg-configs", "data"),
-        #     Input("btn-download-fg", "n_clicks"),
-        #     State("fg-configs", "data"),
-        #     prevent_initial_call=True
-        # )
-        # def download_configs(n, data):
-        #     if not n or not data:
-        #         raise PreventUpdate
-        #     payload = json.dumps(data, indent=2, ensure_ascii=False)
-        #     return dcc.send_string(payload, "functional_groups_config.json")
 
