@@ -192,13 +192,16 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                             )
                                         ],
                                     ),
-                                    html.Div(id="fg-list-container", className="mt-2 w-100", style = {'gap': '15px'}),
+
+                                    # Div containers to store functional group buttons and tooltips:
                                     html.Div(id = "fg-button-container", className="mt-2 w-100", style=fg_row_style),
                                     html.Div(id = "fg-button-tooltips", className="mt-2 w-100"),
                                     
                                     # Stores: 
                                     dcc.Store(id="fg-selected-index"),
                                     dcc.Store(id="fg-last-click-ts", data=0),
+                                    dcc.Store(id="fg-configs", data={}),
+
                                     # Modal reutilizable
                                     dbc.Modal(
                                         id="fg-config-modal",
@@ -229,8 +232,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     dbc.Tooltip("Type group name", target="fg-input-name", placement="auto"),
                                                     dbc.Col(dbc.Input(id="fg-input-eez", type="text", placeholder="EEZ country"), md=4),
                                                     dbc.Tooltip("Target EEZ country name", target="fg-input-eez", placement="auto"),
-                                                    dbc.Col(dbc.Input(id="fg-input-eez-grid-size", type= "number", placeholder="EEZ grid size", min=250, max=10000, step=50), md=4),
-                                                    dbc.Tooltip("Target EEZ grid size to evaluate NRF rareness (in m)", target="fg-input-eez-grid-size", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-input-eez-grid-size", type= "number", placeholder="EEZ grid size", min=0, max=10000, step=1), md=4),
+                                                    dbc.Tooltip("Target EEZ grid size to evaluate NRF rareness (in m if quadratic grid or level 0-15 if hexagonal H3 grid)", target="fg-input-eez-grid-size", placement="auto"),
                                                 ),
                                                 row3(
                                                     dbc.Col(dbc.Input(id="fg-lrf-taxonid", type="text", placeholder="LRF Taxon IDs"), md=4),
@@ -279,7 +282,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 children = [
 
                                 ]
-                            )
+                            ),
+
+                            # Test button to download functional group configuration as JSON:
+                            # dcc.Download(id="download-fg-configs"),
+                            # dbc.Button("Descargar JSON", id="btn-download-fg", className="mt-2"),
                         ]
                     )
 
