@@ -65,7 +65,11 @@ def create_layout():  # definir función que construye el layout
                                     dl.FeatureGroup(id="mgmt-wind-upload", children=[]),  # capa para los datos subidos (Wind)
                                     dl.FeatureGroup(id="mgmt-aquaculture-upload", children=[]),  # capa para los datos subidos (Aquaculture)
                                     dl.FeatureGroup(id="mgmt-vessel-upload", children=[]),# capa para los datos subidos (Vessel Routes)
-                                    dl.FeatureGroup(id="mgmt-defence-upload", children=[])# capa para los datos subidos (Defence)
+                                    dl.FeatureGroup(id="mgmt-defence-upload", children=[]),# capa para los datos subidos (Defence)
+
+                                    # Layers where we store the uploaded files of eva-overscale, the drew study area and the results
+                                    dl.FeatureGroup(id="eva-overscale-draw", children=[]),
+                                    dl.FeatureGroup(id="eva-overscale-file", children=[]),
 
                                 ]
                             ),
@@ -158,6 +162,12 @@ def create_layout():  # definir función que construye el layout
                     dcc.Store(id="aquaculture-file-store"),                    # store para Aquaculture
                     dcc.Store(id="vessel-file-store"),                         # store para Vessel Route
                     dcc.Store(id="defence-file-store"),                        # store para Defence
+                    # almacen para los EVA-Overscale funcional groups: 
+                    dcc.Store(id="fg-selected-index"),
+                    dcc.Store(id="fg-last-click-ts", data=0),
+                    dcc.Store(id="fg-configs", data={}),
+                    dcc.Store(id = "eva-overscale-draw-meta", data={"layer": "study-area", "color": "#015B97"}),
+                    dcc.Store(id = "eva-overscale-file-store", data={}),
 
 
                     # modal de bienvenida

@@ -388,7 +388,7 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
     )
 
 
-# Definis los callbacks que vienen de la app para el tab-management:
+# Definimos los callbacks que vienen de la app para el tab-management:
 def register_management_callbacks(app: dash.Dash):
 
     # (1) Enable/disable por checklist (tu versión correcta)

@@ -166,9 +166,41 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 id='functional-groups-div',
                                 className='d-flex flex-column',
                                 children=[
+                                    html.Legend(html.B("Assessment Area")),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                html.Button(
+                                                    "Draw",
+                                                    id="eva-overscale-sa-draw",
+                                                    n_clicks=0,
+                                                    disabled=False,
+                                                    className="btn btn-outline-primary w-100",
+                                                ),
+                                                xs=12, md=6, 
+                                            ),
+                                            dbc.Col(
+                                                dcc.Upload(
+                                                    id="eva-overscale-sa-file",
+                                                    multiple=False,
+                                                    accept=".geojson,.json,.shp,.zip,.gpkg,.kml,.kmz",
+                                                    children=html.Div(
+                                                        id="eva-overscale-sa-file-label",
+                                                        children="Drop a file or click to upload",
+                                                        className="form-control",
+                                                        style={"height": "100%"}
+                                                    ),
+                                                    className="w-100",
+                                                ),
+                                                xs=12, md=6,
+                                            ),
+                                        ],
+                                        className="g-2 mb-2 align-items-center-stretch",
+                                    ),
+                                    
                                     html.Legend(html.B("Functional Groups Configuration:")),
                                     html.Div(
-                                        className="input-group mb-3",
+                                        className="input-group mb-2",
                                         children=[
                                             dcc.Input(
                                                 id="fg",
@@ -196,11 +228,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     # Div containers to store functional group buttons and tooltips:
                                     html.Div(id = "fg-button-container", className="mt-2 w-100", style=fg_row_style),
                                     html.Div(id = "fg-button-tooltips", className="mt-2 w-100"),
-                                    
-                                    # Stores: 
-                                    dcc.Store(id="fg-selected-index"),
-                                    dcc.Store(id="fg-last-click-ts", data=0),
-                                    dcc.Store(id="fg-configs", data={}),
 
                                     # Modal reutilizable
                                     dbc.Modal(
@@ -225,7 +252,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                         ))
                                                     ]
                                                 ),
-                                                html.Legend("Group Configuration:"),
+                                                html.Legend(html.B("Group Configuration:")),
                                                 # inputs de configuración (ejemplo básico)
                                                 row3(
                                                     dbc.Col(dbc.Input(id="fg-input-name", type="text", placeholder="Group name"), md=4),
@@ -269,7 +296,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             html.Div(
                                 id='grid-config-div',
                                 children=[
-                                    html.Legend("Assessment Grid Configuration:"),
+                                    html.Legend(html.B("Assessment Grid Configuration:")),
                                     dbc.Row(
                                         [
                                             dbc.Col(

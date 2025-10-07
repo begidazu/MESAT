@@ -1,7 +1,14 @@
-import dash, json
+import dash, json, time
 from dash import Input, Output, State, no_update, html, dcc, ALL, ctx
 from dash.exceptions import PreventUpdate
+import dash_leaflet as dl
 import dash_bootstrap_components as dbc
+
+from app.callbacks.management_callbacks import _valid_ext, _save_upload_to_disk, _to_geojson_from_parquet, _estimate_b64_size
+
+COLOR = {
+    "eva-overscale-sa-draw": ("study-area",   "#015B97")
+}
 
 # Utility functions:
 def _parse_csv_ints(text: str):
@@ -53,6 +60,31 @@ def _is_group_complete(cfg: dict) -> bool:
 
     return True
 
+def _to_leaflet_polys(geojson):
+    """Convierte Polygon/MultiPolygon GeoJSON -> lista de dl.Polygon(positions=...)."""
+    feats = (geojson or {}).get("features", [])
+    comps = []
+
+    def lonlat_to_latlon(coords):
+        # GeoJSON [lon,lat] -> Leaflet [lat,lon]
+        return [[lat, lon] for lon, lat in coords]
+
+    for f in feats:
+        g = (f or {}).get("geometry") or {}
+        gtype = g.get("type")
+        if gtype == "Polygon":
+            ring = g.get("coordinates", [[]])[0]
+            comps.append(dl.Polygon(positions=lonlat_to_latlon(ring),
+                                    color="#0d6efd", fillColor="#0d6efd",
+                                    fillOpacity=0.35, weight=3))
+        elif gtype == "MultiPolygon":
+            for poly in g.get("coordinates", []):
+                ring = poly[0] if poly else []
+                comps.append(dl.Polygon(positions=lonlat_to_latlon(ring),
+                                        color="#0d6efd", fillColor="#0d6efd",
+                                        fillOpacity=0.35, weight=3))
+        # otros tipos: ignorar
+    return comps
 
 # Main Callback function:
 def register_eva_mpaeu_callbacks(app: dash.Dash):
@@ -358,6 +390,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             Output("eva-overscale-quadrat-size", "disabled"),
             Output("ag-size-store", "data"),
             Output("eva-overscale-run-button", "disabled"),
+            Output("eva-overscale-draw", "children", allow_duplicate=True),
             Input("eva-overscale-reset-button", "n_clicks"),
             prevent_initial_call=True
         )
@@ -377,5 +410,79 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 True,         # quadrat disabled
                 {},           # ag-size-store empty
                 True,         # Run disabled
+                []            # Clear Study Area polygons
             )
+        
+        # Callback to enable Drawing to the user:
+        @app.callback(
+            Output("eva-overscale-draw-meta", "data", allow_duplicate=True),
+            Output("edit-control", "drawToolbar", allow_duplicate= True),
+            Input("eva-overscale-sa-draw", "n_clicks"),
+            prevent_initial_call=True
+        )
+        def draw_eva_overscale_sa(sa):
+            if not (sa):
+                raise PreventUpdate
+            ctx = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
+            layer_key, color = COLOR[ctx]
+            return {"layer": layer_key, "color": color}, {"mode": "polygon", "n_clicks": int(time.time())}
+        
+        # Callback to add the polygon to the map
+        @app.callback(
+            Output("eva-overscale-draw", "children"),
+            Output("draw-len", "data", allow_duplicate=True),
+            Output("edit-control", "editToolbar", allow_duplicate=True),
+            Input("edit-control", "geojson"),
+            State("draw-len", "data"),
+            State("eva-overscale-draw-meta", "data"),
+            State("eva-overscale-draw", "children"),
+            prevent_initial_call=True
+        )
+        def manage_layers(gj, prev_len, meta, ch_sa):
+            ctx = dash.callback_context
+            trig = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
+
+            # Normaliza children actuales
+            ch_sa    = list(ch_sa or [])
+
+            # --- 2) Si el trigger fue el geojson -> copiar último dibujo y limpiar el control ---
+            feats = (gj or {}).get("features", [])
+            n = len(feats)
+            prev_len = prev_len or 0
+            if n <= prev_len:
+                raise PreventUpdate  # sin nuevo dibujo (o updates del clear)
+
+            f = feats[-1]
+            geom = (f or {}).get("geometry", {})
+            gtype = geom.get("type")
+
+            def to_positions(coords):
+                # GeoJSON [lon,lat] -> Leaflet [lat,lon]
+                return [[lat, lon] for lon, lat in coords]
+
+            new_polys = []
+            if gtype == "Polygon":
+                new_polys = [to_positions(geom["coordinates"][0])]
+            elif gtype == "MultiPolygon":
+                new_polys = [to_positions(poly[0]) for poly in geom["coordinates"]]
+            else:
+                # Tipo no soportado: solo resetea contador y limpia el control
+                clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
+                return ch_sa, 0, clear
+
+            color = (meta or {}).get("color", "#ff00ff")
+            layer = (meta or {}).get("layer", "wind")
+            comps = [dl.Polygon(positions=p, color=color, fillColor=color, fillOpacity=0.6, weight=4)
+                    for p in new_polys]
+
+            if layer == "study-area":
+                ch_sa.extend(comps)
+
+            # Limpia el EditControl y resetea contador para evitar "azules intermedios"
+            clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
+            return ch_sa, 0, clear
+
+
+        
+        
 
