@@ -1,14 +1,22 @@
-import dash, json, time
+import dash, json, time, os, sys #traceback
 from dash import Input, Output, State, no_update, html, dcc, ALL, ctx
 from dash.exceptions import PreventUpdate
+from pathlib import Path
+import geopandas as gpd
+import pandas as pd
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
+from shapely import wkt as shp_wkt  
+from shapely import wkb as shp_wkb
+from shapely.geometry import mapping
 
-from app.callbacks.management_callbacks import _valid_ext, _save_upload_to_disk, _to_geojson_from_parquet, _estimate_b64_size
+from app.callbacks.management_callbacks import _valid_ext, _save_upload_to_disk, _to_geojson_from_parquet, _detect_lonlat_columns, _df_to_feature_collection_from_polygon, _estimate_b64_size, _rm_tree, _session_dir
 
-COLOR = {
-    "eva-overscale-sa-draw": ("study-area",   "#015B97")
-}
+# Classes:
+COLOR = {"eva-overscale-sa-draw": ("study-area",   "#015B97")}
+UPLOAD_CLASS = "form-control form-control-lg"
+BASE_UPLOAD_CLASS = "form-control is-valid form-control-lg"               
+INVALID_UPLOAD_CLASS = "form-control is-invalid form-control-lg"  
 
 # Utility functions:
 def _parse_csv_ints(text: str):
@@ -59,6 +67,11 @@ def _is_group_complete(cfg: dict) -> bool:
         return False
 
     return True
+
+
+
+
+
 
 def _to_leaflet_polys(geojson):
     """Convierte Polygon/MultiPolygon GeoJSON -> lista de dl.Polygon(positions=...)."""
@@ -391,6 +404,11 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             Output("ag-size-store", "data"),
             Output("eva-overscale-run-button", "disabled"),
             Output("eva-overscale-draw", "children", allow_duplicate=True),
+            Output("eva-overscale-sa-draw", "disabled", allow_duplicate=True),
+            Output("eva-overscale-upload", "children", allow_duplicate=True),
+            Output("eva-overscale-sa-file", "disabled", allow_duplicate=True),
+            Output("eva-overscale-sa-file-label", "children"),
+            Output("eva-overscale-file-store", "data"),
             Input("eva-overscale-reset-button", "n_clicks"),
             prevent_initial_call=True
         )
@@ -410,7 +428,12 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 True,         # quadrat disabled
                 {},           # ag-size-store empty
                 True,         # Run disabled
-                []            # Clear Study Area polygons
+                [],           # Clear Study Area polygons Draw
+                False,        # Enable Draw Button 
+                [],           # Clear Study Area polygons uploaded
+                False,        # Enable Upload again
+                "Choose json or parquet file",
+                {}
             )
         
         # Callback to enable Drawing to the user:
@@ -438,7 +461,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             State("eva-overscale-draw", "children"),
             prevent_initial_call=True
         )
-        def manage_layers(gj, prev_len, meta, ch_sa):
+        def add_sa_polygon(gj, prev_len, meta, ch_sa):
             ctx = dash.callback_context
             trig = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
 
@@ -481,8 +504,189 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             # Limpia el EditControl y resetea contador para evitar "azules intermedios"
             clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
             return ch_sa, 0, clear
-
-
         
-        
+        # Callback to check if the file is valid. If extension is not valid we add a error message, if it is valid we store it and save it as a GeoJSON:
+        @app.callback(
+            Output("eva-overscale-sa-file-label", "children", allow_duplicate=True),
+            Output("eva-overscale-sa-file", "className", allow_duplicate=True),
+            Output("eva-overscale-file-store", "data", allow_duplicate=True),
+            Input("eva-overscale-sa-file", "filename"),
+            Input("eva-overscale-sa-file", "contents"),
+            State("eva-overscale-file-store", "data"),
+            State("session-id", "data"),
+            prevent_initial_call=True
+        )
+        def on_upload_sa(filename, contents, prev_store, sid):
+            if not filename:
+                raise PreventUpdate
+            label_text = filename
+            if not _valid_ext(filename):
+                return label_text, INVALID_UPLOAD_CLASS, {"valid": False, "reason": "bad_extension"}
+            if not contents:
+                return label_text, BASE_UPLOAD_CLASS, no_update
+            try:
+                sid = sid if isinstance(sid, str) and sid else None
+                out_path = _save_upload_to_disk(contents, filename, "eva_overscale_study_area", sid)
+                # eliminar fichero previo de ESTA sesión si existía
+                try:
+                    if isinstance(prev_store, dict) and prev_store.get("valid"):
+                        old_path = prev_store.get("path")
+                        if old_path and Path(old_path).exists() and sid in Path(old_path).parts:
+                            Path(old_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
+                payload = {
+                    "valid": True,
+                    "kind": "eva_overscale_study_area",
+                    "filename": filename,
+                    "ext": os.path.splitext(filename)[1].lower(),
+                    "path": out_path,
+                    "ts": int(time.time()),
+                    "sid": sid
+                }
+                return label_text, BASE_UPLOAD_CLASS, payload
+            except Exception as e:
+                return f"{filename} — error: {e}", INVALID_UPLOAD_CLASS, {"valid": False, "error": str(e)}
+            
+        # Callback to syinchronize UI:
+        @app.callback(
+            Output("eva-overscale-sa-draw", "disabled", allow_duplicate=True),
+            Output("eva-overscale-sa-file", "disabled", allow_duplicate=True),
+            Output("eva-overscale-draw", "children", allow_duplicate=True),
+            Output("eva-overscale-file-store", "data", allow_duplicate=True),
+            Output("eva-overscale-upload", "children", allow_duplicate=True),
+            Output("eva-overscale-sa-file-label", "children", allow_duplicate=True),
+            Output("eva-overscale-sa-file", "filename", allow_duplicate=True),
+            Output("eva-overscale-sa-file", "contents", allow_duplicate=True),
+            Output("eva-overscale-sa-file", "className"),
+            Input("eva-overscale-file-store", "data"),
+            Input("eva-overscale-draw", "children"),
+            Input("eva-overscale-reset-button", "n_clicks"),
+            State("session-id", "data"),
+            prevent_initial_call=True
+        )
+        def sync_eva_overscale_ui(store, drawn_children, n_reset, sid):
+            # ¿qué disparó?
+            trig_id = (ctx.triggered_id if hasattr(ctx, "triggered_id") else None)
 
+            # --- RESET: limpiar UI y DISCO para esta sesión ---
+            if trig_id == "eva-overscale-reset-button":
+                try:
+                    _rm_tree(_session_dir("eva_overscale_study_area", sid))
+                except Exception:
+                    pass
+                return (
+                    False,                      # draw habilitado
+                    False,                      # upload habilitado
+                    [],                         # sin polígonos dibujados
+                    None,                       # limpiar store
+                    [],                         # limpiar capa subida
+                    "Choose json or parquet file",  # label por defecto
+                    None, None,                 # filename/contents -> None (permite re-subir el mismo)
+                    UPLOAD_CLASS,               # clase neutra
+                )
+
+            # --- Lógica normal de sincronía (como en management) ---
+            file_present = isinstance(store, dict) and store.get("valid") is True
+            print(f"Sincronizando: fichero presente : {file_present}", file=sys.stderr, flush=True)
+            print(f"Fichero exists? {file_present}", file=sys.stderr, flush=True)
+            has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children)
+
+            # Si hay fichero → bloquear Draw y Upload
+            if file_present:
+                return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+            # Sin fichero → Draw habilitado; Upload se deshabilita si hay polígonos dibujados (no mezclar modos)
+            return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        # @app.callback(
+        #     Output("eva-overscale-sa-draw", "disabled", allow_duplicate=True),
+        #     Output("eva-overscale-sa-file", "disabled", allow_duplicate=True),
+        #     Output("eva-overscale-draw", "children", allow_duplicate=True),
+        #     Output("eva-overscale-file-store", "data", allow_duplicate=True),
+        #     Output("eva-overscale-upload", "children", allow_duplicate=True),
+        #     Output("eva-overscale-sa-file-label", "children", allow_duplicate=True),
+        #     Output("eva-overscale-sa-file", "filename", allow_duplicate=True),
+        #     Output("eva-overscale-sa-file", "contents", allow_duplicate=True),
+        #     Output("eva-overscale-sa-file", "className"),
+        #     Input("eva-overscale-file-store", "data"),
+        #     Input("eva-overscale-draw", "children"),
+        #     Input("eva-overscale-reset-button", "n_clicks"),
+        #     State("session-id", "data"),
+        #     prevent_initial_call=True
+        # )
+        # def sync_eva_overscale_ui(store, drawn_children, n_reset, sid):
+        #     trig_id = (ctx.triggered_id if hasattr(ctx, "triggered_id") else None)
+
+        #     # Clean disk and memory:
+        #     if trig_id == "eva-overscale-reset-button":
+        #         try:
+        #             _rm_tree(_session_dir("eva_overscale_study_area", sid))
+        #         except Exception:
+        #             pass
+        #         return (
+        #             False,                      
+        #             False,                      
+        #             [],                         
+        #             None,                     
+        #             [],                        
+        #             "Choose json or parquet file",  
+        #             None, None,                 
+        #             UPLOAD_CLASS               
+        #         )
+
+        #     file_present = isinstance(store, dict) and store.get("valid") is True
+        #     has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children)
+
+        #     # Si hay fichero subido -> bloquear ambos (no dejamos dibujar ni volver a subir)
+        #     if file_present:
+        #         return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+        #     # Si NO hay fichero:
+        #     #   - draw habilitado
+        #     #   - upload habilitado solo si NO hay polígonos dibujados (evita mezclar modos)
+        #     return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+
+
+        # Callback to paint the uploaded file:
+        @app.callback(                                                                                  
+            Output("eva-overscale-upload", "children"),                                                     # salida: capa pintada en el mapa
+            Input("eva-overscale-file-store", "data"),                                                           # entrada: cambios en el Store de wind
+            prevent_initial_call=True                                                                   
+        )
+        def paint_eva_sa_uploaded(data):                                                                  
+            if not data or not isinstance(data, dict):                                                  
+                raise PreventUpdate                                                                      # no actualizar si no hay nada
+            if not data.get("valid"):                                                                   
+                return []                                                                                # limpiar capa si hubo intento inválido
+
+            path = data.get("path")
+            print(f"[EVA] path -> {data.get('path')}", file=sys.stderr, flush=True)
+            print(f"[EVA] exists? {os.path.exists(data.get('path'))}", file=sys.stderr, flush=True)                                                                      # ruta del archivo guardado en la carpeta de la sesion
+            ext  = (data.get("ext") or "").lower()                                                      
+
+            # estilo común para polígonos/líneas (Leaflet aplicará estilo a features no puntuales)       
+            style = dict(color="#015B97", weight=3, fillColor="#015B97", fillOpacity=0.4)               # estilo Wind
+
+            try:                                                                                         # intentar construir GeoJSON en memoria
+                if ext == ".json":                                                                       # caso GeoJSON directo
+                    with open(path, "r", encoding="utf-8") as f:                                         # abrir fichero json
+                        geo = json.load(f)                                                               # cargar a dict
+                elif ext == ".parquet":                                                                  # caso Parquet -> GeoJSON
+                    geo = _to_geojson_from_parquet(path)                                                 # convertir parquet a GeoJSON dict
+                else:                                                                                    # extensión no soportada
+                    return []                                                                            # no pintamos nada
+
+                # proteger contra colecciones vacías para evitar zoom no deseado                        
+                if not isinstance(geo, dict) or not geo.get("features"):                                 
+                    return []                                                                            
+
+                layer = dl.GeoJSON(                                                                      # crear capa GeoJSON
+                    data=geo,                                                                            # pasar dict geojson
+                    zoomToBounds=True,                                                                   # ajustar mapa al contenido
+                    options=dict(style=style),                                                           # estilo para polígonos/líneas
+                    id=f"eva-overscale-upload-{data.get('ts', 0)}"                                                # id único por timestamp
+                )
+                return [layer]                                                                           # devolver lista con la capa
+            except Exception:                                                                             
+                return []

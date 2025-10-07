@@ -183,14 +183,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                 dcc.Upload(
                                                     id="eva-overscale-sa-file",
                                                     multiple=False,
-                                                    accept=".geojson,.json,.shp,.zip,.gpkg,.kml,.kmz",
+                                                    accept=".geojson,.json,.parquet",
+                                                    className="upload-as-input form-control form-control-lg",
                                                     children=html.Div(
                                                         id="eva-overscale-sa-file-label",
-                                                        children="Drop a file or click to upload",
-                                                        className="form-control",
-                                                        style={"height": "100%"}
+                                                        children="Choose json or parquet file"
                                                     ),
-                                                    className="w-100",
+                                                    
                                                 ),
                                                 xs=12, md=6,
                                             ),

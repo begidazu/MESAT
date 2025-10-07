@@ -69,7 +69,7 @@ def create_layout():  # definir función que construye el layout
 
                                     # Layers where we store the uploaded files of eva-overscale, the drew study area and the results
                                     dl.FeatureGroup(id="eva-overscale-draw", children=[]),
-                                    dl.FeatureGroup(id="eva-overscale-file", children=[]),
+                                    dl.FeatureGroup(id="eva-overscale-upload", children=[]),
 
                                 ]
                             ),
@@ -167,7 +167,11 @@ def create_layout():  # definir función que construye el layout
                     dcc.Store(id="fg-last-click-ts", data=0),
                     dcc.Store(id="fg-configs", data={}),
                     dcc.Store(id = "eva-overscale-draw-meta", data={"layer": "study-area", "color": "#015B97"}),
-                    dcc.Store(id = "eva-overscale-file-store", data={}),
+                    dcc.Store(id = "eva-overscale-file-store"),
+
+
+                    # Debug Store:
+                    # html.Pre(id="eva-debug", style={"display": "none"}),
 
 
                     # modal de bienvenida
