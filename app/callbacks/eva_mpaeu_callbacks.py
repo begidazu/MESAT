@@ -4,13 +4,16 @@ from dash.exceptions import PreventUpdate
 from pathlib import Path
 import geopandas as gpd
 import pandas as pd
+import numpy as np
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from shapely import wkt as shp_wkt  
 from shapely import wkb as shp_wkb
-from shapely.geometry import mapping
+from shapely.geometry import mapping, shape, Polygon
 
 from app.callbacks.management_callbacks import _valid_ext, _save_upload_to_disk, _to_geojson_from_parquet, _detect_lonlat_columns, _df_to_feature_collection_from_polygon, _estimate_b64_size, _rm_tree, _session_dir
+from app.models import eva_mpaeu
+from app.models.eva_obis import create_quadrat_grid
 
 # Classes:
 COLOR = {"eva-overscale-sa-draw": ("study-area",   "#015B97")}
@@ -77,7 +80,153 @@ def _is_group_complete(cfg: dict) -> bool:
     return True
 
 
+# Utils to run EVA Overscale:
 
+def _positions_to_shapely(positions):
+    """
+    Leaflet usa [lat, lon]; Shapely/GeoJSON usan [lon, lat].
+    'positions' puede ser:
+      - lista de [lat, lon]
+      - lista de listas (por compat), nos quedamos con la primera si es necesario.
+    """
+    if not positions:
+        return None
+
+    # Aceptar casos [ [lat,lon], [lat,lon], ... ] o [[[lat,lon], ...]]
+    ring = positions
+    if isinstance(ring[0], (list, tuple)) and len(ring) > 0 and isinstance(ring[0][0], (list, tuple)):
+        ring = ring[0]  # por si vino anidado
+
+    # Convertir a [lon, lat]
+    coords = [(lon, lat) for lat, lon in ring if lat is not None and lon is not None]
+    if len(coords) < 3:
+        return None
+
+    # Cerrar anillo si no está cerrado
+    if coords[0] != coords[-1]:
+        coords.append(coords[0])
+
+    try:
+        poly = Polygon(coords)
+        if not poly.is_valid:
+            poly = poly.buffer(0)
+        return poly if not poly.is_empty else None
+    except Exception:
+        return None
+
+def _iter_children(children):
+    """Normaliza children a lista plana."""
+    if children is None:
+        return []
+    return children if isinstance(children, (list, tuple)) else [children]
+
+def _get_prop_eva(component, prop):
+    """Dash components llegan como dict-like; saca una prop de forma segura."""
+    try:
+        # cuando llega serializado
+        return component.get("props", {}).get(prop)
+    except Exception:
+        # compat: algunos llegan como BaseComponent
+        return getattr(component, prop, None)
+
+def aoi_from_featuregroups(sa_draw_children, sa_upload_children) -> gpd.GeoDataFrame:
+    """
+    Lee geometrías de:
+      - dl.GeoJSON(data=Feature/FeatureCollection)  -> upload
+      - dl.Polygon(positions=...)                   -> draw
+    y devuelve un GeoDataFrame en EPSG:4326.
+    """
+    all_feats = []
+
+    for ch in _iter_children(sa_draw_children) + _iter_children(sa_upload_children):
+        # 1) Caso GeoJSON
+        data = _get_prop_eva(ch, "data")
+        if data:
+            feats = []
+            if data.get("type") == "FeatureCollection":
+                feats = data.get("features", [])
+            elif data.get("type") == "Feature":
+                feats = [data]
+
+            for f in feats:
+                geom = (f or {}).get("geometry")
+                if not geom:
+                    continue
+                try:
+                    g = shape(geom)
+                    if g.is_empty:
+                        continue
+                    all_feats.append({"geometry": g, **(f.get("properties") or {})})
+                except Exception:
+                    pass
+            continue  # ya tratamos este child
+
+        # 2) Caso Polygon (Leaflet)
+        ctype = getattr(ch, "type", None) or (ch.get("type") if isinstance(ch, dict) else None)
+        if ctype == "Polygon":
+            positions = _get_prop_eva(ch, "positions")
+            poly = _positions_to_shapely(positions)
+            if poly is not None:
+                all_feats.append({"geometry": poly})
+            continue
+
+        # 3) Otros tipos: ignora
+        # (si en el futuro añades MultiPolygon como varios dl.Polygon, seguirá valiendo)
+
+    if not all_feats:
+        return gpd.GeoDataFrame(columns=["geometry"], geometry="geometry", crs="EPSG:4326")
+
+    gdf = gpd.GeoDataFrame(all_feats, geometry="geometry", crs="EPSG:4326")
+    gdf = gdf[~gdf.geometry.is_empty & gdf.geometry.notna()].copy()
+    if gdf.empty:
+        return gpd.GeoDataFrame(columns=["geometry"], geometry="geometry", crs="EPSG:4326")
+    return gdf
+
+# Wrapper H3 que acepta GDF directamente (mismo código que tu fn, pero sin load_aoi)
+def create_h3_grid_from_gdf(aoi_gdf: gpd.GeoDataFrame, h3_resolution: int) -> gpd.GeoDataFrame:
+    import h3  # asegúrate de tenerlo instalado
+    resolution = int(h3_resolution)
+    if not (0 <= resolution <= 15):
+        raise ValueError("resolution debe estar entre 0 y 15 (entero).")
+
+    aoi = aoi_gdf.to_crs(4326) if aoi_gdf.crs else aoi_gdf.set_crs(4326)
+    geoms = aoi.geometry.explode(index_parts=False)
+    if geoms.empty:
+        return gpd.GeoDataFrame(columns=["h3", "geometry"], crs="EPSG:4326")
+
+    union_geom = geoms.unary_union
+    if union_geom.is_empty:
+        return gpd.GeoDataFrame(columns=["h3", "geometry"], crs="EPSG:4326")
+
+    # Polígonos individuales
+    polygons = []
+    for geom in geoms:
+        if geom.is_empty:
+            continue
+        if geom.geom_type == "Polygon":
+            polygons.append(geom)
+        elif geom.geom_type == "MultiPolygon":
+            polygons.extend(list(geom.geoms))
+
+    cells = set()
+    for poly in polygons:
+        # quitar Z si existiera
+        if hasattr(poly, "has_z") and poly.has_z:
+            poly = Polygon(
+                [(x, y) for x, y, *_ in np.asarray(poly.exterior.coords)],
+                holes=[[(x, y) for x, y, *_ in np.asarray(r.coords)] for r in poly.interiors]
+            )
+        cells.update(h3.geo_to_cells(poly, res=resolution))
+
+    if not cells:
+        return gpd.GeoDataFrame(columns=["h3", "geometry"], crs="EPSG:4326")
+
+    all_cells = {nb for c in cells for nb in h3.grid_disk(c, k=5)}
+    hex_geoms = [(cid, Polygon([(lon, lat) for lat, lon in h3.cell_to_boundary(cid)])) for cid in all_cells]
+    hex_df = gpd.GeoDataFrame(hex_geoms, columns=["h3", "geometry"], crs="EPSG:4326")
+    return hex_df[hex_df.intersects(union_geom)].reset_index(drop=True)
+
+# ------------------------------------------------------------------------
 
 
 
@@ -652,3 +801,61 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 return [layer]                                                                           # devolver lista con la capa
             except Exception:                                                                             
                 return []
+            
+
+        # Callback to Run the EVA Overscale with MPAEU results:
+        @app.callback(
+            Output("buttons-div", "children"),
+            Input("eva-overscale-run-button", "n_clicks"),
+            State("fg-configs", "data"),
+            State("ag-size-store", "data"),
+            State("eva-overscale-draw", "children"),
+            State("eva-overscale-upload", "children"),
+            prevent_initial_call=True
+        )
+        def run_eva_overscale(n_clicks, fg_params, ag_store, sa_draw_children, sa_upload_children):
+            if not n_clicks:
+                raise PreventUpdate
+
+            # 1) AOI desde FeatureGroups (WGS84)
+            print(f"Lenght SA Draw: {len(sa_draw_children)}", file=sys.stderr, flush=True)
+            print(f"Lenght SA Upload: {len(sa_upload_children)}", file=sys.stderr, flush=True)
+            aoi_gdf = aoi_from_featuregroups(sa_draw_children, sa_upload_children)
+            if aoi_gdf.empty:
+                return "No hay AOI (draw/upload) para generar el grid."
+
+            # 2) Generar grid según 'ag-size-store'
+            ag_store = ag_store or {}
+            grid_type = ag_store.get("type")
+            grid_size = ag_store.get("size")
+
+            if grid_type == "quadrat":
+                grid_gdf = create_quadrat_grid(aoi_gdf, grid_size=int(grid_size))
+                grid_meta = {"type": "quadrat", "size": int(grid_size)}
+            elif grid_type == "h3":
+                grid_gdf = create_h3_grid_from_gdf(aoi_gdf, h3_resolution=int(grid_size))
+                grid_meta = {"type": "h3", "size": int(grid_size)}
+            else:
+                return "ag-size-store inválido: falta 'type' en {'h3','quadrat'} y 'size'."
+
+            # 3) Construir execution_config + guardar todo
+            execution_config = {**(fg_params or {}), **(ag_store or {})}
+            outdir = Path(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\config_test")
+            outdir.mkdir(parents=True, exist_ok=True)
+
+            stamp = time.strftime("%Y%m%d_%H%M%S")
+            # a) JSON de configuración
+            json_path = outdir / f"execution_config_{stamp}.json"
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(execution_config, f, ensure_ascii=False, indent=2)
+
+            # b) Guardar grid (elige formato; aquí GeoParquet para precisión/velocidad)
+            grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.parquet"
+            try:
+                grid_gdf.to_parquet(grid_path)
+            except Exception:
+                # fallback a GeoJSON si no tienes pyarrow/fastparquet
+                grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.geojson"
+                grid_gdf.to_file(grid_path, driver="GeoJSON")
+
+            return f"OK: guardado {json_path.name} y grid ({len(grid_gdf)} celdas) → {grid_path.name}"

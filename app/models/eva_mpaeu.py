@@ -16,7 +16,7 @@ from shapely import intersects
 from rasterio.features import geometry_mask
 from rasterio.windows import from_bounds, Window
 from pathlib import PurePosixPath
-from eva_obis import create_h3_grid, create_quadrat_grid
+from .eva_obis import create_h3_grid, create_quadrat_grid
 
 from scipy.spatial import cKDTree
 
