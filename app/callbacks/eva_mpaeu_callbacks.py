@@ -39,6 +39,14 @@ def _none_if_empty(v):
 def _get_prop(node, key, default=None):
     return (node or {}).get("props", {}).get(key, default)
 
+def _has_any_child(children) -> bool:
+    """True if at least one children"""
+    if children is None:
+        return False
+    if isinstance(children, (list, tuple)):
+        return any(ch is not None for ch in children)
+    return True
+
 # Check if group configuration is complete:
 def _is_group_complete(cfg: dict) -> bool:
     if not cfg:
@@ -366,10 +374,12 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             Output("eva-overscale-run-button", "disabled", allow_duplicate=True),
             Input("fg-configs", "data"),
             Input("ag-size-store", "data"),
+            Input("eva-overscale-draw", "children"),
+            Input("eva-overscale-upload", "children"),
             State("fg-button-container", "children"),
-            prevent_initial_call = True
+            prevent_initial_call=True
         )
-        def toggle_run_button(cfgs, ag, btn_children):
+        def toggle_run_button(cfgs, ag, sa_draw, sa_upload, btn_children):
             # 1) Existing groups
             idxs = []
             for child in (btn_children or []):
@@ -379,15 +389,48 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             if not idxs:
                 return True  # no hay grupos
 
-            # 2) Valid Grid Size:
+            # 2) Valid Grid Size
             ag_ok = bool(ag) and ag.get("type") in ("h3", "quadrat") and ag.get("size") not in (None, "")
             if not ag_ok:
                 return True
 
-            # 3) All groups complete:
+            # 3) ROI presente: draw o upload con al menos un hijo
+            roi_ok = _has_any_child(sa_draw) or _has_any_child(sa_upload)
+            if not roi_ok:
+                return True
+
+            # 4) Todos los grupos completos + ROI OK
             cfgs = cfgs or {}
-            all_complete = all(_is_group_complete(cfgs.get(i)) for i in idxs)
+            groups_ok = all(_is_group_complete(cfgs.get(i)) for i in idxs)
+            all_complete = groups_ok and roi_ok
+
             return not all_complete
+        # @app.callback(
+        #     Output("eva-overscale-run-button", "disabled", allow_duplicate=True),
+        #     Input("fg-configs", "data"),
+        #     Input("ag-size-store", "data"),
+        #     State("fg-button-container", "children"),
+        #     prevent_initial_call = True
+        # )
+        # def toggle_run_button(cfgs, ag, btn_children):
+        #     # 1) Existing groups
+        #     idxs = []
+        #     for child in (btn_children or []):
+        #         cid = _get_prop(child, "id")
+        #         if isinstance(cid, dict) and cid.get("type") == "fg-button":
+        #             idxs.append(str(cid.get("index")))
+        #     if not idxs:
+        #         return True  # no hay grupos
+
+        #     # 2) Valid Grid Size:
+        #     ag_ok = bool(ag) and ag.get("type") in ("h3", "quadrat") and ag.get("size") not in (None, "")
+        #     if not ag_ok:
+        #         return True
+
+        #     # 3) All groups complete:
+        #     cfgs = cfgs or {}
+        #     all_complete = all(_is_group_complete(cfgs.get(i)) for i in idxs)
+        #     return not all_complete
         
         # Callback to reset all:
         @app.callback(
