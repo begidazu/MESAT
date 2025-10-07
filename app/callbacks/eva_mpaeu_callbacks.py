@@ -405,32 +405,6 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             all_complete = groups_ok and roi_ok
 
             return not all_complete
-        # @app.callback(
-        #     Output("eva-overscale-run-button", "disabled", allow_duplicate=True),
-        #     Input("fg-configs", "data"),
-        #     Input("ag-size-store", "data"),
-        #     State("fg-button-container", "children"),
-        #     prevent_initial_call = True
-        # )
-        # def toggle_run_button(cfgs, ag, btn_children):
-        #     # 1) Existing groups
-        #     idxs = []
-        #     for child in (btn_children or []):
-        #         cid = _get_prop(child, "id")
-        #         if isinstance(cid, dict) and cid.get("type") == "fg-button":
-        #             idxs.append(str(cid.get("index")))
-        #     if not idxs:
-        #         return True  # no hay grupos
-
-        #     # 2) Valid Grid Size:
-        #     ag_ok = bool(ag) and ag.get("type") in ("h3", "quadrat") and ag.get("size") not in (None, "")
-        #     if not ag_ok:
-        #         return True
-
-        #     # 3) All groups complete:
-        #     cfgs = cfgs or {}
-        #     all_complete = all(_is_group_complete(cfgs.get(i)) for i in idxs)
-        #     return not all_complete
         
         # Callback to reset all:
         @app.callback(
@@ -609,10 +583,9 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             prevent_initial_call=True
         )
         def sync_eva_overscale_ui(store, drawn_children, n_reset, sid):
-            # ¿qué disparó?
             trig_id = (ctx.triggered_id if hasattr(ctx, "triggered_id") else None)
 
-            # --- RESET: limpiar UI y DISCO para esta sesión ---
+            # Reset: clear UI and memory:
             if trig_id == "eva-overscale-reset-button":
                 try:
                     _rm_tree(_session_dir("eva_overscale_study_area", sid))
@@ -629,67 +602,13 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                     UPLOAD_CLASS,               # clase neutra
                 )
 
-            # --- Lógica normal de sincronía (como en management) ---
             file_present = isinstance(store, dict) and store.get("valid") is True
-            print(f"Sincronizando: fichero presente : {file_present}", file=sys.stderr, flush=True)
-            print(f"Fichero exists? {file_present}", file=sys.stderr, flush=True)
             has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children)
 
-            # Si hay fichero → bloquear Draw y Upload
             if file_present:
                 return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
-            # Sin fichero → Draw habilitado; Upload se deshabilita si hay polígonos dibujados (no mezclar modos)
             return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
-        # @app.callback(
-        #     Output("eva-overscale-sa-draw", "disabled", allow_duplicate=True),
-        #     Output("eva-overscale-sa-file", "disabled", allow_duplicate=True),
-        #     Output("eva-overscale-draw", "children", allow_duplicate=True),
-        #     Output("eva-overscale-file-store", "data", allow_duplicate=True),
-        #     Output("eva-overscale-upload", "children", allow_duplicate=True),
-        #     Output("eva-overscale-sa-file-label", "children", allow_duplicate=True),
-        #     Output("eva-overscale-sa-file", "filename", allow_duplicate=True),
-        #     Output("eva-overscale-sa-file", "contents", allow_duplicate=True),
-        #     Output("eva-overscale-sa-file", "className"),
-        #     Input("eva-overscale-file-store", "data"),
-        #     Input("eva-overscale-draw", "children"),
-        #     Input("eva-overscale-reset-button", "n_clicks"),
-        #     State("session-id", "data"),
-        #     prevent_initial_call=True
-        # )
-        # def sync_eva_overscale_ui(store, drawn_children, n_reset, sid):
-        #     trig_id = (ctx.triggered_id if hasattr(ctx, "triggered_id") else None)
-
-        #     # Clean disk and memory:
-        #     if trig_id == "eva-overscale-reset-button":
-        #         try:
-        #             _rm_tree(_session_dir("eva_overscale_study_area", sid))
-        #         except Exception:
-        #             pass
-        #         return (
-        #             False,                      
-        #             False,                      
-        #             [],                         
-        #             None,                     
-        #             [],                        
-        #             "Choose json or parquet file",  
-        #             None, None,                 
-        #             UPLOAD_CLASS               
-        #         )
-
-        #     file_present = isinstance(store, dict) and store.get("valid") is True
-        #     has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children)
-
-        #     # Si hay fichero subido -> bloquear ambos (no dejamos dibujar ni volver a subir)
-        #     if file_present:
-        #         return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
-
-        #     # Si NO hay fichero:
-        #     #   - draw habilitado
-        #     #   - upload habilitado solo si NO hay polígonos dibujados (evita mezclar modos)
-        #     return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
-
-
 
         # Callback to paint the uploaded file:
         @app.callback(                                                                                  
