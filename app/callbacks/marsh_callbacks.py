@@ -374,12 +374,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     html.Div(  # contenedor de descarga
                                         [
                                             html.Button(  # botón de descarga
-                                                [html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")], 
-                                                id='eva-overscale-results',  # id
-                                                disabled=True,  # oculto al inicio
+                                                id='eva-overscale-results',
+                                                disabled=True,
+                                                children=[html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
                                                 n_clicks=0,  # contador
                                                 className='btn btn-outline-primary'
                                             ),
+                                            dcc.Store(id="eva-results-store"),
                                             dcc.Download(id='eva-overscale-download')  # componente de descarga
                                         ]
                                     ),

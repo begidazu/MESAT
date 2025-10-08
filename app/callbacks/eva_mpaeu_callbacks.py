@@ -1,6 +1,6 @@
 from zipfile import ZipFile
 
-import dash, json, time, os, sys, glob, io #traceback
+import dash, json, time, os, sys, glob, io, shutil, uuid #traceback
 from dash import Input, Output, State, no_update, html, dcc, ALL, ctx
 from dash.exceptions import PreventUpdate
 from pathlib import Path
@@ -577,6 +577,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             Output("eva-overscale-sa-file", "disabled", allow_duplicate=True),
             Output("eva-overscale-sa-file-label", "children"),
             Output("eva-overscale-file-store", "data"),
+            Output("eva-overscale-results", "disabled", allow_duplicate=True),
             Input("eva-overscale-reset-button", "n_clicks"),
             prevent_initial_call=True
         )
@@ -601,7 +602,8 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 [],           # Clear Study Area polygons uploaded
                 False,        # Enable Upload again
                 "Choose json or parquet file",
-                {}
+                {},
+                True
             )
         
         # Callback to enable Drawing to the user:
@@ -807,273 +809,104 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
 
         # Callback to Run the EVA Overscale with MPAEU results:
         @app.callback(
-            Output("buttons-div", "children"),
+            Output("eva-overscale-results", "disabled"),
+            Output("eva-results-store", "data"),
             Input("eva-overscale-run-button", "n_clicks"),
             State("fg-configs", "data"),
             State("ag-size-store", "data"),
             State("eva-overscale-draw", "children"),
             State("eva-overscale-upload", "children"),
+            State("session-id", "data"),
             prevent_initial_call=True,
         )
-        def run_eva_overscale(n_clicks, fg_params, ag_store, sa_draw_children, sa_upload_children):
+        def run_eva_overscale(n_clicks, fg_params, ag_store, sa_draw_children, sa_upload_children, session_id):
             if not n_clicks:
                 raise PreventUpdate
 
-            # 1) AOI desde FeatureGroups (WGS84)
-            print(f"Length SA Draw: {len(sa_draw_children)}", file=sys.stderr, flush=True)
-            print(f"Length SA Upload: {len(sa_upload_children)}", file=sys.stderr, flush=True)
             aoi_gdf = aoi_from_featuregroups(sa_draw_children, sa_upload_children)
             if aoi_gdf.empty:
-                return " NO AOI to generate grid"
+                return no_update, no_update
 
-            # 2) Generar grid según 'ag-size-store'
             ag_store = ag_store or {}
             grid_type = ag_store.get("type")
             grid_size = ag_store.get("size")
             if grid_type == "quadrat":
                 grid_gdf = create_quadrat_grid(aoi_gdf, grid_size=int(grid_size))
-                grid_meta = {"type": "quadrat", "size": int(grid_size)}
             elif grid_type == "h3":
                 grid_gdf = create_h3_grid_from_gdf(aoi_gdf, h3_resolution=int(grid_size))
-                grid_meta = {"type": "h3", "size": int(grid_size)}
             else:
-                return "ag-size-store inválido: falta 'type' en {'h3','quadrat'} y 'size'."
+                return no_update, no_update
 
-            # 3) Construir execution_config + guardar
-            execution_config = {**(fg_params or {}), **(ag_store or {})}
-            outdir = Path(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\config_test")
-            outdir.mkdir(parents=True, exist_ok=True)
-            stamp = time.strftime("%Y%m%d_%H%M%S")
-
-            # a) JSON de configuración
-            json_path = outdir / f"execution_config_{stamp}.json"
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(execution_config, f, ensure_ascii=False, indent=2)
-
-            # b) Guardar grid (Parquet preferido)
-            grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.parquet"
-            try:
-                grid_gdf.to_parquet(grid_path)
-            except Exception:
-                grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.geojson"
-                grid_gdf.to_file(grid_path, driver="GeoJSON")
-
-            print(f"[APP] Grid CRS: {grid_gdf.crs}", file=sys.stderr, flush=True)
-
-            # 4) Crear instancia de EVA
-            eva_over = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog")
-
-            # 5) Ejecutar EVA por cada grupo funcional
+            eva = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog")
             eva_results_by_fg = {}
-            cfgs = (fg_params or {}).copy()
-            group_keys = [k for k in cfgs.keys() if isinstance(k, str) and k.isdigit()]
+
+            cfgs = fg_params or {}
+            group_keys = [k for k in cfgs if k.isdigit()]
             if not group_keys:
-                return "No functional group configuration."
+                return no_update, no_update
 
             for gkey in sorted(group_keys, key=int):
-                cfg = cfgs.get(gkey, {})
-
-                lrf = cfg.get("lrf") or {}
-                nrf = cfg.get("nrf") or {}
-
-                lrf_id_list     = lrf.get("taxon_ids") or []
-                nrf_id_list     = nrf.get("taxon_ids") or []
-                esf_id_list     = cfg.get("esf_taxon_ids") or []
-                hfs_bh_id_list  = cfg.get("hfsbh_taxon_ids") or []
-                mss_id_list     = cfg.get("mss_taxon_ids") or []
-                cut_lrf         = lrf.get("threshold_pct")
-                cut_nrf         = nrf.get("threshold_pct")
-                country_name    = cfg.get("eez_country")
-                eez_grid_size   = cfg.get("eez_grid_size")
-
-                all_ids_unique = sorted({
-                    *lrf_id_list, *nrf_id_list, *esf_id_list, *hfs_bh_id_list, *mss_id_list
-                })
+                cfg = cfgs[gkey]
+                lrf = cfg.get("lrf", {})
+                nrf = cfg.get("nrf", {})
 
                 parameters = {
-                    "aq1":  {"taxon_ids": lrf_id_list, "cut_lrf": cut_lrf},
-                    "aq5":  {"taxon_ids": nrf_id_list, "country_name": country_name, "grid_size": eez_grid_size, "cut_nrf": cut_nrf},
-                    "aq7":  {"taxon_ids": all_ids_unique},
-                    "aq10": {"taxon_ids": esf_id_list},
-                    "aq12": {"taxon_ids": hfs_bh_id_list},
-                    "aq14": {"taxon_ids": mss_id_list},
+                    "aq1":  {"taxon_ids": lrf.get("taxon_ids", []), "cut_lrf": lrf.get("threshold_pct")},
+                    "aq5":  {"taxon_ids": nrf.get("taxon_ids", []), "country_name": cfg.get("eez_country"),
+                            "grid_size": cfg.get("eez_grid_size"), "cut_nrf": nrf.get("threshold_pct")},
+                    "aq7":  {"taxon_ids": sorted(set(lrf.get("taxon_ids", []) + nrf.get("taxon_ids", []) +
+                                                    cfg.get("esf_taxon_ids", []) + cfg.get("hfsbh_taxon_ids", []) + cfg.get("mss_taxon_ids", [])))},
+                    "aq10": {"taxon_ids": cfg.get("esf_taxon_ids", [])},
+                    "aq12": {"taxon_ids": cfg.get("hfsbh_taxon_ids", [])},
+                    "aq14": {"taxon_ids": cfg.get("mss_taxon_ids", [])},
                 }
 
-                print(f"[EVA] Running FG={gkey} with parameters: {parameters}", file=sys.stderr, flush=True)
-
                 try:
-                    eva_result = run_selected_assessments(
-                        eva=eva_over,
-                        grid=grid_gdf,
-                        params=parameters
-                    )
-                    eva_results_by_fg[gkey] = eva_result
+                    result = run_selected_assessments(eva=eva, grid=grid_gdf, params=parameters)
+                    eva_results_by_fg[gkey] = (cfg.get("name", f"group_{gkey}"), result)
                 except Exception as e:
-                    print(f"[EVA] ERROR in FG={gkey} → {e}", file=sys.stderr, flush=True)
+                    print(f"[EVA] ERROR in FG {gkey}: {e}", file=sys.stderr)
 
-            # 6) Guardar resultados por grupo funcional en carpeta "results_eva_overscale"
-            results_dir = outdir / "results_eva_overscale"
+            if not eva_results_by_fg:
+                return no_update, no_update
+
+            # Save in directory session:
+            stamp = time.strftime("%Y%m%d_%H%M%S")
+            base_dir = _session_dir("eva_overscale_study_area", session_id)
+            results_dir = Path(base_dir) / f"results_eva_overscale_{stamp}"
             results_dir.mkdir(parents=True, exist_ok=True)
 
-            for gkey, result in eva_results_by_fg.items():
-                cfg = cfgs.get(gkey, {})
-                group_name = cfg.get("name", f"group_{gkey}").replace(" ", "_")
-                parquet_path = results_dir / f"{group_name}.parquet"
+            for gkey, (name, result) in eva_results_by_fg.items():
+                filename = name.replace(" ", "_") + ".parquet"
+                result.to_parquet(results_dir / filename)
 
-                try:
-                    result.to_parquet(parquet_path)
-                    print(f"[EVA] Guardado resultado FG={gkey} → {parquet_path.name}", file=sys.stderr, flush=True)
-                except Exception as e:
-                    print(f"[EVA] ERROR al guardar FG={gkey}: {e}", file=sys.stderr, flush=True)
-
-            # 7) Guardar configuración global como "configuration.json"
+            # Save configuration
             config_path = results_dir / "configuration.json"
-            try:
-                with open(config_path, "w", encoding="utf-8") as f:
-                    json.dump(execution_config, f, ensure_ascii=False, indent=2)
-                print(f"[EVA] Configuración guardada en: {config_path}", file=sys.stderr, flush=True)
-            except Exception as e:
-                print(f"[EVA] ERROR al guardar configuración: {e}", file=sys.stderr, flush=True)
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(fg_params, f, ensure_ascii=False, indent=2)
 
-            # 8) Mensaje de confirmación
-            return f"OK: {len(eva_results_by_fg)} grupos funcionales evaluados. Resultados en: {results_dir.name}"
+            # Create ZIP
+            zip_path = Path(base_dir) / f"eva_overscale_{stamp}.zip"
+            shutil.make_archive(zip_path.with_suffix("").as_posix(), "zip", root_dir=results_dir)
 
-
-        # @app.callback(
-        #      Output("buttons-div", "children"), 
-        #      Input("eva-overscale-run-button", "n_clicks"), 
-        #      State("fg-configs", "data"), 
-        #      State("ag-size-store", "data"), 
-        #      State("eva-overscale-draw", "children"), 
-        #      State("eva-overscale-upload", "children"), prevent_initial_call=True )
-        # def run_eva_overscale(n_clicks, fg_params, ag_store, sa_draw_children, sa_upload_children): 
-        #     if not n_clicks: raise PreventUpdate 
-        #     # 1) AOI desde FeatureGroups (WGS84) 
-        #     print(f"Lenght SA Draw: {len(sa_draw_children)}", file=sys.stderr, flush=True) 
-        #     print(f"Lenght SA Upload: {len(sa_upload_children)}", file=sys.stderr, flush=True) 
-        #     aoi_gdf = aoi_from_featuregroups(sa_draw_children, sa_upload_children) 
-        #     if aoi_gdf.empty: 
-        #         return "No hay AOI (draw/upload) para generar el grid." 
-        #     # 2) Generar grid según 'ag-size-store' 
-        #     ag_store = ag_store or {} 
-        #     grid_type = ag_store.get("type") 
-        #     grid_size = ag_store.get("size") 
-        #     if grid_type == "quadrat": 
-        #         grid_gdf = create_quadrat_grid(aoi_gdf, grid_size=int(grid_size)) 
-        #         grid_meta = {"type": "quadrat", "size": int(grid_size)} 
-        #     elif grid_type == "h3": 
-        #         grid_gdf = create_h3_grid_from_gdf(aoi_gdf, h3_resolution=int(grid_size)) 
-        #         grid_meta = {"type": "h3", "size": int(grid_size)} 
-        #     else: 
-        #         return "ag-size-store inválido: falta 'type' en {'h3','quadrat'} y 'size'." 
-        #     # 3) Construir execution_config + guardar todo 
-        #     execution_config = {**(fg_params or {}), **(ag_store or {})} 
-        #     outdir = Path(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\config_test") 
-        #     outdir.mkdir(parents=True, exist_ok=True) 
-        #     stamp = time.strftime("%Y%m%d_%H%M%S") 
-        #     # a) JSON de configuración 
-        #     json_path = outdir / f"execution_config_{stamp}.json" 
-        #     with open(json_path, "w", encoding="utf-8") as f: 
-        #         json.dump(execution_config, f, ensure_ascii=False, indent=2) 
-        #     # b) Guardar grid (elige formato; aquí GeoParquet para precisión/velocidad) 
-        #     grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.parquet" 
-        #     try: 
-        #         grid_gdf.to_parquet(grid_path) 
-        #     except Exception: 
-        #         # fallback a GeoJSON si no tienes pyarrow/fastparquet 
-        #         grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.geojson" 
-        #         grid_gdf.to_file(grid_path, driver="GeoJSON") 
-
-        #     print(f"[APP] Grid CRS: {grid_gdf.crs}")
-        #     # 4) Construct the EVA wrapper: 
-        #     eva_over = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog") 
-        #     # 5) Construct params: 
-        #     cfgs = (fg_params or {}).copy() 
-        #     # Gets the first key: 
-        #     group_keys = [k for k in cfgs.keys() if isinstance(k, str) and k.isdigit()] 
-        #     if not group_keys: 
-        #         return "No functional group configuration." 
-        #     gkey = sorted(group_keys, key=int)[0] 
-        #     # First Functional Group: 
-        #     cfg = cfgs.get(gkey, {}) 
-        #     # LRF parameters of the Functional Group: 
-        #     lrf = (cfg.get("lrf") or {}) 
-        #     # NRF parameters of the Fucntional group: 
-        #     nrf = (cfg.get("nrf") or {}) 
-        #     # Params: 
-        #     lrf_id_list = lrf.get("taxon_ids") or [] 
-        #     nrf_id_list = nrf.get("taxon_ids") or [] 
-        #     esf_id_list = cfg.get("esf_taxon_ids") or [] 
-        #     hfs_bh_id_list = cfg.get("hfsbh_taxon_ids") or [] 
-        #     mss_id_list = cfg.get("mss_taxon_ids") or [] 
-        #     cut_lrf = lrf.get("threshold_pct") 
-        #     cut_nrf = nrf.get("threshold_pct") 
-        #     country_name = cfg.get("eez_country") 
-        #     eez_grid_size = cfg.get("eez_grid_size") 
-        #     # FN: union of all other significant species 
-        #     all_ids_unique = sorted({ *lrf_id_list, *nrf_id_list, *esf_id_list, *hfs_bh_id_list, *mss_id_list }) 
-            
-        #     parameters = { 
-        #         "aq1": {"taxon_ids": lrf_id_list, "cut_lrf": cut_lrf}, 
-        #         "aq5": {"taxon_ids": nrf_id_list, "country_name": country_name, "grid_size": eez_grid_size, "cut_nrf": cut_nrf}, 
-        #         "aq7": {"taxon_ids": all_ids_unique}, 
-        #         "aq10": {"taxon_ids": esf_id_list}, 
-        #         "aq12": {"taxon_ids": hfs_bh_id_list}, 
-        #         "aq14": {"taxon_ids": mss_id_list}
-        #         } 
-            
-        #     print(parameters) 
-
-        #     eva_result = run_selected_assessments(eva=eva_over, grid=grid_gdf, params=parameters) 
-            
-        #     eva_result.to_parquet(outdir / f"eva_overscale_app_test.parquet") 
-            
-        #     return f"OK: guardado {json_path.name} y grid ({len(grid_gdf)} celdas) → {grid_path.name}"
-
-
-
-
+            # Enable download button and return ZIP path
+            return False, {"zip_path": str(zip_path)}
 
         # Callback to download EVA overscale results:
-        @app.callback(  # descarga ZIP por escenario
-            Output('eva-overscale-download', 'data'),
-            Input('eva-overscale-results', 'n_clicks'),
-            State("study-area-dropdown", "value"),
-            State("year-dropdown", "value"),
-            prevent_initial_call=True
+        @app.callback(
+            Output("eva-overscale-download", "data"),
+            Input("eva-overscale-results", "n_clicks"),
+            State("eva-results-store", "data"),
+            prevent_initial_call=True,
         )
-        def download_results(n, area, year):  # construir zip
-            if not (n and area and year):
+        def download_eva_results(n_clicks, store_data):
+            if not store_data or "zip_path" not in store_data:
                 raise PreventUpdate
 
-            def class_tif(area, scen, year):  # helper localizar tif de clases
-                base = os.path.join(os.getcwd(), "results", "saltmarshes", area, scen)  # ruta base
-                hits = glob.glob(os.path.join(base, f"*{year}*.tif")) + glob.glob(os.path.join(base, f"*{year}*.tiff"))  # candidatos
-                hits = [p for p in hits if "accretion" not in os.path.basename(p).lower()]  # excluir acreción
-                return sorted(hits)[0] if hits else None  # primero o None
+            zip_path = Path(store_data["zip_path"])
+            if not zip_path.exists():
+                print(f"[EVA] ZIP not found: {zip_path}", file=sys.stderr)
+                raise PreventUpdate
 
-            zip_buf = io.BytesIO()  # buffer del zip
-            with ZipFile(zip_buf, 'w') as zf:  # abrir zip
-                for scen, _ in SCENARIOS:  # recorrer escenarios
-                    tif_path = class_tif(area, scen, year)  # localizar tif
-                    if not tif_path:  # si no existe
-                        continue  # saltar
-                    etiquetas, areas_ha, colores = _areas_por_habitat(tif_path)  # calcular áreas
-                    titulo = f"Habitat Areas — {area} / {scen} / {year}"  # título
-                    png_buf = _png_grafico_areas(titulo, etiquetas, areas_ha, colores)  # generar PNG
-                    zf.writestr(f"{scen}/habitat_areas_{area}_{scen}_{year}.png", png_buf.getvalue())  # añadir PNG
-                    zf.write(tif_path, arcname=f"{scen}/{os.path.basename(tif_path)}")  # añadir TIF de clases
-                    acc_tif = _acc_tif_from_class_tif(tif_path)  # localizar accretion
-                    if acc_tif and os.path.exists(acc_tif):  # si existe
-                        try:  # intentar PNG de acreción
-                            etiquetas_acc, valores_acc = _accretion_volume_by_class(tif_path, acc_tif)  # calcular volúmenes
-                            if valores_acc:  # si hay datos
-                                titulo_acc = f"Accumulated Accretion — {area} / {scen} / {year}"  # título
-                                acc_png_buf = _png_grafico_accretion(titulo_acc, etiquetas_acc, valores_acc)  # generar PNG
-                                zf.writestr(f"{scen}/accumulated_accretion_{area}_{scen}_{year}.png", acc_png_buf.getvalue())  # añadir PNG
-                        except Exception:  # silenciar errores de cálculo
-                            pass  # continuar
-                        zf.write(acc_tif, arcname=f"{scen}/{os.path.basename(acc_tif)}")  # añadir TIF de accretion
-            zip_buf.seek(0)  # rebobinar
-            return dcc.send_bytes(lambda f: f.write(zip_buf.getvalue()), filename=f"saltmarsh_results_{area}_{year}.zip")
+            return dcc.send_file(str(zip_path))
     
