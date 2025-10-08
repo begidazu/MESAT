@@ -380,7 +380,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                 n_clicks=0,  # contador
                                                 className='btn btn-outline-primary'
                                             ),
-                                            dcc.Download(id='mgmt-download')  # componente de descarga
+                                            dcc.Download(id='eva-overscale-download')  # componente de descarga
                                         ]
                                     ),
                                     html.Button(  # botón info
