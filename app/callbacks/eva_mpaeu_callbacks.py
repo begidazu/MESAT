@@ -12,7 +12,7 @@ from shapely import wkb as shp_wkb
 from shapely.geometry import mapping, shape, Polygon
 
 from app.callbacks.management_callbacks import _valid_ext, _save_upload_to_disk, _to_geojson_from_parquet, _detect_lonlat_columns, _df_to_feature_collection_from_polygon, _estimate_b64_size, _rm_tree, _session_dir
-from app.models import eva_mpaeu
+from app.models.eva_mpaeu import run_selected_assessments, EVA_MPAEU
 from app.models.eva_obis import create_quadrat_grid
 
 # Classes:
@@ -805,57 +805,93 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
 
         # Callback to Run the EVA Overscale with MPAEU results:
         @app.callback(
-            Output("buttons-div", "children"),
-            Input("eva-overscale-run-button", "n_clicks"),
-            State("fg-configs", "data"),
-            State("ag-size-store", "data"),
-            State("eva-overscale-draw", "children"),
-            State("eva-overscale-upload", "children"),
-            prevent_initial_call=True
-        )
-        def run_eva_overscale(n_clicks, fg_params, ag_store, sa_draw_children, sa_upload_children):
-            if not n_clicks:
-                raise PreventUpdate
+             Output("buttons-div", "children"), 
+             Input("eva-overscale-run-button", "n_clicks"), 
+             State("fg-configs", "data"), 
+             State("ag-size-store", "data"), 
+             State("eva-overscale-draw", "children"), 
+             State("eva-overscale-upload", "children"), prevent_initial_call=True )
+        def run_eva_overscale(n_clicks, fg_params, ag_store, sa_draw_children, sa_upload_children): 
+            if not n_clicks: raise PreventUpdate 
+            # 1) AOI desde FeatureGroups (WGS84) 
+            print(f"Lenght SA Draw: {len(sa_draw_children)}", file=sys.stderr, flush=True) 
+            print(f"Lenght SA Upload: {len(sa_upload_children)}", file=sys.stderr, flush=True) 
+            aoi_gdf = aoi_from_featuregroups(sa_draw_children, sa_upload_children) 
+            if aoi_gdf.empty: 
+                return "No hay AOI (draw/upload) para generar el grid." 
+            # 2) Generar grid según 'ag-size-store' 
+            ag_store = ag_store or {} 
+            grid_type = ag_store.get("type") 
+            grid_size = ag_store.get("size") 
+            if grid_type == "quadrat": 
+                grid_gdf = create_quadrat_grid(aoi_gdf, grid_size=int(grid_size)) 
+                grid_meta = {"type": "quadrat", "size": int(grid_size)} 
+            elif grid_type == "h3": 
+                grid_gdf = create_h3_grid_from_gdf(aoi_gdf, h3_resolution=int(grid_size)) 
+                grid_meta = {"type": "h3", "size": int(grid_size)} 
+            else: 
+                return "ag-size-store inválido: falta 'type' en {'h3','quadrat'} y 'size'." 
+            # 3) Construir execution_config + guardar todo 
+            execution_config = {**(fg_params or {}), **(ag_store or {})} 
+            outdir = Path(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\config_test") 
+            outdir.mkdir(parents=True, exist_ok=True) 
+            stamp = time.strftime("%Y%m%d_%H%M%S") 
+            # a) JSON de configuración 
+            json_path = outdir / f"execution_config_{stamp}.json" 
+            with open(json_path, "w", encoding="utf-8") as f: 
+                json.dump(execution_config, f, ensure_ascii=False, indent=2) 
+            # b) Guardar grid (elige formato; aquí GeoParquet para precisión/velocidad) 
+            grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.parquet" 
+            try: 
+                grid_gdf.to_parquet(grid_path) 
+            except Exception: 
+                # fallback a GeoJSON si no tienes pyarrow/fastparquet 
+                grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.geojson" 
+                grid_gdf.to_file(grid_path, driver="GeoJSON") 
 
-            # 1) AOI desde FeatureGroups (WGS84)
-            print(f"Lenght SA Draw: {len(sa_draw_children)}", file=sys.stderr, flush=True)
-            print(f"Lenght SA Upload: {len(sa_upload_children)}", file=sys.stderr, flush=True)
-            aoi_gdf = aoi_from_featuregroups(sa_draw_children, sa_upload_children)
-            if aoi_gdf.empty:
-                return "No hay AOI (draw/upload) para generar el grid."
+            print(f"[APP] Grid CRS: {grid_gdf.crs}")
+            # 4) Construct the EVA wrapper: 
+            eva_over = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog") 
+            # 5) Construct params: 
+            cfgs = (fg_params or {}).copy() 
+            # Gets the first key: 
+            group_keys = [k for k in cfgs.keys() if isinstance(k, str) and k.isdigit()] 
+            if not group_keys: 
+                return "No functional group configuration." 
+            gkey = sorted(group_keys, key=int)[0] 
+            # First Functional Group: 
+            cfg = cfgs.get(gkey, {}) 
+            # LRF parameters of the Functional Group: 
+            lrf = (cfg.get("lrf") or {}) 
+            # NRF parameters of the Fucntional group: 
+            nrf = (cfg.get("nrf") or {}) 
+            # Params: 
+            lrf_id_list = lrf.get("taxon_ids") or [] 
+            nrf_id_list = nrf.get("taxon_ids") or [] 
+            esf_id_list = cfg.get("esf_taxon_ids") or [] 
+            hfs_bh_id_list = cfg.get("hfsbh_taxon_ids") or [] 
+            mss_id_list = cfg.get("mss_taxon_ids") or [] 
+            cut_lrf = lrf.get("threshold_pct") 
+            cut_nrf = nrf.get("threshold_pct") 
+            country_name = cfg.get("eez_country") 
+            eez_grid_size = cfg.get("eez_grid_size") 
+            # FN: union of all other significant species 
+            all_ids_unique = sorted({ *lrf_id_list, *nrf_id_list, *esf_id_list, *hfs_bh_id_list, *mss_id_list }) 
+            
+            parameters = { 
+                "aq1": {"taxon_ids": lrf_id_list, "cut_lrf": cut_lrf}, 
+                "aq5": {"taxon_ids": nrf_id_list, "country_name": country_name, "grid_size": eez_grid_size, "cut_nrf": cut_nrf}, 
+                "aq7": {"taxon_ids": all_ids_unique}, 
+                "aq10": {"taxon_ids": esf_id_list}, 
+                "aq12": {"taxon_ids": hfs_bh_id_list}, 
+                "aq14": {"taxon_ids": mss_id_list}
+                } 
+            
+            print(parameters) 
 
-            # 2) Generar grid según 'ag-size-store'
-            ag_store = ag_store or {}
-            grid_type = ag_store.get("type")
-            grid_size = ag_store.get("size")
-
-            if grid_type == "quadrat":
-                grid_gdf = create_quadrat_grid(aoi_gdf, grid_size=int(grid_size))
-                grid_meta = {"type": "quadrat", "size": int(grid_size)}
-            elif grid_type == "h3":
-                grid_gdf = create_h3_grid_from_gdf(aoi_gdf, h3_resolution=int(grid_size))
-                grid_meta = {"type": "h3", "size": int(grid_size)}
-            else:
-                return "ag-size-store inválido: falta 'type' en {'h3','quadrat'} y 'size'."
-
-            # 3) Construir execution_config + guardar todo
-            execution_config = {**(fg_params or {}), **(ag_store or {})}
-            outdir = Path(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\config_test")
-            outdir.mkdir(parents=True, exist_ok=True)
-
-            stamp = time.strftime("%Y%m%d_%H%M%S")
-            # a) JSON de configuración
-            json_path = outdir / f"execution_config_{stamp}.json"
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(execution_config, f, ensure_ascii=False, indent=2)
-
-            # b) Guardar grid (elige formato; aquí GeoParquet para precisión/velocidad)
-            grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.parquet"
-            try:
-                grid_gdf.to_parquet(grid_path)
-            except Exception:
-                # fallback a GeoJSON si no tienes pyarrow/fastparquet
-                grid_path = outdir / f"grid_{grid_meta['type']}_{grid_meta['size']}_{stamp}.geojson"
-                grid_gdf.to_file(grid_path, driver="GeoJSON")
-
+            eva_result = run_selected_assessments(eva=eva_over, grid=grid_gdf, params=parameters) 
+            
+            eva_result.to_parquet(outdir / f"eva_overscale_app_test.parquet") 
+            
             return f"OK: guardado {json_path.name} y grid ({len(grid_gdf)} celdas) → {grid_path.name}"
+    
