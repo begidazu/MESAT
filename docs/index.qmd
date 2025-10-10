@@ -1,13 +1,30 @@
 ---
-title: "docs"
+title: "Ph.D. TITLE - Web App Documentation"
+author: "Beñat Egidazu-de la Parte"
+date: "2025-10-10"
+date-modified: last-modified  
+date-format: "MMMM D, YYYY"
+title-block-style: default
 ---
 
-This is a Quarto website.
+# Introduction to the application
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+The Ph.D. TITLE web application aims to be a Proof of Concept of a potential future tool that assesses marine
+economic activities affection to habitats and ecosystem service delivery. This information is crucial for informed
+decission-making and can promote better-designed Marine Spatial Plans (MSPs) that minimize activity impact and 
+maximize ecosystem service delivery, including future climate change effects into habitat distributions and ecosystem
+service provision.
 
-## Comprobación del intérprete (temporal)
+Ph.D. TITLE web application is divided into five main sections: (1) management scenarios; (2) saltmarsh evolution; 
+(3) physical accounts; (4) EVA overscale; and (5) fish stocks. In all cases, model codes used to obtain the results of
+Ph.D Title are available in [./app/models](https://github.com/begidazu/PhD_Web_App/tree/main/app/models) and will be further explained in the corresponging sections.
 
-```{python}
-import sys, platform
-sys.executable, platform.python_version()
+## About this Documentation
+
+Transparency and reproducibility are an integral part of the research. Thus, here you will find all the details 
+of the approaches and decisions taken in this work. This is a complement to the available scientific articles, [thesis](https://doi.org/10.1016/j.scitotenv.2024.178164) 
+and codes. Public data sources and/or data obtained in the thesis are available at [fake data]() and results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results).
+In case some desired results are not available, please contact: <benat.egidazu@bc3research.org>. However, data sources 
+also include other author contributions, in that case you may need to contact those authors for specific datasets.
+
+

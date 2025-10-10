@@ -1,0 +1,35 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Ph. D. Web App documentation",
+    "section": "",
+    "text": "1 Introduction to the application\nThe Ph.D. TITLE web application aims to be a Proof of Concept of a potential future tool that assesses marine economic activities affection to habitats and ecosystem service delivery. This information is crucial for informed decission-making and can promote better-designed Marine Spatial Plans (MSPs) that minimize activity impact and maximize ecosystem service delivery, including future climate change effects into habitat distributions and ecosystem service provision.\nPh.D. TITLE web application is divided into five main sections: (1) management scenarios; (2) saltmarsh evolution; (3) physical accounts; (4) EVA overscale; and (5) fish stocks. In all cases, model codes used to obtain the results of Ph.D Title are available in ./app/models and will be further explained in the corresponging sections.",
+    "crumbs": [
+      "Introduction",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Ph.D. TITLE - Web App Documentation</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#about-this-documentation",
+    "href": "index.html#about-this-documentation",
+    "title": "Ph. D. Web App documentation",
+    "section": "1.1 About this Documentation",
+    "text": "1.1 About this Documentation\nTransparency and reproducibility are an integral part of the research. Thus, here you will find all the details of the approaches and decisions taken in this work. This is a complement to the available scientific articles, thesis and codes. Public data sources and/or data obtained in the thesis are available at fake data and results could be found in results. In case some desired results are not available, please contact: benat.egidazu@bc3research.org. However, data sources also include other author contributions, in that case you may need to contact those authors for specific datasets.",
+    "crumbs": [
+      "Introduction",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Ph.D. TITLE - Web App Documentation</span>"
+    ]
+  },
+  {
+    "objectID": "management_scenarios.html",
+    "href": "management_scenarios.html",
+    "title": "2  Management Scenarios",
+    "section": "",
+    "text": "Management Scenarios\nIn this saection, the user can…",
+    "crumbs": [
+      "Introduction",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Management Scenarios</span>"
+    ]
+  }
+]

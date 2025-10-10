@@ -1,0 +1,7 @@
+---
+title: "Management Scenarios"
+---
+
+Management Scenarios
+
+In this saection, the user can...

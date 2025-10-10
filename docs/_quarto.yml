@@ -1,13 +1,31 @@
 project:
-  type: website
+  type: book
 
-website:
-  title: "docs"
+book:
+  title: "Ph. D. Web App documentation"
+  page-navigation: true
+  chapters:
+    - index.qmd
+    - management_scenarios.qmd
+    - saltmarsh.qmd
+    - physical_accounts.qmd
+    - eva_overscale.qmd
+    - fish.qmd
+
   navbar:
     left:
       - href: index.qmd
-        text: Home
-      - about.qmd
+        text: Introduction
+      - href: management_scenarios.qmd
+        text: Management scenarios
+      - href: saltmarsh.qmd
+        text: Saltmarsh Evolution
+      - href: physical_accounts.qmd
+        text: Physical Accounts
+      - href: eva_overscale.qmd
+        text: EVA Overscale
+      - href: fish.qmd
+        text: Fish Stocks
 
 format:
   html:
@@ -16,10 +34,13 @@ format:
       - brand
     css: styles.css
     toc: true
+    number-sections: true   
 
 execute:
   engine: jupyter
+
 jupyter:
   python: "C:/dev/venvs/qdocs/Scripts/python.exe"
+
 
 
