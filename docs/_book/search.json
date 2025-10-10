@@ -26,7 +26,7 @@
     "href": "management_scenarios.html",
     "title": "2  Management Scenarios",
     "section": "",
-    "text": "Management Scenarios\nIn this saection, the user can…",
+    "text": "Management Scenarios tab gives you the option to explore the potential affection of a set of marine economic activities (i.e. wind farms, aquaculture plants, vessel routes and/or defence/military areas) in the study areas where the Ph.D. studies have been carried out. In this sense, you can select Santander Coast, North Sea, Irish Sea, Urdaibai Estuary and Cadiz Bay study areas. The affection in this Proof of Concept is based on the Physical Accounts studies and the Saltmarsh Evolution studies. Thus, it is worth noting that in some study areas you could explore the potential affection of EUNIS habitats and/or saltmarsh and mudflat current affection and under a set of climate change scenarios. The following table is a summary of the available affection in each study area:\n\n\n\nStudy Area\nPhysical Accounts\nSaltmarsh Evolution\n\n\n\n\nSantander Coast\n✅\n✅\n\n\nNorth Sea\n✅\n❌\n\n\nIrish Sea\n✅\n❌\n\n\nUrdaibai Estuary\n❌\n✅\n\n\nCadiz Bay\n❌\n✅",
     "crumbs": [
       "Introduction",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Management Scenarios</span>"
