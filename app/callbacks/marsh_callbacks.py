@@ -317,7 +317,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     [
                                                         dcc.Input(
                                                             id='eva-overscale-h3-level',
-                                                            type="number", min=0, max=15, step=1,
+                                                            type="number", min=0, max=7, step=1,
                                                             placeholder="H3 Grid Level",
                                                             className="form-control mb-2",
                                                             disabled=False

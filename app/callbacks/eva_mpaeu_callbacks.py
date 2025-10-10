@@ -1,7 +1,7 @@
 from zipfile import ZipFile
 
 import dash, json, time, os, sys, glob, io, shutil, uuid #traceback
-from dash import Input, Output, State, no_update, html, dcc, ALL, ctx
+from dash import Input, Output, State, no_update, html, dcc, ALL, ctx, MATCH
 from dash.exceptions import PreventUpdate
 from pathlib import Path
 import geopandas as gpd
@@ -230,33 +230,93 @@ def create_h3_grid_from_gdf(aoi_gdf: gpd.GeoDataFrame, h3_resolution: int) -> gp
 
 # ------------------------------------------------------------------------
 
+# Function to compose the Accordion with the Functional Groups passes by the user:
+def _build_legend_eva_overscale() -> html.Div:
+    colors = ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c']
+    labels = ['Very low (0–1)','Low (1–2)','Medium (2–3)','High (3–4)','Very high (4–5)']
+    return html.Div(
+        className="legend",
+        children=[
+            html.Div("Condition", style={'fontWeight': 'bold', 'marginBottom': '6px'}),
+            html.Div("No Data", className="legend-item"),  # optional
+            *[html.Div(
+                className="legend-item",
+                children=[
+                    html.Div(style={'backgroundColor': color, 'width': '20px', 'height': '10px', 'display': 'inline-block', 'marginRight': '6px'}),
+                    html.Span(label)
+                ]
+            ) for color, label in zip(colors, labels)]
+        ]
+    )
+
+def build_results_accordion(eva_results_by_fg: dict) -> dbc.Accordion:
+    accordion_items = []
+
+    for gkey, (group_name, result_gdf) in eva_results_by_fg.items():
+        aq_columns = [col for col in result_gdf.columns if col.startswith("aq")]
+        aq_radio = dcc.RadioItems(
+            id={"type": "fg-aq-radio", "index": gkey},
+            options=[{"label": aq.upper(), "value": aq} for aq in aq_columns],
+            value=aq_columns[0] if aq_columns else None,
+            labelStyle={"display": "block", "marginLeft": "10px"},
+        )
+        accordion_items.append(
+            dbc.AccordionItem(
+                title=group_name,
+                children=[aq_radio],
+                class_name="layers-acc-item"
+            )
+        )
+
+    return dbc.Accordion(
+        id="eva-results-accordion",
+        always_open=True,
+        start_collapsed=True,
+        className="layers-accordion",
+        children=accordion_items
+    )
+
+def render_aq_on_map(gdf, aq_column):
+    import dash_leaflet as dl
+    import dash_leaflet.express as dlx
+
+    gdf = gdf.copy()
+    gdf["value"] = gdf[aq_column].fillna(0).astype(float)
+
+    # Clasifica en 5 intervalos
+    bins = [0, 1, 2, 3, 4, 5]
+    colors = ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c']
+    gdf["color"] = pd.cut(gdf["value"], bins=bins, labels=colors, include_lowest=True)
+
+    features = []
+    for _, row in gdf.iterrows():
+        try:
+            feat = dlx.geojson.Feature(
+                geometry=json.loads(row.geometry.to_json()),
+                properties={
+                    "value": row["value"],
+                    "style": {
+                        "color": row["color"],
+                        "weight": 0.8,
+                        "fillOpacity": 0.7
+                    }
+                }
+            )
+            features.append(feat)
+        except Exception as e:
+            continue
+
+    geojson_data = dlx.geojson.FeatureCollection(features)
+
+    return dl.GeoJSON(
+        data=geojson_data,
+        id="aq-visualization",
+        hoverStyle={"weight": 2, "color": "black", "dashArray": "5, 5"},
+        zoomToBounds=True
+    )
 
 
-def _to_leaflet_polys(geojson):
-    """Convierte Polygon/MultiPolygon GeoJSON -> lista de dl.Polygon(positions=...)."""
-    feats = (geojson or {}).get("features", [])
-    comps = []
 
-    def lonlat_to_latlon(coords):
-        # GeoJSON [lon,lat] -> Leaflet [lat,lon]
-        return [[lat, lon] for lon, lat in coords]
-
-    for f in feats:
-        g = (f or {}).get("geometry") or {}
-        gtype = g.get("type")
-        if gtype == "Polygon":
-            ring = g.get("coordinates", [[]])[0]
-            comps.append(dl.Polygon(positions=lonlat_to_latlon(ring),
-                                    color="#0d6efd", fillColor="#0d6efd",
-                                    fillOpacity=0.35, weight=3))
-        elif gtype == "MultiPolygon":
-            for poly in g.get("coordinates", []):
-                ring = poly[0] if poly else []
-                comps.append(dl.Polygon(positions=lonlat_to_latlon(ring),
-                                        color="#0d6efd", fillColor="#0d6efd",
-                                        fillOpacity=0.35, weight=3))
-        # otros tipos: ignorar
-    return comps
 
 # Main Callback function:
 def register_eva_mpaeu_callbacks(app: dash.Dash):
@@ -811,6 +871,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
         @app.callback(
             Output("eva-overscale-results", "disabled"),
             Output("eva-results-store", "data"),
+            Output("eva-results-accordion-container", "children"),
             Input("eva-overscale-run-button", "n_clicks"),
             State("fg-configs", "data"),
             State("ag-size-store", "data"),
@@ -889,8 +950,11 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             zip_path = Path(base_dir) / f"eva_overscale_{stamp}.zip"
             shutil.make_archive(zip_path.with_suffix("").as_posix(), "zip", root_dir=results_dir)
 
+            # Create Accordion to add to map:
+            accordion = build_results_accordion(eva_results_by_fg)
+
             # Enable download button and return ZIP path
-            return False, {"zip_path": str(zip_path)}
+            return False, {"zip_path": str(zip_path)}, accordion
 
         # Callback to download EVA overscale results:
         @app.callback(
@@ -909,4 +973,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 raise PreventUpdate
 
             return dcc.send_file(str(zip_path))
+        
+        # Callback to render Functional Groups to Map and add legend:
+
     

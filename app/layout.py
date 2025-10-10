@@ -53,7 +53,6 @@ def create_layout():  # definir función que construye el layout
                                         },
                                         children=[]  # vacío al inicio; se completa al ejecutar OPSA
                                     ),
-
                                     
                                     # Layers where we store the management polygons
                                     dl.FeatureGroup(id="mgmt-wind", children=[]),
@@ -70,6 +69,31 @@ def create_layout():  # definir función que construye el layout
                                     # Layers where we store the uploaded files of eva-overscale, the drew study area and the results
                                     dl.FeatureGroup(id="eva-overscale-draw", children=[]),
                                     dl.FeatureGroup(id="eva-overscale-upload", children=[]),
+
+                                    # Div to Store EVA Overscale Accordion:
+                                    html.Div(
+                                        id="eva-results-accordion-container",
+                                        style={"left":"10px","top":"108px","zIndex":1100,"minWidth":"260px"}
+                                    ),
+                                    html.Div(  # contenedor de la leyenda flotante
+                                        id='eva-overscale-legend-div',  # id para actualizar desde callbacks
+                                        style={  # estilos para posicionarla sobre el mapa
+                                            'position': 'absolute',  # posición absoluta dentro del mapa
+                                            'bottom': '10px',  # distancia al borde inferior
+                                            'left': '10px',  # distancia al borde izquierdo
+                                            'zIndex': 1000,  # por encima del mapa
+                                            'background': 'rgba(255,255,255,0.92)',  # fondo semitransparente
+                                            'border': '1px solid #ccc',  # borde sutil
+                                            'borderRadius': '8px',  # esquinas redondeadas
+                                            'padding': '8px 10px',  # espaciado interno
+                                            'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  # sombra suave
+                                            'fontSize': '12px'  # tamaño de fuente
+                                        },
+                                        children=[]  # vacío al inicio; se completa al ejecutar OPSA
+                                    ),
+                                    # Layers of the Accordion:
+                                    dl.FeatureGroup(id="eva-aq-layer", children=[]),
+
 
                                 ]
                             ),
