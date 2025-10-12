@@ -8,8 +8,8 @@ areas where the Ph.D. studies have been carried out. In this sense, you can sele
 Irish Sea, Urdaibai Estuary and Cadiz Bay study areas. The affection in this Proof of Concept is based on the [Physical 
 Accounts studies](https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit#heading=h.i7jku579q3oc)
 and the [Saltmarsh Evolution studies](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub).
-Thus, it is worth noting that in some study areas you could explore the potential affection of EUNIS habitats and/or 
-saltmarsh and mudflat current affection and under a set of climate change scenarios. The following table is a summary
+Thus, it is worth noting that in some study areas you could explore the potential affection on EUNIS habitats and/or 
+saltmarsh and mudflat habitats, under a set of climate change scenarios. The following table is a summary
 of the available affection in each study area:
 
 | Study Area        | Physical Accounts     | Saltmarsh Evolution   |
@@ -19,3 +19,34 @@ of the available affection in each study area:
 | Irish Sea         | ✅                    | ❌                   |
 | Urdaibai Estuary  | ❌                    | ✅                   |
 | Cadiz Bay         | ❌                    | ✅                   |                      
+
+In order to guide you where the Physical Accounts and Saltmarsh Studies have been conducted in the study areas, here 
+is a map with the location of Physical Account and Saltmarsh Evolution locations in each study area.
+
+![Physical Accounts and Saltmarsh areas](images/PA_MARSH_docs.png){fig-cap="Physical Accounts and Saltmarsh areas" width=75%}
+
+## How to run potential affection?
+
+1. Select the Study Area.
+2. Enable the desired activities clicking on the boxes.
+3. Draw the location or upload the file with the desired activity areas.
+4. Run the assessment.
+
+## How to interpret affection results?
+
+The affection results are presented in table format. Each economic activity affection is further divided into three affection 
+subdivisions -- EUNIS, saltmarshes and fish -- that represent the affection of the economic activities to the respective 
+subdivision based on the results presented by [Egidazu-de la Parte *et al.* (2026)](https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit?tab=t.0#heading=h.i7jku579q3oc) 
+(EUNIS habitats), [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816) and [poner link fish study](). You can filter the 
+results using SQL queries.
+
+Below is a breakdown of what each of the subdivisions represents:
+
+- EUNIS: each *economic activity* + *EUNIS* tab include the extension (Extent (km^2) field) of each EUNIS habitat type affected by the activity and 
+the condition metric of the portion of the EUNIS habitat area affected by the activity. Condition metric is an indicator of the 
+underlaying status of the habitat and scores from 0 (very low condition) to 5 (very high condition). For more detailed information see [Physical Accounts section](physical_accounts.qmd) and 
+[Egidazu-de la Parte *et al.* (2026)](https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit?tab=t.0#heading=h.i7jku579q3oc). 
+- Saltmarshes: *economic activity* + *Saltmarshes* tab include the extension (Extent (ha) field) of *saltmarsh*, *mudflat*, *upland areas* and 
+*channel* affected by the corresponding activity, as well as the expected accretion (main driver of carbon sequestration in intertidal ecosystems) 
+in those areas that the activities will have impact. For more detailed information see [Saltmarsh Evolution section](saltmarsh.qmd) and [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816). 
+- Fish: ***ADD FISH DOCUMENTATION WHEN WE HAVE THE MODELS AND RESULTS***

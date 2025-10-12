@@ -1,5 +1,5 @@
 ---
-title: "Ph.D. TITLE - Web App Documentation"
+title: "Web App Documentation"
 author: "Beñat Egidazu-de la Parte"
 date: "2025-10-10"
 date-modified: last-modified  
@@ -17,14 +17,15 @@ service provision.
 
 Ph.D. TITLE web application is divided into five main sections: (1) management scenarios; (2) saltmarsh evolution; 
 (3) physical accounts; (4) EVA overscale; and (5) fish stocks. In all cases, model codes used to obtain the results of
-Ph.D Title are available in [./app/models](https://github.com/begidazu/PhD_Web_App/tree/main/app/models) and will be further explained in the corresponging sections.
+Ph.D Title are available in the folder [app/models](https://github.com/begidazu/PhD_Web_App/tree/main/app/models) and will 
+be further explained in the corresponding sections.
 
 ## About this Documentation
 
 Transparency and reproducibility are an integral part of the research. Thus, here you will find all the details 
 of the approaches and decisions taken in this work. This is a complement to the available scientific articles, [thesis](https://doi.org/10.1016/j.scitotenv.2024.178164) 
-and codes. Public data sources and/or data obtained in the thesis are available at [fake data]() and results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results).
+and codes. Public data sources and/or data obtained in the thesis are available at [`data`]() and results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results).
 In case some desired results are not available, please contact: <benat.egidazu@bc3research.org>. However, data sources 
-also include other author contributions, in that case you may need to contact those authors for specific datasets.
+also include other author contributions, in that case, you may need to contact those authors for specific datasets.
 
 

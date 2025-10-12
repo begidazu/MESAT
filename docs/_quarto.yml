@@ -2,7 +2,7 @@ project:
   type: book
 
 book:
-  title: "Ph. D. Web App documentation"
+  title: "Web App documentation"
   page-navigation: true
   chapters:
     - index.qmd
