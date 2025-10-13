@@ -1068,8 +1068,28 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
 
             # Save configuration
             config_path = results_dir / "configuration.json"
+            config_payload = {
+                "version": "",
+                "assessment_day": time.strftime("%Y_%m_%d"),
+                # Optional: area of interest EPSG and bbox
+                "aoi": {
+                    "crs": "EPSG:4326",
+                    "bbox": list(aoi_gdf.total_bounds) if not aoi_gdf.empty else None
+                },
+                "functional_groups": fg_params,             # functional group params
+                "assessment_grid": {                        # añade esto
+                    "type": grid_type,                      # "h3" | "quadrat"
+                    "size": int(grid_size) if grid_size is not None else None,
+                }  
+            } 
+
             with open(config_path, "w", encoding="utf-8") as f:
-                json.dump(fg_params, f, ensure_ascii=False, indent=2)
+                json.dump(config_payload, f, ensure_ascii=False, indent=2)
+
+
+            # config_path = results_dir / "configuration.json"
+            # with open(config_path, "w", encoding="utf-8") as f:
+            #     json.dump(fg_params, f, ensure_ascii=False, indent=2)
 
             # Create ZIP
             zip_path = Path(base_dir) / f"eva_overscale_{stamp}.zip"
