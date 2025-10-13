@@ -64,5 +64,20 @@ coverage.xml
 *.py,cover
 .hypothesis/
 
+# Quarto build/cache (en docs/)
+docs/.quarto/
+docs/_site/
+docs/_freeze/
+docs/**/.ipynb_checkpoints/
+
+# Si te aparecen estos:
+docs/.quarto/idx/
+docs/.quarto/cites/
+docs/.quarto/preview/
+docs/.quarto/project-cache/
+docs/**/*.qmd.json
+docs/**/index.json
+docs/**/lock
+
 # Editor backups
 *~ 
