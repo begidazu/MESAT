@@ -49,4 +49,4 @@ underlaying status of the habitat and scores from 0 (very low condition) to 5 (v
 - Saltmarshes: *economic activity* + *Saltmarshes* tab include the extension (Extent (ha) field) of *saltmarsh*, *mudflat*, *upland areas* and 
 *channel* affected by the corresponding activity, as well as the expected accretion (main driver of carbon sequestration in intertidal ecosystems) 
 in those areas that the activities will have impact. For more detailed information see [Saltmarsh Evolution section](saltmarsh.qmd) and [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816). 
-- Fish: ***ADD FISH DOCUMENTATION WHEN WE HAVE THE MODELS AND RESULTS***
+- Fish: ***ADD FISH DOCUMENTATION WHEN WE HAVE THE MODELS AND RESULTS*** 
