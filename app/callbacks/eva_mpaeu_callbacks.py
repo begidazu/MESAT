@@ -1,17 +1,18 @@
-from zipfile import ZipFile
+# from zipfile import ZipFile
+from typing import Dict, Tuple, List
 
-import dash, json, time, os, sys, glob, io, shutil, uuid #traceback
+import dash, json, time, os, sys, shutil, re 
 from dash import Input, Output, State, no_update, html, dcc, ALL, ctx, MATCH
 from dash.exceptions import PreventUpdate
+# from dash_extensions.javascript import assign
 from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 import numpy as np
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
-from shapely import wkt as shp_wkt  
-from shapely import wkb as shp_wkb
-from shapely.geometry import mapping, shape, Polygon
+from shapely.geometry import shape, Polygon
+
 
 from app.callbacks.management_callbacks import _valid_ext, _save_upload_to_disk, _to_geojson_from_parquet, _detect_lonlat_columns, _df_to_feature_collection_from_polygon, _estimate_b64_size, _rm_tree, _session_dir
 from app.models.eva_mpaeu import run_selected_assessments, EVA_MPAEU
@@ -22,6 +23,11 @@ COLOR = {"eva-overscale-sa-draw": ("study-area",   "#015B97")}
 UPLOAD_CLASS = "form-control form-control-lg"
 BASE_UPLOAD_CLASS = "form-control is-valid form-control-lg"               
 INVALID_UPLOAD_CLASS = "form-control is-invalid form-control-lg"  
+
+# List of AQ used for EVA Overscale:
+AQ_LIST = (1, 5, 7, 10, 12, 14)
+
+COLORS = ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c']
 
 # Utility functions:
 def _parse_csv_ints(text: str):
@@ -83,28 +89,20 @@ def _is_group_complete(cfg: dict) -> bool:
 
 
 # Utils to run EVA Overscale:
-
 def _positions_to_shapely(positions):
-    """
-    Leaflet usa [lat, lon]; Shapely/GeoJSON usan [lon, lat].
-    'positions' puede ser:
-      - lista de [lat, lon]
-      - lista de listas (por compat), nos quedamos con la primera si es necesario.
-    """
     if not positions:
         return None
 
-    # Aceptar casos [ [lat,lon], [lat,lon], ... ] o [[[lat,lon], ...]]
     ring = positions
     if isinstance(ring[0], (list, tuple)) and len(ring) > 0 and isinstance(ring[0][0], (list, tuple)):
-        ring = ring[0]  # por si vino anidado
+        ring = ring[0]  
 
-    # Convertir a [lon, lat]
+    # Convert to [lon, lat]
     coords = [(lon, lat) for lat, lon in ring if lat is not None and lon is not None]
     if len(coords) < 3:
         return None
 
-    # Cerrar anillo si no está cerrado
+    # Close polygons in case are not correctly closed (should be):
     if coords[0] != coords[-1]:
         coords.append(coords[0])
 
@@ -117,31 +115,28 @@ def _positions_to_shapely(positions):
         return None
 
 def _iter_children(children):
-    """Normaliza children a lista plana."""
+    """Normalize children to plain list."""
     if children is None:
         return []
     return children if isinstance(children, (list, tuple)) else [children]
 
 def _get_prop_eva(component, prop):
-    """Dash components llegan como dict-like; saca una prop de forma segura."""
+    """ Get component properties from Dash dictionary"""
     try:
-        # cuando llega serializado
+        # If they are serialized:
         return component.get("props", {}).get(prop)
     except Exception:
-        # compat: algunos llegan como BaseComponent
+        # if they are BaseComponent:
         return getattr(component, prop, None)
 
 def aoi_from_featuregroups(sa_draw_children, sa_upload_children) -> gpd.GeoDataFrame:
     """
-    Lee geometrías de:
-      - dl.GeoJSON(data=Feature/FeatureCollection)  -> upload
-      - dl.Polygon(positions=...)                   -> draw
-    y devuelve un GeoDataFrame en EPSG:4326.
+    Get geometries of draw and upload study area and return a GeoDataframe in EPSG:4326 (same CRS of MPAEU results)
     """
     all_feats = []
 
     for ch in _iter_children(sa_draw_children) + _iter_children(sa_upload_children):
-        # 1) Caso GeoJSON
+        # 1) GeoJSON
         data = _get_prop_eva(ch, "data")
         if data:
             feats = []
@@ -161,9 +156,9 @@ def aoi_from_featuregroups(sa_draw_children, sa_upload_children) -> gpd.GeoDataF
                     all_feats.append({"geometry": g, **(f.get("properties") or {})})
                 except Exception:
                     pass
-            continue  # ya tratamos este child
+            continue  
 
-        # 2) Caso Polygon (Leaflet)
+        # 2) Polygon (Leaflet)
         ctype = getattr(ch, "type", None) or (ch.get("type") if isinstance(ch, dict) else None)
         if ctype == "Polygon":
             positions = _get_prop_eva(ch, "positions")
@@ -171,9 +166,6 @@ def aoi_from_featuregroups(sa_draw_children, sa_upload_children) -> gpd.GeoDataF
             if poly is not None:
                 all_feats.append({"geometry": poly})
             continue
-
-        # 3) Otros tipos: ignora
-        # (si en el futuro añades MultiPolygon como varios dl.Polygon, seguirá valiendo)
 
     if not all_feats:
         return gpd.GeoDataFrame(columns=["geometry"], geometry="geometry", crs="EPSG:4326")
@@ -184,9 +176,9 @@ def aoi_from_featuregroups(sa_draw_children, sa_upload_children) -> gpd.GeoDataF
         return gpd.GeoDataFrame(columns=["geometry"], geometry="geometry", crs="EPSG:4326")
     return gdf
 
-# Wrapper H3 que acepta GDF directamente (mismo código que tu fn, pero sin load_aoi)
+# Wrapper H3 that acepts GDF directly
 def create_h3_grid_from_gdf(aoi_gdf: gpd.GeoDataFrame, h3_resolution: int) -> gpd.GeoDataFrame:
-    import h3  # asegúrate de tenerlo instalado
+    import h3  
     resolution = int(h3_resolution)
     if not (0 <= resolution <= 15):
         raise ValueError("resolution debe estar entre 0 y 15 (entero).")
@@ -200,7 +192,7 @@ def create_h3_grid_from_gdf(aoi_gdf: gpd.GeoDataFrame, h3_resolution: int) -> gp
     if union_geom.is_empty:
         return gpd.GeoDataFrame(columns=["h3", "geometry"], crs="EPSG:4326")
 
-    # Polígonos individuales
+    # Individual polygons
     polygons = []
     for geom in geoms:
         if geom.is_empty:
@@ -212,7 +204,7 @@ def create_h3_grid_from_gdf(aoi_gdf: gpd.GeoDataFrame, h3_resolution: int) -> gp
 
     cells = set()
     for poly in polygons:
-        # quitar Z si existiera
+        # Delete Z in case it exists
         if hasattr(poly, "has_z") and poly.has_z:
             poly = Polygon(
                 [(x, y) for x, y, *_ in np.asarray(poly.exterior.coords)],
@@ -232,89 +224,212 @@ def create_h3_grid_from_gdf(aoi_gdf: gpd.GeoDataFrame, h3_resolution: int) -> gp
 
 # Function to compose the Accordion with the Functional Groups passes by the user:
 def _build_legend_eva_overscale() -> html.Div:
-    colors = ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c']
-    labels = ['Very low (0–1)','Low (1–2)','Medium (2–3)','High (3–4)','Very high (4–5)']
+    colors = ["#edf8e9", "#bae4b3", "#74c476", "#31a354", "#006d2c"]
+    labels = ["Very low (0–1)", "Low (1–2)", "Medium (2–3)", "High (3–4)", "Very high (4–5)"]
+
+    box_style_base = {
+        "width": "20px",
+        "height": "12px",
+        "display": "inline-block",
+        "marginRight": "6px",
+        "border": "1px solid #333",
+        "borderRadius": "2px"
+    }
+
+    # NoData Style:
+    no_data_box_style = {
+        **box_style_base,
+        "backgroundColor": "transparent",
+        "backgroundImage": (
+            "repeating-linear-gradient("
+            "45deg, rgba(0,0,0,0.9) 0 2px, rgba(0,0,0,0) 2px 4px)"
+        )
+    }
+
     return html.Div(
         className="legend",
         children=[
-            html.Div("Condition", style={'fontWeight': 'bold', 'marginBottom': '6px'}),
-            html.Div("No Data", className="legend-item"),  # optional
-            *[html.Div(
+            html.Div("Condition", style={"fontWeight": "bold", "marginBottom": "6px"}),
+            html.Div( 
                 className="legend-item",
                 children=[
-                    html.Div(style={'backgroundColor': color, 'width': '20px', 'height': '10px', 'display': 'inline-block', 'marginRight': '6px'}),
-                    html.Span(label)
-                ]
-            ) for color, label in zip(colors, labels)]
-        ]
+                    html.Div(style=no_data_box_style),
+                    html.Span("No Data"),
+                ],
+                style={"marginBottom": "4px"}
+            ),
+            *[
+                html.Div(
+                    className="legend-item",
+                    children=[
+                        html.Div(style={**box_style_base, "backgroundColor": color}),
+                        html.Span(label)
+                    ],
+                    style={"marginBottom": "4px"}
+                )
+                for color, label in zip(colors, labels)
+            ],
+        ],
     )
 
-def build_results_accordion(eva_results_by_fg: dict) -> dbc.Accordion:
-    accordion_items = []
+def _results_dir_from_store(store_data: dict) -> Path | None:
+    """
+    Points results directori from store
+    """
+    try:
+        zip_path = Path(store_data.get("zip_path"))
+        if not zip_path.exists():
+            return None
+        base = zip_path.stem
+        stamp = base.replace("eva_overscale_", "", 1)
+        results_dir = zip_path.parent / f"results_eva_overscale_{stamp}"
+        return results_dir if results_dir.exists() else None
+    except Exception:
+        return None
+    
+def _slugify_name_for_match(name: str) -> str:
+    """normaliza nombres a clave comparable (minúsculas, guiones)."""
+    s = name.strip().lower().replace("_", " ")
+    s = re.sub(r"\s+", "-", s)
+    return re.sub(r"[^a-z0-9-]", "", s)
 
-    for gkey, (group_name, result_gdf) in eva_results_by_fg.items():
-        aq_columns = [col for col in result_gdf.columns if col.startswith("aq")]
-        aq_radio = dcc.RadioItems(
-            id={"type": "fg-aq-radio", "index": gkey},
-            options=[{"label": aq.upper(), "value": aq} for aq in aq_columns],
-            value=aq_columns[0] if aq_columns else None,
-            labelStyle={"display": "block", "marginLeft": "10px"},
+def _parquet_for_group(results_dir: Path, group_key: str) -> Path | None:
+    """
+    Busca el parquet cuyo nombre (sin extensión) coincide con el grupo,
+    admitiendo diferencias de '_' vs '-' y espacios.
+    """
+    if not results_dir or not results_dir.exists():
+        return None
+    gkey = _slugify_name_for_match(group_key)
+    for p in results_dir.glob("*.parquet"):
+        key = _slugify_name_for_match(p.stem)   # ej.: "Angiosperms" -> "angiosperms"
+        if key == gkey:
+            return p
+    return None
+
+def _parquet_to_binned_featurecollections(parquet_path: Path, aq_col: str):
+    gdf = gpd.read_parquet(parquet_path).copy()
+
+    # CRS → WGS84
+    if gdf.crs is None:
+        gdf.set_crs(4326, inplace=True)
+    elif getattr(gdf.crs, "to_epsg", lambda: None)() not in (None, 4326):
+        gdf = gdf.to_crs(4326)
+
+    # locate columns
+    cols_lc = {c.lower(): c for c in gdf.columns}
+    target = aq_col.lower()
+    real_col = cols_lc.get(target)
+    if real_col is None:
+        tnorm = target.replace("_", "")
+        for lc, orig in cols_lc.items():
+            if lc.replace("_", "") == tnorm:
+                real_col = orig
+                break
+
+    if real_col is None:
+        return {i: {"type": "FeatureCollection", "features": []} for i in (-1, 0, 1, 2, 3, 4)}
+
+    vals = pd.to_numeric(gdf[real_col], errors="coerce")
+
+    nodata_mask = vals.isna() | (vals < 0)
+
+    vals_clip = vals.clip(lower=0.0, upper=5.0)
+    bin_ids = pd.cut(
+        vals_clip, bins=[0, 1, 2, 3, 4, 5],
+        labels=[0, 1, 2, 3, 4],
+        include_lowest=True
+    ).astype("Int64") 
+
+    gdf["_bin"] = np.where(nodata_mask, -1, bin_ids.fillna(0).astype(int))
+
+    out = {}
+    for i in (-1, 0, 1, 2, 3, 4):
+        sub = gdf[gdf["_bin"] == i]
+        if sub.empty:
+            out[i] = {"type": "FeatureCollection", "features": []}
+        else:
+            out[i] = json.loads(sub.to_json())
+    return out
+
+def load_geojson_bins_for(group_key: str, aq_value: str, store_data: dict) -> dict:
+    if not store_data or "zip_path" not in store_data:
+        return {}
+    results_dir = _results_dir_from_store(store_data)
+    if not results_dir:
+        return {}
+    parquet_path = _parquet_for_group(results_dir, group_key)
+    if not parquet_path:
+        return {}
+    return _parquet_to_binned_featurecollections(parquet_path, aq_value)
+
+def _slugify(txt: str) -> str:
+    """Id seguro para pattern-matching: minúsculas y solo [a-z0-9_-]."""
+    txt = txt.strip().lower()
+    txt = re.sub(r"\s+", "-", txt)
+    return re.sub(r"[^a-z0-9_-]", "", txt) or "group"
+
+def build_results_ui(fg_configs: Dict) -> Tuple[html.Div, List[dl.LayerGroup]]:
+    """
+    Constructs the Accordion and AccordionItens from the functional groups and AQs.
+    """
+    accordion_items = []
+    layer_groups: List[dl.LayerGroup] = []
+
+    # Filtramos keys that represent groups
+    for k, cfg in (fg_configs or {}).items():
+        if not isinstance(cfg, dict):
+            continue
+        name = cfg.get("name") or f"Group {k}"
+        group_key = _slugify(name) or f"g{k}"
+
+        # Switch + Radios 
+        header_row = dbc.Row(
+            [
+                dbc.Col(dbc.Badge(name, color="light", text_color="dark"), width="auto"),
+                dbc.Col(
+                    dbc.Switch(
+                        id={"type": "fg-visible", "group": group_key},
+                        # label=f"{group_key}",
+                        value=False,               # por defecto apagado
+                    ),
+                    width="auto",
+                    className="ms-auto"
+                ),
+            ],
+            className="align-items-center g-2 mb-2"
         )
+
+        radios = dbc.RadioItems(
+            id={"type": "fg-aq-radio", "group": group_key},
+            options=[{"label": f"AQ{n}", "value": f"aq{n}"} for n in AQ_LIST],
+            value="aq1",                          # por defecto
+            inputClassName="me-2 d-inline",
+            labelClassName="form-check-label",
+            className="ms-2"
+        )
+
         accordion_items.append(
             dbc.AccordionItem(
-                title=group_name,
-                children=[aq_radio],
-                class_name="layers-acc-item"
+                [header_row, radios],
+                title= html.Span(name, className="form-check-label"),
+                item_id=group_key
             )
         )
 
-    return dbc.Accordion(
-        id="eva-results-accordion",
+        # Capa contenedora de resultados por grupo
+        layer_groups.append(
+            dl.LayerGroup(id={"type": "fg-layer", "group": group_key})
+        )
+
+    accordion = dbc.Accordion(
+        accordion_items or [dbc.AccordionItem("No groups found", title="Results")],
         always_open=True,
-        start_collapsed=True,
-        className="layers-accordion",
-        children=accordion_items
+        start_collapsed=False,
+        className="p-2"
     )
 
-def render_aq_on_map(gdf, aq_column):
-    import dash_leaflet as dl
-    import dash_leaflet.express as dlx
-
-    gdf = gdf.copy()
-    gdf["value"] = gdf[aq_column].fillna(0).astype(float)
-
-    # Clasifica en 5 intervalos
-    bins = [0, 1, 2, 3, 4, 5]
-    colors = ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c']
-    gdf["color"] = pd.cut(gdf["value"], bins=bins, labels=colors, include_lowest=True)
-
-    features = []
-    for _, row in gdf.iterrows():
-        try:
-            feat = dlx.geojson.Feature(
-                geometry=json.loads(row.geometry.to_json()),
-                properties={
-                    "value": row["value"],
-                    "style": {
-                        "color": row["color"],
-                        "weight": 0.8,
-                        "fillOpacity": 0.7
-                    }
-                }
-            )
-            features.append(feat)
-        except Exception as e:
-            continue
-
-    geojson_data = dlx.geojson.FeatureCollection(features)
-
-    return dl.GeoJSON(
-        data=geojson_data,
-        id="aq-visualization",
-        hoverStyle={"weight": 2, "color": "black", "dashArray": "5, 5"},
-        zoomToBounds=True
-    )
-
+    return accordion, layer_groups
 
 
 
@@ -638,6 +753,9 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             Output("eva-overscale-sa-file-label", "children"),
             Output("eva-overscale-file-store", "data"),
             Output("eva-overscale-results", "disabled", allow_duplicate=True),
+            Output("eva-results-accordion-container", "children", allow_duplicate=True),
+            Output("eva-overscale-legend-div", "children"),
+            Output("eva-aq-layer", "children", allow_duplicate=True),
             Input("eva-overscale-reset-button", "n_clicks"),
             prevent_initial_call=True
         )
@@ -663,7 +781,10 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 False,        # Enable Upload again
                 "Choose json or parquet file",
                 {},
-                True
+                True,         # EVA Overscale results download button
+                [],           # Clear Accordion
+                [],           # Clear Legend
+                []            # Clear GeoJsons of results added to the dl.Map
             )
         
         # Callback to enable Drawing to the user:
@@ -871,7 +992,11 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
         @app.callback(
             Output("eva-overscale-results", "disabled"),
             Output("eva-results-store", "data"),
-            Output("eva-results-accordion-container", "children"),
+            Output("eva-results-accordion-container", "children", allow_duplicate=True),
+            Output("eva-aq-layer", "children"),
+            Output("eva-overscale-legend-div", "children", allow_duplicate=True),
+            Output("eva-overscale-draw", "children", allow_duplicate=True),
+            Output("eva-overscale-upload", "children", allow_duplicate=True),
             Input("eva-overscale-run-button", "n_clicks"),
             State("fg-configs", "data"),
             State("ag-size-store", "data"),
@@ -950,11 +1075,16 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             zip_path = Path(base_dir) / f"eva_overscale_{stamp}.zip"
             shutil.make_archive(zip_path.with_suffix("").as_posix(), "zip", root_dir=results_dir)
 
-            # Create Accordion to add to map:
-            accordion = build_results_accordion(eva_results_by_fg)
+            # Create Accordion and LayerGroup to add to map:
+            accordion, layer_groups = build_results_ui(fg_params or {})
+
+            # Build legend:
+            legend = _build_legend_eva_overscale()
+
+            # The last to [] is to clear the study area in tha map to better show the results:
 
             # Enable download button and return ZIP path
-            return False, {"zip_path": str(zip_path)}, accordion
+            return False, {"zip_path": str(zip_path)}, accordion, layer_groups, legend, [], []
 
         # Callback to download EVA overscale results:
         @app.callback(
@@ -974,6 +1104,48 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
 
             return dcc.send_file(str(zip_path))
         
-        # Callback to render Functional Groups to Map and add legend:
+        # Callback that displays groups and the selected AQ:
+        @app.callback(
+            Output({"type":"fg-layer","group":MATCH}, "children"),
+            Input({"type":"fg-visible","group":MATCH}, "value"),
+            Input({"type":"fg-aq-radio","group":MATCH}, "value"),
+            State("eva-results-store","data"),
+            State({"type":"fg-layer","group":MATCH}, "id"),
+            prevent_initial_call=True
+        )
+        def toggle_group_layer(show, aq_value, store_data, layer_id):
+            if not show:
+                return []
+            if not aq_value:
+                raise PreventUpdate
 
-    
+            group_key = layer_id["group"]
+            bins_fc = load_geojson_bins_for(group_key, aq_value, store_data)
+            if not bins_fc:
+                return []
+
+            layers = []
+            did_zoom = False
+            for i in (-1, 0, 1, 2, 3, 4):
+                fc = bins_fc.get(i, {"type":"FeatureCollection","features":[]})
+                if not fc.get("features"):
+                    continue
+
+                if i == -1:
+                    # NoData: borde negro, trazo discontinuo, sin relleno
+                    style = dict(weight=2, color="#000000", dashArray="4 3", fill=False, fillOpacity=0.0)
+                else:
+                    color = COLORS[i]
+                    style = dict(weight=2, color=color, fillColor=color, fillOpacity=0.7)
+
+                layers.append(
+                    dl.GeoJSON(
+                        id={"type":"fg-geojson","group":group_key,"aq":aq_value,"bin":i},
+                        data=fc,
+                        options=dict(style=style),
+                        zoomToBounds=(not did_zoom)
+                    )
+                )
+                did_zoom = True
+
+            return layers

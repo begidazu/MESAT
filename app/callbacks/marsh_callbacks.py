@@ -311,7 +311,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     labelClassName="form-check-label",
                                                 ),
                                                 xs=12, md=6,
-                                            ),
+                                            ), 
                                             dbc.Col(
                                                 html.Div(
                                                     [
@@ -323,7 +323,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                             disabled=False
                                                         ),
                                                         dbc.Tooltip(
-                                                            "H3 Level. Decreasing cell size from 0 to 15",
+                                                            "H3 Level. Decreasing cell size from 0 to 7",
                                                             target="eva-overscale-h3-level", placement="auto"
                                                         ),
                                                         dcc.Input(
@@ -353,45 +353,92 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
 
                             # Run, Download and Info buttons:
-                            html.Div(
-                                id='eva-overscale-button-bar',
-                                style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
-                                children=[
-                                    html.Button(  # botón Run
-                                        html.Span("Run"),
-                                        id="eva-overscale-run-button",
-                                        n_clicks=0,
-                                        disabled=True,
-                                        className='btn btn-outline-primary'  
-                                    ),
-                                    html.Button(  # botón Reset
-                                        html.Span("Reset"),
-                                        id="eva-overscale-reset-button",
-                                        n_clicks=0,
-                                        className='btn btn-outline-primary',
-                                        disabled=False
-                                    ),
-                                    html.Div(  # contenedor de descarga
-                                        [
-                                            html.Button(  # botón de descarga
-                                                id='eva-overscale-results',
+                            dcc.Loading(
+                                type="dot",  # tipo de spinner
+                                color='#2c3e50',
+                                children = [
+                                    html.Div(
+                                        id='eva-overscale-button-bar',
+                                        style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
+                                        children=[
+                                            html.Button(  # botón Run
+                                                html.Span("Run"),
+                                                id="eva-overscale-run-button",
+                                                n_clicks=0,
                                                 disabled=True,
-                                                children=[html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
-                                                n_clicks=0,  # contador
-                                                className='btn btn-outline-primary'
+                                                className='btn btn-outline-primary'  
                                             ),
-                                            dcc.Store(id="eva-results-store"),
-                                            dcc.Download(id='eva-overscale-download')  # componente de descarga
+                                            html.Button(  # botón Reset
+                                                html.Span("Reset"),
+                                                id="eva-overscale-reset-button",
+                                                n_clicks=0,
+                                                className='btn btn-outline-primary',
+                                                disabled=False
+                                            ),
+                                            html.Div(  # contenedor de descarga
+                                                [
+                                                    html.Button(  # botón de descarga
+                                                        id='eva-overscale-results',
+                                                        disabled=True,
+                                                        children=[html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
+                                                        n_clicks=0,  # contador
+                                                        className='btn btn-outline-primary'
+                                                    ),
+                                                    dcc.Store(id="eva-results-store"),
+                                                    dcc.Download(id='eva-overscale-download')  # componente de descarga
+                                                ]
+                                            ),
+                                            html.Button(  # botón info
+                                                [html.Img(src='/assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
+                                                id='eva-overscale-info-button',
+                                                className='btn btn-outline-primary',
+                                                n_clicks=0  # contador
+                                            )
                                         ]
                                     ),
-                                    html.Button(  # botón info
-                                        [html.Img(src='/assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
-                                        id='eva-overscale-info-button',
-                                        className='btn btn-outline-primary',
-                                        n_clicks=0  # contador
-                                    )
-                                ]
+                                ] 
                             ),
+
+
+                            # html.Div(
+                            #     id='eva-overscale-button-bar',
+                            #     style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
+                            #     children=[
+                            #         html.Button(  # botón Run
+                            #             html.Span("Run"),
+                            #             id="eva-overscale-run-button",
+                            #             n_clicks=0,
+                            #             disabled=True,
+                            #             className='btn btn-outline-primary'  
+                            #         ),
+                            #         html.Button(  # botón Reset
+                            #             html.Span("Reset"),
+                            #             id="eva-overscale-reset-button",
+                            #             n_clicks=0,
+                            #             className='btn btn-outline-primary',
+                            #             disabled=False
+                            #         ),
+                            #         html.Div(  # contenedor de descarga
+                            #             [
+                            #                 html.Button(  # botón de descarga
+                            #                     id='eva-overscale-results',
+                            #                     disabled=True,
+                            #                     children=[html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
+                            #                     n_clicks=0,  # contador
+                            #                     className='btn btn-outline-primary'
+                            #                 ),
+                            #                 dcc.Store(id="eva-results-store"),
+                            #                 dcc.Download(id='eva-overscale-download')  # componente de descarga
+                            #             ]
+                            #         ),
+                            #         html.Button(  # botón info
+                            #             [html.Img(src='/assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
+                            #             id='eva-overscale-info-button',
+                            #             className='btn btn-outline-primary',
+                            #             n_clicks=0  # contador
+                            #         )
+                            #     ]
+                            # ),
 
                             html.Div(
                                 id = 'area-selection-div',

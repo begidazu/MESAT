@@ -19,9 +19,11 @@ def create_layout():  # definir función que construye el layout
                                 id='map',  # id del mapa
                                 center=[40, -3.5],  # centro por defecto
                                 zoom=7,  # zoom por defecto
+                                zoomControl = False,
                                 style={'width': '100%', 'height': '100%'},  # ocupar 100%
                                 children=[  # hijos del mapa
                                     dl.TileLayer(),  # capa base OSM
+                                    dl.ZoomControl(position="topright"),
                                     dl.FeatureGroup(  # grupo de dibujo
                                         id='draw-layer',  # id del grupo de dibujo
                                         children=[  # hijos del grupo de dibujo
@@ -73,7 +75,8 @@ def create_layout():  # definir función que construye el layout
                                     # Div to Store EVA Overscale Accordion:
                                     html.Div(
                                         id="eva-results-accordion-container",
-                                        style={"left":"10px","top":"108px","zIndex":1100,"minWidth":"260px"}
+                                        className="card shadow-sm position-absolute",
+                                        style={"left":"10px","top":"10px","zIndex":1000,"minWidth":"260px"},
                                     ),
                                     html.Div(  # contenedor de la leyenda flotante
                                         id='eva-overscale-legend-div',  # id para actualizar desde callbacks

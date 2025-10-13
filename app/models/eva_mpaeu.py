@@ -337,8 +337,15 @@ class EVA_MPAEU:
                 print(f"[{taxonid}] Exception: {e}")
                 pass
 
-        den = len(lrf_ids) or 1
-        results[target_col] = results["aggregation"] / den
+        if len(included_ids) == 0:
+            # If there is no IDs to asses:
+            results[target_col] = -9999.0
+        else:
+            den = max(len(lrf_ids), 1)  
+            results[target_col] = results["aggregation"] / den
+
+        # den = len(lrf_ids) or 1
+        # results[target_col] = results["aggregation"] / den
 
         return (
             results,
@@ -419,9 +426,15 @@ class EVA_MPAEU:
 
             except Exception:
                 continue
+        
+        if len(included_ids) == 0:
+            results[target_col] = -9999.0
+        else:
+            den = max(len(nrf_ids), 1)
+            results[target_col] = results["aggregation"] / den
 
-        den = len(nrf_ids) or 1
-        results[target_col] = results["aggregation"] / den
+        # den = len(nrf_ids) or 1
+        # results[target_col] = results["aggregation"] / den
 
         return (
             results,
@@ -471,9 +484,16 @@ class EVA_MPAEU:
                     results.loc[idxs, "aggregation"] += 5
             except Exception as e:
                 pass
+        
+        if len(included_ids) == 0:
+            # If there is no IDs assessed:
+            results[target_col] = -9999.0
+        else:
+            den = max(len(included_ids), 1)
+            results[target_col] = results["aggregation"] / den
 
-        den = len(included_ids) or 1
-        results[target_col] = results["aggregation"] / den
+        # den = len(included_ids) or 1
+        # results[target_col] = results["aggregation"] / den
 
         return results, list(dict.fromkeys(included_ids)), list(dict.fromkeys(skipped_ids))
 
