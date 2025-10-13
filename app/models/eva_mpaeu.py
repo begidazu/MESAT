@@ -526,8 +526,8 @@ class EVA_MPAEU:
 def run_selected_assessments(
     eva: EVA_MPAEU,              # instance
     grid: gpd.GeoDataFrame,      # assessment grid
-    params: Dict[str, Dict],     
-) -> gpd.GeoDataFrame:
+    params: Dict[str, Dict],
+) -> Tuple[gpd.GeoDataFrame, Dict[str, Dict[str, List[int]]]]:
     function_map = {
         "aq1":  eva.locally_rare_features_presence,
         "aq5":  eva.nationally_rare_feature_presence,
@@ -539,15 +539,38 @@ def run_selected_assessments(
 
     results = grid.copy()
     print(f"[DEBUG] AQs to run: {list(params.keys())}", file=sys.stderr, flush=True)
+
+    aq_meta: Dict[str, Dict[str, List[int]]] = {}
+
     for aq_key, func_args in params.items():
         func = function_map.get(aq_key)
         print(f"[CALLING AQ] {aq_key} with args: {func_args}", file=sys.stderr, flush=True)
         if not func:
             print(f"[SKIP] No function for {aq_key}", file=sys.stderr, flush=True)
             continue
-        results, *rest = func(assessment_grid=results, **func_args)
-        print(f"[RESULT AQ] {aq_key} mean: {results[aq_key].mean()}", file=sys.stderr, flush=True)
-    return results
+
+        if aq_key == "aq1":
+            results, included, skipped, lrf = func(assessment_grid=results, **func_args)
+            aq_meta["aq1"] = {
+                "included_ids": included,
+                "skipped_ids": skipped,
+                "lrf_ids": lrf,
+            }
+        elif aq_key == "aq5":
+            results, included, skipped, nrf = func(assessment_grid=results, **func_args)
+            aq_meta["aq5"] = {
+                "included_ids": included,
+                "skipped_ids": skipped,
+                "nrf_ids": nrf,
+            }
+        else:  # aq7, aq10, aq12, aq14
+            results, included, skipped = func(assessment_grid=results, **func_args)
+            aq_meta[aq_key] = {
+                "included_ids": included,
+                "skipped_ids": skipped,
+            }
+
+    return results, aq_meta
 
 # ===================
 # Testing / examples 

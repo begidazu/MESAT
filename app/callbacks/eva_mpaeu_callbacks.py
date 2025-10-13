@@ -29,6 +29,28 @@ AQ_LIST = (1, 5, 7, 10, 12, 14)
 
 COLORS = ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c']
 
+# Function to get the release version:
+def app_version() -> str:
+    try:
+        import subprocess
+
+        # 1) ¿Hay un tag exactamente en HEAD?
+        exact = subprocess.check_output(
+            ["git", "tag", "--points-at", "HEAD"],
+            text=True
+        ).strip()
+        if exact:
+            # si hay varios, coge el primero
+            return exact.splitlines()[0]
+
+        # 2) Si no hay tag exacto, toma el más reciente alcanzable
+        return subprocess.check_output(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            text=True
+        ).strip()
+    except Exception:
+        return "unknown"
+
 # Utility functions:
 def _parse_csv_ints(text: str):
     if not text:
@@ -1048,8 +1070,8 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 }
 
                 try:
-                    result = run_selected_assessments(eva=eva, grid=grid_gdf, params=parameters)
-                    eva_results_by_fg[gkey] = (cfg.get("name", f"group_{gkey}"), result)
+                    result, aq_meta = run_selected_assessments(eva=eva, grid=grid_gdf, params=parameters)
+                    eva_results_by_fg[gkey] = (cfg.get("name", f"group_{gkey}"), result, aq_meta)
                 except Exception as e:
                     print(f"[EVA] ERROR in FG {gkey}: {e}", file=sys.stderr)
 
@@ -1062,34 +1084,33 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             results_dir = Path(base_dir) / f"results_eva_overscale_{stamp}"
             results_dir.mkdir(parents=True, exist_ok=True)
 
-            for gkey, (name, result) in eva_results_by_fg.items():
-                filename = name.replace(" ", "_") + ".parquet"
-                result.to_parquet(results_dir / filename)
+            # Configuration with metadata:
+            fg_with_meta = {}
+            for gkey, cfg in (fg_params or {}).items():
+                name, result, aq_meta = eva_results_by_fg.get(gkey, (cfg.get("name", f"group_{gkey}"), None, {}))
+                # guarda parquet como ya haces
+                if result is not None:
+                    filename = name.replace(" ", "_") + ".parquet"
+                    result.to_parquet(results_dir / filename)
+
+                # mezcla config del usuario + metadatos de AQs
+                fg_with_meta[gkey] = {
+                    **cfg,
+                    "aqs": aq_meta,  
+                }
 
             # Save configuration
             config_path = results_dir / "configuration.json"
             config_payload = {
-                "version": "",
+                "version": app_version(),
                 "assessment_day": time.strftime("%Y_%m_%d"),
-                # Optional: area of interest EPSG and bbox
-                "aoi": {
-                    "crs": "EPSG:4326",
-                    "bbox": list(aoi_gdf.total_bounds) if not aoi_gdf.empty else None
-                },
-                "functional_groups": fg_params,             # functional group params
-                "assessment_grid": {                        # añade esto
-                    "type": grid_type,                      # "h3" | "quadrat"
-                    "size": int(grid_size) if grid_size is not None else None,
-                }  
-            } 
+                "aoi": {"crs": "EPSG:4326", "bbox": list(aoi_gdf.total_bounds) if not aoi_gdf.empty else None},
+                "assessment_grid": {"type": grid_type, "size": int(grid_size) if grid_size is not None else None},
+                "functional_groups": fg_with_meta,   
+            }
 
             with open(config_path, "w", encoding="utf-8") as f:
                 json.dump(config_payload, f, ensure_ascii=False, indent=2)
-
-
-            # config_path = results_dir / "configuration.json"
-            # with open(config_path, "w", encoding="utf-8") as f:
-            #     json.dump(fg_params, f, ensure_ascii=False, indent=2)
 
             # Create ZIP
             zip_path = Path(base_dir) / f"eva_overscale_{stamp}.zip"
