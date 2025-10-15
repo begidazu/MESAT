@@ -1518,3 +1518,27 @@ def register_management_callbacks(app: dash.Dash):
             True,   # oculto botón "Current"
             # opcional: not saltmarsh_enabled
         )
+    
+    @app.callback(
+        Output("mgmt-wind", "children", allow_duplicate=True),
+        Output("mgmt-aquaculture", "children", allow_duplicate=True),
+        Output("mgmt-vessel", "children", allow_duplicate=True),
+        Output("mgmt-defence", "children", allow_duplicate=True),
+        Output("mgmt-wind-upload", "children", allow_duplicate=True),
+        Output("mgmt-aquaculture-upload", "children", allow_duplicate=True),
+        Output("mgmt-vessel-upload", "children", allow_duplicate=True),
+        Output("mgmt-defence-upload", "children", allow_duplicate=True),
+        Output("draw-meta", "data", allow_duplicate = True),
+        Output("draw-len", "data", allow_duplicate = True),
+        Output("wind-file-store", "data", allow_duplicate = True),
+        Output("aquaculture-file-store", "data", allow_duplicate = True),
+        Output("vessel-file-store", "data", allow_duplicate = True),
+        Output("defence-file-store", "data", allow_duplicate = True),
+        Input("tabs", "value"),
+        prevent_initial_call=True
+    )
+    def clear_overlay_on_tab_change(tab_value):
+        if tab_value != "tab-management":
+            return [],[],[],[],[],[],[],[],{},0,{},{},{},{}          # limpiar overlay al salir del tab
+        raise PreventUpdate 
+    

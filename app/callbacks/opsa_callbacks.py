@@ -327,3 +327,5 @@ def register_opsa_tab_callbacks(app: dash.Dash):  # registrar callbacks del tab 
             buf.write(bio.getvalue())
 
         return dcc.send_bytes(_writer, "opsa_results.zip")
+    
+    
