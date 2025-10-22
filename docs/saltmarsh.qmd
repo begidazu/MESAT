@@ -1,3 +1,38 @@
 ---
 title: "Saltmarsh Evolution"
 ---
+
+Saltmarshes are key ecosystems that inhabit low-energy temperate intertidal areas. Provide a wide set of ecosystem services such 
+as coastal protection, carbon sequestration and food provisioning, among others. Unfortunately, like most of coastal and marine 
+ecosystems, these valuable systems face multiple threads that threaten their survival capacity. Two of the major threads that 
+threaten survival capacity of saltmarshes are sea level rise and reduced sediment availability.
+
+[Egidazu-de la Parte et al., 2025](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub) explored the 
+future distributions of three saltmarshes under varied sea  level rise and sediment availability scenarios. In this tab, you can 
+explore and download the results described by [Egidazu-de la Parte et al. (2025)](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub) under the actual sediment availability and all sea level rise scenarios.
+
+## How to navigate saltmarsh evolution?
+
+First of all, you have to select the study area where you want to focus on and the year of the predictions. Notice that the 
+baseline years for each study area are the first ones in the dropdown (i.e. Urdaibai Estuary baseline is 2017; Cantabria baseline 
+is 2014; and Cadiz Bay baseline is 2023). In the radio buttons that appear below the dropdown, you can select the desired 
+scenario to display in the map (be patient, displaying the maps could take a little bit of time). Moreover, the results of 
+habitat extents, and saltmarsh and mudflat aggregated yearly accretion rates are made available in the table below. Finally, you 
+can click the ‘Download’ button to have the results in your local computer, click ‘Info’ to open a tab with additional information 
+of the results or click ‘Reset’ to be able to explore other results.
+
+## How to interpret the results?
+
+Results should be interpreted as potential habitat distribution extents under the assumptions and limitations specified in 
+[Egidazu-de la Parte et al. (2025)](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub). Uncertainties 
+of sea level rise projections, as well as model uncertainties from model simplifications, assumptions and data limitations, could 
+be high. Thus, future projections of the habitat distributions should never be taken as absolute and precise distributions for the 
+selected year and sea level rise scenario. However, results could be used to take management decisions based on the trends of 
+habitat changes presented by the different scenarios. 
+
+With regards to habitat extent results, we recommend to compare habitat increases and decreases in relative terms to baseline 
+results. According to accretion rates, results represent the yearly aggregated accretion by saltmarsh and mudflat habitats. 
+Accretion is the major process that make saltmarshes one of the most important ecosystems in the world sequestering carbon, and 
+combined with sediment carbon content and bulk density can be used to measure sequestered carbon in each scenario.
+
+For detailed information of the applied model, scenarios and results, please read [Egidazu-de la Parte et al. (2025)](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub).
