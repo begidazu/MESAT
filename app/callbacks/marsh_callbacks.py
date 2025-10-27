@@ -1331,7 +1331,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
 
     # Callback to open the welcome modal when they click the ? button:
-
     @app.callback(
         Output("welcome-modal", "is_open", allow_duplicate=True),
         Input("help-btn", "n_clicks"),

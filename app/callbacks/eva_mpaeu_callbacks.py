@@ -1190,3 +1190,19 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 did_zoom = True
 
             return layers
+        
+        @app.callback(
+            Output("fg-configs", "data", allow_duplicate=True),
+            Output("eva-overscale-draw", "children", allow_duplicate=True),
+            Output("eva-overscale-upload", "children", allow_duplicate=True),
+            Output("eva-overscale-file-store", "data", allow_duplicate=True),
+            Output("eva-results-accordion-container", "children", allow_duplicate=True),
+            Output("eva-overscale-legend-div", "children", allow_duplicate=True),
+            Output("eva-aq-layer", "children", allow_duplicate=True),
+            Input("tabs", "value"),
+            prevent_initial_call=True
+        )
+        def clear_overlay_on_tab_change(tab_value):
+            if tab_value != "tab-eva-overscale":
+                return {},[],[],{},[],[],[]            # limpiar overlay al salir del tab
+            raise PreventUpdate
