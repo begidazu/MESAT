@@ -1,3 +1,20 @@
 ---
 title: "EVA Overscale"
 ---
+
+The Ecological Value Assessment (EVA) is an adaptation, developed by [Franco *et al.*, 2026](add book chapter link), of the Biological Valuation methodology proposed by 
+[Derous *et al.*, 2007a](https://pureportal.inbo.be/en/publications/a-concept-for-biological-valuation-in-the-marine-environment/) 
+and [Derous *et al.*, 2007b](https://bibliotekanauki.pl/articles/48603). EVA can be defined as the process of assigning a value to an area based on the 
+integration of the inherent value of its ecosystem qualities. This value is estimated as the combination 
+of a set of metrics (calculated using defined algorithms to answer multiple assessment questions) measuring 
+multiple qualities of biodiversity for multiple ecosystem components. Like Biological Valuation, EVA facilitates 
+the spatial evaluation of ecosystem properties and allows for the comparative analysis of ecological value (EV) 
+among subzones within the study area and can be applied from intertidal to deep-sea areas.
+
+EVA Overscale tab gives you the option to apply partially the EVA methodology wherever you want in the world based on 
+the work of [Ocean Biodiversity Information System, 2024](https://shiny.obis.org/distmaps/)
+
+## References
+
+OBIS (YEAR) Ocean Biodiversity Information System. Intergovernmental Oceanographic Commission of UNESCO. https://obis.org.
+Ocean Biodiversity information System (OBIS). (2024). Species distribution dashboard for MPA Europe. (version 0.1.0). https://shiny.obis.org/distmaps. Zenodo. https://doi.org/10.5281/zenodo.14524781
