@@ -328,13 +328,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                         ),
                                                         dcc.Input(
                                                             id='eva-overscale-quadrat-size',
-                                                            type="number", min=250, max=5000, step=250,
+                                                            type="number", min=2500, max=20000, step=2500,
                                                             placeholder="Quadrat Grid Size in meters",
                                                             className="form-control",
                                                             disabled=True
                                                         ),
                                                         dbc.Tooltip(
-                                                            "Quadrat grid size. Min 250, max 5000. Use multiples of 250",
+                                                            "Quadrat grid size. Min 2500 m, max 20000m. Use multiples of 2500",
                                                             target="eva-overscale-quadrat-size", placement="auto"
                                                         ),
                                                     ],
