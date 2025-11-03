@@ -1122,7 +1122,6 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             # Build legend:
             legend = _build_legend_eva_overscale()
 
-            # The last to [] is to clear the study area in tha map to better show the results:
 
             # Enable download button and return ZIP path
             return False, {"zip_path": str(zip_path)}, accordion, layer_groups, legend, [], []
