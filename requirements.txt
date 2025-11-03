@@ -26,6 +26,7 @@ copernicusmarine==2.0.1
 cryptography==44.0.2
 cycler==0.12.1
 dash==3.0.0
+dash-extensions
 dash-leaflet==1.0.15
 dask==2025.3.0
 dask-geopandas==0.4.3
