@@ -12,9 +12,52 @@ the spatial evaluation of ecosystem properties and allows for the comparative an
 among subzones within the study area and can be applied from intertidal to deep-sea areas.
 
 EVA Overscale tab gives you the option to apply partially the EVA methodology wherever you want in the world based on 
-the work of [Ocean Biodiversity Information System, 2024](https://shiny.obis.org/distmaps/)
+the work of [Ocean Biodiversity Information System, 2024](https://shiny.obis.org/distmaps/) & [OBIS, 2025](https://obis.org). 
+
+## Applied methodology
+
+Due to the data limitations to compute all assessment questions (AQs) worldwide, we applied the overscaling options using the qualitative AQs defined by 
+[Franco *et al.*, 2026](add book chapter link). In the following table the AQs applied in the overcaling option are defined:
+
+| Assessment question | Physical Accounts                                                                   |
+| ------------------  | ----------------------------------------------------------------------------------- |
+| AQ1                 | Is the subzone characterized by the presence of many Locally Rare Features?         |          
+| AQ5                 | Is the subzone characterized by the presence of many Nationally Rare Features?      |           
+| AQ7                 | Is the Feature Number in the subzone high?                                          | 
+| AQ10                | Is the presence of Ecologically Significant Features high in the subzone?           |          
+| AQ12                | Is the presence of Habitat Forming Species/Biogenic Habitats high in the subzone?   |
+| AQ14                | Is the presence of Mutualistic or Symbiotic species high in the subzone?            |
+
+We computed the AQs based on the SDMs developed by [Ocean Biodiversity Information System (2024)](https://shiny.obis.org/distmaps) available at [https://mpaeu-dist.s3.amazonaws.com/index.html#](https://mpaeu-dist.s3.amazonaws.com/index.html#). 
+The overscaling methodology follows the subsequent steps:
+    1. Creates the assessment grid from the user study area and grid configuration.
+    2. Computes the Ecological Value score (very low: 0-1; low: 1-2; medium: 2-3; high: 3-4; very high: 4-5) for each AQ:
+        2.1. AQ1: 
+            2.1.1. Parses the Locally Rare Feature TaxonIDs to be analized configured by the user.
+            2.1.2. Gets the predicted suitability maps for each TaxonID from the [Amazon S3 bucket](https://mpaeu-dist.s3.amazonaws.com/index.html#).
+            2.1.3. Converts the suitability maps into binary presence/absence maps using the percentile 10 as threshold.
+            2.1.4. Selects the Locally Rare Features based on the threshold passed by the user.
+            2.1.5. Computes the score using those TaxonIDs identified as Locally Rare Features.
+        2.2. AQ5:
+            2.2.1. Parses the Nationally Rare Features to be analized configured by the user.
+            2.2.2. Gets the predicted suitability maps for each TaxonID from the [Amazon S3 bucket](https://mpaeu-dist.s3.amazonaws.com/index.html#).
+            2.2.3. Converts the suitability maps into binary presence/absence maps using the percentile 10 as threshold.
+            2.2.4. Selects the Nationally Rare Features based on the Exclusive Economic Zone and the grid for the EEZ configured by the user. If a species is present in less than the threshold is categorized as Nationally Rare Species.
+            2.2.5. Computes the score using those TaxonIDs identified as Natinally Rare Features.
+        2.3. AQ7:
+            2.3.1. Parses the Locally Rare Feature TaxonIDs to be analized configured by the user.
+            2.3.2. Gets the predicted suitability maps for each TaxonID from the [Amazon S3 bucket](https://mpaeu-dist.s3.amazonaws.com/index.html#).
+            2.3.3. Converts the suitability maps into binary presence/absence maps using the percentile 10 as threshold.
+            2.3.4. Computes the score using all TaxonIDs passed in the other AQs.
+        2.4. AQ10:
+            2.4.1. Same as AQ7 but just with Ecollogically Significant Features.
+        2.5. AQ12:
+            2.5.1. Same as AQ7 but just with Habitat Forming Species/Biogenic Habitats.
+        2.6. AQ14:
+            2.6.1. Same as AQ7 but just with Mutualistic or Symbiotic species.
+
 
 ## References
 
-OBIS (YEAR) Ocean Biodiversity Information System. Intergovernmental Oceanographic Commission of UNESCO. https://obis.org.
+OBIS (2025) Ocean Biodiversity Information System. Intergovernmental Oceanographic Commission of UNESCO. https://obis.org.
 Ocean Biodiversity information System (OBIS). (2024). Species distribution dashboard for MPA Europe. (version 0.1.0). https://shiny.obis.org/distmaps. Zenodo. https://doi.org/10.5281/zenodo.14524781
