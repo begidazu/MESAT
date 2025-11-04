@@ -71,6 +71,7 @@ docs/_freeze/
 docs/**/.ipynb_checkpoints/
 
 # Si te aparecen estos:
+docs/_book/
 docs/.quarto/idx/
 docs/.quarto/cites/
 docs/.quarto/preview/
