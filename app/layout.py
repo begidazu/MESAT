@@ -36,6 +36,9 @@ def create_layout():  # definir función que construye el layout
                                     ),
                                     # Layers where we store the raster tiles for the saltmarsh model
                                     dl.FeatureGroup(id='reg-rcp45', children=[]),
+                                    # Layers where we store the training points for the saltmarsh model
+                                    dl.FeatureGroup(id='training-points', children=[]),
+
                                     # Layer where we store the EUNIS habitat polygons:
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
                                      # OPSA legend:

@@ -12,7 +12,8 @@ import dash_bootstrap_components as dbc  # componentes Bootstrap
 import matplotlib.pyplot as plt  # dibujar PNGs
 import plotly.express as px  # gráficas interactivas
 import numpy as np  # numérico
-import time
+import time, json
+import geopandas as gpd
 
 # =============================
 # Constantes y utilidades
@@ -961,6 +962,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
     @app.callback(  # pintar overlays para 3 escenarios
         Output("reg-rcp45","children", allow_duplicate=True),
+        Output("training-points","children", allow_duplicate=True),
         Output("reset-button", "disabled", allow_duplicate=True),
         Output("study-area-dropdown", "disabled", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
@@ -987,8 +989,83 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             data = np.ma.masked_where(data.data==0,data)  # enmascarar clase 0 como nodata por coherencia visual
             b = vrt.bounds  # extraer límites geográficos
         url = f"/raster/{area}/{scen}/{year}.png"  # construir URL del PNG servido por Flask
-        overlay = dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)  # crear capa de imagen
-        return overlay, False, True, True, True, False  # estados de UI
+
+        overlay = dl.ImageOverlay(
+            url=url,
+            bounds=[[b.bottom, b.left], [b.top, b.right]],
+            opacity=0.95
+        )
+
+        # Get the training dataset of the study areas and add it to map:
+        if area == "Urdaibai_Estuary":
+            points_path = os.path.join(os.getcwd(), "data", "Urdaibai_Estuary", "urdaibai_estuary_training_dataset.parquet")
+        elif area == "Bay_of_Santander":
+            points_path = os.path.join(os.getcwd(), "data", "Bay_of_Santander", "bay_santander_training_dataset.parquet")
+        elif area == "Cadiz_Bay":
+            points_path = os.path.join(os.getcwd(), "data", "Cadiz_Bay", "cadiz_bay_training_dataset.parquet")
+        else:
+            points_path = None
+
+        markers = []
+
+        if points_path and os.path.exists(points_path):
+            gdf_points = gpd.read_parquet(points_path)
+
+            # reproyectar a EPSG:4326 (requerido)
+            gdf_wgs = gdf_points.to_crs(epsg=4326) if gdf_points.crs is not None else gdf_points.copy()
+
+            # crear marcadores (dl.CircleMarker) por cada punto y asignar color según la clase
+            for _, row in gdf_wgs.iterrows():
+                geom = row.geometry
+                if geom is None:
+                    continue
+                # obtener lat/lon (WGS84)
+                try:
+                    lat, lon = float(geom.y), float(geom.x)
+                except Exception:
+                    try:
+                        coords = list(geom.coords)[0]
+                        lon, lat = float(coords[0]), float(coords[1])
+                    except Exception:
+                        continue
+
+                # leer valor de clase (puede ser int o etiqueta str)
+                if area == "Urdaibai_Estuary":
+                    raw = row.get('Class') if 'Class' in row.index else row.get('class', None)
+                else:
+                    raw = row.get('class') if 'class' in row.index else row.get('Class', None)
+
+                # normalizar a etiqueta y obtener color
+                habitat_label = None
+                color = "#000000"
+                try:
+                    # si es entero -> mapear desde CLASS_INFO
+                    if isinstance(raw, (int, float, np.integer)) or (isinstance(raw, (str,)) and raw.isdigit()):
+                        idx = int(raw)
+                        if idx in CLASS_INFO:
+                            habitat_label, color = CLASS_INFO[idx]
+                    else:
+                        # tratar como texto (p. ej. "Mudflat", "Saltmarsh", ...)
+                        habitat_label = str(raw) if raw is not None else "unknown"
+                        color = LABEL_TO_COLOR.get(habitat_label, "#000000")
+                except Exception:
+                    habitat_label = str(raw)
+
+                # crear CircleMarker con fillColor para que se vea el color
+                m = dl.CircleMarker(
+                    center=[lat, lon],
+                    radius=5,
+                    color="#000000",        # borde (puede ser igual al relleno)
+                    weight=1,
+                    fill=True,
+                    fillColor= color,
+                    fillOpacity=1,
+                    opacity=1,
+                    children=[dl.Tooltip(habitat_label or "")]
+                )
+                markers.append(m)
+
+        return overlay, markers, False, True, True, True, False  # estados de UI
 
     @app.callback(  # reset total
         Output("study-area-dropdown", "value", allow_duplicate=True),
@@ -1004,12 +1081,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('saltmarsh-legend', 'hidden', allow_duplicate=True),
         Output('scenario-radio', 'value'),
         Output('map', 'viewport'),
+        Output("training-points","children"),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45', {"center": [40, -3.5], "zoom": 7}]
+            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45', {"center": [40, -3.5], "zoom": 7}, []]
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario
