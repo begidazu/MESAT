@@ -95,5 +95,15 @@ def serve_reprojected_raster(area, scenario, year):  # servir PNG desde tif de c
 
     return send_file(buf, mimetype="image/png")  # devolver PNG
 
-if __name__ == "__main__":  # arrancar servidor
-    app.run(debug=True, host="0.0.0.0", port=8050, dev_tools_ui=False, dev_tools_props_check=False)
+""" if __name__ == "__main__":  # arrancar servidor en local
+    app.run(debug=True, host="0.0.0.0", port=8050, dev_tools_ui=False, dev_tools_props_check=False) """
+
+if __name__ == "__main__":  # arrancar servidor configuracion produccion
+    debug = os.getenv("DEBUG", "0") == "1"
+    app.run(
+        debug=debug,
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "8050")),
+        dev_tools_ui=False,
+        dev_tools_props_check=False
+    )

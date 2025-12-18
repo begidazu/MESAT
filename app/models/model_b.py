@@ -10,5 +10,5 @@ def run():
     # Lógica de Model B
     return {"message": "Resultado de Model B"}
 
-# shp = gpd.read_file(r"D:\Papers\Saltmarshes\Modelos\IH\Santander\data\random_500_points.shp")
-# shp.to_parquet(r"D:\Papers\Saltmarshes\Modelos\IH\Santander\data\santander_bay_training_dataset.parquet")
+# shp = gpd.read_parquet(r"C:\Users\beñat.egidazu\Downloads\Fish.parquet")
+# shp.to_file(r"C:\Users\beñat.egidazu\Downloads\Fish.shp")

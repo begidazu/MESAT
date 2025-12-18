@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Entornos / secretos
+.env
+*.log
+
+# Datos
+data/
+
+# Results:
+results/
+
+# Assets
+assets/
+
+# Artefactos de documentación
+_book/
+
+# Frontend build artifacts (por si aparecen en el futuro)
+dist/
+build/
+
+# Cachés
+.cache/
+.pytest_cache/
