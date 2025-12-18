@@ -1,5 +1,5 @@
---find-links wheels
-GDAL==3.4.3
+//--find-links //wheels
+//GDAL==3.4.3
 
 affine==2.4.0
 annotated-types==0.7.0
