@@ -20,7 +20,7 @@ copernicusmarine==2.0.1
 cryptography==44.0.2
 cycler==0.12.1
 
-dash==3.0.0
+dash>=3.0.4,<4
 dash_bootstrap_components==2.0.4
 dash-extensions
 dash-leaflet==1.0.15
