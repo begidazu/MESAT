@@ -8,6 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Dependencias del sistema para stack geoespacial + compilación si hiciera falta
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     gdal-bin \
@@ -17,6 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgeos-dev \
     libspatialindex-dev \
     build-essential \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # (Opcional pero recomendado) actualiza pip para que resuelva wheels mejor
