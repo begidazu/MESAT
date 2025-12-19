@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2-dev \
     libxslt1-dev \
     zlib1g-dev \
+    python3-matplotlib \
     && rm -rf /var/lib/apt/lists/*
 
 # (Opcional pero recomendado) actualiza pip para que resuelva wheels mejor

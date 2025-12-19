@@ -57,7 +57,7 @@ geopandas==1.0.1
 geopy==2.4.1
 h3
 lxml==5.3.1
-matplotlib==3.9.2
+#matplotlib==3.9.2
 mercantile==1.2.1
 msgpack==1.1.0
 nest-asyncio==1.6.0
