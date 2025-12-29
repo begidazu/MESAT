@@ -10,7 +10,7 @@ threaten survival capacity of saltmarshes are sea level rise and reduced sedimen
 [Egidazu-de la Parte *et al.*, 2025](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub) explored the 
 future distributions of three saltmarshes under varied sea  level rise and sediment availability scenarios. In this tab, you can 
 explore and download the results described by [Egidazu-de la Parte *et al.* (2025)](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub) 
-under the sea level rise scenarios and the actual sediment availability scenario used in the study.
+under the sea level rise scenarios and the actual sediment availability scenario used in the study. You can also download the complete results and the trained models [here](https://github.com/begidazu/MESAT/tree/main/results/saltmarshes).
 
 ## How to navigate saltmarsh evolution?
 

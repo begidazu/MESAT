@@ -33,7 +33,7 @@ These sections are detailed in their corresponding sections and the model codes 
 Transparency and reproducibility are an integral part of the research. Thus, here you will find all the details 
 of the approaches and decisions taken in this work. This is a complement to the available scientific articles, [`thesis`](https://doi.org/10.1016/j.scitotenv.2024.178164) 
 and [`software`](https://github.com/begidazu/MESAT). Public data sources and/or data gathered in the thesis are available at [`data`](https://github.com/begidazu/MESAT/tree/main/data) and 
-results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results) (METER LOS NETCDF completos a poder ser, LOS EVA y LO DE FISH). Due to privacy and data ownership, 
+results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results) (METER LO DE FISH). Due to privacy and data ownership, 
 some source data may not be available in the MESAT application. In those cases, please contact <benat.egidazu@bc3research.org>. However, data sources also include other author contributions, in 
 that case, you may need to contact those authors for specific datasets. 
 
