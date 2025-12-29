@@ -18,12 +18,12 @@ under the sea level rise scenarios and the actual sediment availability scenario
 2. Select the prediction year you want to explore (the first year of the list is the baseline, so it has the same results for all sea level rise scenarios).
 3. Choose the sea level rise scenario that you want to display in the map from the radio buttons that appear below the dropdown (be patient, it can take a little bit of time).
 4. Explore the habitat distribution changes for the sea level rise scenarios from the selected study area and year in the tables. Also explore aggregated yearly accretion rates for saltmarsh and mudflat habitats.
-5. Download the results if needed with the 'Download' button or get additional information with the 'Info' button.
+5. Download the results, if needed, with the 'Download' button or get additional information with the 'Info' button.
 6. Reset the results to restart the configuration.
 
 ## How to interpret the results?
 
-Results should be interpreted as potential habitat distributions and extents under the assumptions and limitations specified in 
+Results should be interpreted as potential habitat distributions and extents under the assumptions and limitations in 
 [Egidazu-de la Parte *et al.* (2025)](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub). Uncertainties 
 of sea level rise projections, as well as model uncertainties from model simplifications, assumptions and data limitations, could 
 be high. Thus, future projections of the habitat distributions should never be taken as absolute and precise distributions for the 

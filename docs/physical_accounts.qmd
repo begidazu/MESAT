@@ -5,7 +5,10 @@ title: "Physical Accounts"
 The System of Environmental-Economic Accounting - Ecosystem Accounting (hereinafter SEEA-EA) is a globally adopted statistical 
 standard on ecosystem accounts, which constitutes an integrated and comprehensive statistical framework for organizing data about 
 ecosystems and is in use by more than 50 countries worldwide. The SEEA-EA is divided into stock and flow accounts, that can 
-be either divided into physical and monetary accounts. Physical Stock Acounts are divided into ecosystem/habitat extent and condition. 
+be either divided into physical and monetary accounts. Physical Stock Acounts are divided into ecosystem/habitat extent and condition.
+
+![SEEA-EA accounting framework. Subgroups of ecosystem accounts and the interconnections between SEEA-EA, classification systems, and condition indicators. (adapted from SEEA). (IUCN GET: IUCN Global Ecosystem Typology; WFD: Water Framework Directive; MSFD: Marine Strategy Framework Directive; BV – Biological Valuation; EVA – Ecological Value Assessment).](images/SEEAEA.png){fig-cap="SEEA-EA" width=75%}
+
 In this section you can explore the Physical Stock Accounts of three study  areas investigated by 
 [Egidazu-de la Parte *et al.* (2026)](https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit#heading=h.i7jku579q3oc).
 
@@ -19,7 +22,7 @@ In this section you can explore the Physical Stock Accounts of three study  area
 ## How to interpret the results?
 
 Results of the Physical Accounts reflect the EUNIS habitat **extents (km^2^)** (2023) based on [Vasquez *et al.*, 2023](Vasquez, M., Ségeat, B., Cordingley, A., Tilby, E., Wikström, S., Ehrnsten, E., Al Hamdani, Z., Agnesi, S., Andersen, M. S., Annunziatellis, A., Askew, N., Bekkby, T., Bentes, L., Daniels, E., Doncheva, V., Drakopoulou, V., Ernstsen, V. B., Gonçalves, J., Karvinen, V., Laamanen-Nicolas, L., Lillis, H., Loukaidi, V., Manca, E., McGrath, F., Mo, G., Monteiro, P., Muresan, M., Nygard, H., O'keeffe, E., Pelembe, T., Radicioli, M., Sakellariou, D., Teaca, A., Todorova, V., Tunesi, L., Woods, H. (2023). EUSeaMap 2023, A European broad-scale seabed habitat map, Technical Report. Ref. EASME/EMFF/2020/3.1.11/Lot3/SI2.843624 – EMODnet Thematic Lot n° 3 – Seabed Habitats - D1.15. EMODnet. https://doi.org/10.13155/97116) 
-and **condition** indicators (from very low condition - 0 to 1 - to very high condition - 4 to 5 -) based on the Ecological Value Assessment (EVA) methodology developed by [Franco *et al.*, 2026](add book chapter link). 
+and **condition** indicators (from very low condition - 0 to 1 - to very high condition - 4 to 5 -) based on the Ecological Value Assessment (EVA) methodology developed by [Franco *et al.*, 2026](add book chapter link) 
 and adapted in the study of [Egidazu-de la Parte *et al.* (2026)](https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit#heading=h.i7jku579q3oc).
 
 Habitat condition should be interpreted as a ranking criteria of areas with better condition rather than an absolute condition 

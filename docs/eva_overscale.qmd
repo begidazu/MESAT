@@ -16,10 +16,10 @@ EVA Overscale tab gives you the option to apply partially the EVA methodology wo
 
 ## Applied methodology
 
-Due to the data limitations to compute all assessment questions (AQs) worldwide, in particular those AQs related to abundance metrics, we applied the overscaling options using the qualitative AQs defined by 
-[Franco *et al.* (2026)](add book chapter link). In the following table the AQs applied in the overcaling option are defined:
+Due to the data limitations to compute all assessment questions (AQs) worldwide, in particular those AQs related to abundance metrics, we applied the overscaling options using the AQs that could be assessed using Species Distribution Models. 
+In the following table the AQs applied in the overcaling option are defined:
 
-| Assessment question | Physical Accounts                                                                   |
+| Assessment question                                                                                       |
 | ------------------  | ----------------------------------------------------------------------------------- |
 | AQ1                 | Is the subzone characterized by the presence of many Locally Rare Features?         |          
 | AQ5                 | Is the subzone characterized by the presence of many Nationally Rare Features?      |           
@@ -65,7 +65,7 @@ For more details about the methodology see [Franco *et al.* (2026)](add book cha
 
 ## References
 
-Derous, S., Agardy, T., Hillewaert, H., Hostens, K., Jamieson, G., Lieberknecht, L., Mees, J., Moulaert, I., Olenin, S., Paelinckx, D., Rabaut, M., Rachor, E., Roff, J., Stienen, E.W.M., van der Wal, J.T., Van Lancker, V., Verfaillie, E., Vincx, M., Weslawski, J.M. and Degraer, S., A concept for biological valuation in the marine environment, *Oceanologia 49* (1) (2007) 99-128.
-Derous, S., Austen, M, Claus, S., Daan, N., Dauvin, J.-C., Deneudt, K., Depestele, J., Desroy, N., Heessen, H., Hostens, K., Marboe, A.H., Lescrauwaet, A.-K., Moreno, M.P., Moulaert, I., Paelinckx, D., Rabaut, M., Rees, H., Ressurreicao, A., Roff, J., Santos, P.T., Speybroeck, J., Stienen, E.W.M., Tatarek, A., Hofstede, R.T., Vincx, M., Zarzycki, T. and Degraer, S., Building on the concept of marine biological valuation with respect to translating it to a practical protocol: Viewpoints derived from a joint ENCORA-MARBEF initiative, *Oceanologia 49* (4) (2007) 579-586. https://bibliotekanauki.pl/articles/48603
-OBIS (2025) Ocean Biodiversity Information System. Intergovernmental Oceanographic Commission of UNESCO. https://obis.org.
-Ocean Biodiversity information System (OBIS). (2024). Species distribution dashboard for MPA Europe. (version 0.1.0). https://shiny.obis.org/distmaps. Zenodo. https://doi.org/10.5281/zenodo.14524781
+1. Derous, S., Agardy, T., Hillewaert, H., Hostens, K., Jamieson, G., Lieberknecht, L., Mees, J., Moulaert, I., Olenin, S., Paelinckx, D., Rabaut, M., Rachor, E., Roff, J., Stienen, E.W.M., van der Wal, J.T., Van Lancker, V., Verfaillie, E., Vincx, M., Weslawski, J.M. and Degraer, S., A concept for biological valuation in the marine environment, *Oceanologia 49* (1) (2007) 99-128.
+2. Derous, S., Austen, M, Claus, S., Daan, N., Dauvin, J.-C., Deneudt, K., Depestele, J., Desroy, N., Heessen, H., Hostens, K., Marboe, A.H., Lescrauwaet, A.-K., Moreno, M.P., Moulaert, I., Paelinckx, D., Rabaut, M., Rees, H., Ressurreicao, A., Roff, J., Santos, P.T., Speybroeck, J., Stienen, E.W.M., Tatarek, A., Hofstede, R.T., Vincx, M., Zarzycki, T. and Degraer, S., Building on the concept of marine biological valuation with respect to translating it to a practical protocol: Viewpoints derived from a joint ENCORA-MARBEF initiative, *Oceanologia 49* (4) (2007) 579-586. https://bibliotekanauki.pl/articles/48603
+3. OBIS (2025) Ocean Biodiversity Information System. Intergovernmental Oceanographic Commission of UNESCO. https://obis.org.
+4. Ocean Biodiversity information System (OBIS). (2024). Species distribution dashboard for MPA Europe. (version 0.1.0). https://shiny.obis.org/distmaps. Zenodo. https://doi.org/10.5281/zenodo.14524781

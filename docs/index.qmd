@@ -9,23 +9,32 @@ title-block-style: default
 
 # Introduction to the application
 
-The Ph.D. TITLE web application aims to be a Proof of Concept of a potential future tool that assesses marine
-economic activities affection to habitats and ecosystem service delivery. This information is crucial for informed
-decission-making and can promote better-designed Marine Spatial Plans (MSPs) that minimize activity impact and 
-maximize ecosystem service delivery, including future climate change effects into habitat distributions and ecosystem
-service provision.
+The MESAT (Marine Ecosystems & Services Affection Tool) web application is a Proof of Concept of a potential future tool enabling the assessment of marine
+economic activities' affection to ecosystems and ecosystem service delivery, aligned with international statistical standards on ecosystem accounting. It has been developed under the Ph.D. 'TITLE PHD' 
+of the Doctoral Programme in Marine Environment and Resources from the University of the Basque Country, and under the grant PRE2022-102042 funded by MICIU/AEI/ 10.13039/501100011033 and by the María de Maeztu Unit of Excellence 
+2023-2027 Ref. CEX2021-001201-M, funded by MCIN/AEI /10 .13039/501100011033; and by the Basque Government through the BERC 2022-2025 programme. 
 
-Ph.D. TITLE web application is divided into five main sections: (1) management scenarios; (2) saltmarsh evolution; 
-(3) physical accounts; (4) EVA overscale; and (5) fish stocks. In all cases, model codes used to obtain the results of
-Ph.D Title are available in the GitHub repository [app/models](https://github.com/begidazu/PhD_Web_App/tree/main/app/models) and will 
-be further explained in the corresponding sections.
+The knowledge about how economic activities will potentilly affect ecosystems and the ecosystem service delivery, also under climate change projections, is crucial for informed
+decission-making and can promote climate-ready Marine Spatial Plans (MSPs) that minimize activity impact and maximize ecosystem service delivery under climate change scenarios. It also promotes the alignment of economic activities in space and time with present and
+future distributions of ecosystems, advancing long-term ecosystem-based MSPs. Moreover, the use of the System of Environmental Economic Accounting - Ecosystem Accounting (SEEA-EA) statistical framework aligns MSPs with international and national entities.  
+
+The MESAT application is divided into five main sections: 
+
+1. Management Scenarios
+2. Saltmarsh Evolution 
+3. Physical Accounts
+4. EVA Overscale
+5. Fish Stocks
+
+These sections are detailed in their corresponding sections and the model codes used to obtain the results of the MESAT app are available in the GitHub repository [app/models](https://github.com/begidazu/PhD_Web_App/tree/main/app/models) ADD SALTMARSH CODES.
 
 ## About this Documentation
 
 Transparency and reproducibility are an integral part of the research. Thus, here you will find all the details 
 of the approaches and decisions taken in this work. This is a complement to the available scientific articles, [`thesis`](https://doi.org/10.1016/j.scitotenv.2024.178164) 
-and codes. Public data sources and/or data gathered in the thesis are available at [`data`]() and results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results).
-In case some desired results are not available, please contact: <benat.egidazu@bc3research.org>. However, data sources 
-also include other author contributions, in that case, you may need to contact those authors for specific datasets.
+and [`software`](https://github.com/begidazu/MESAT). Public data sources and/or data gathered in the thesis are available at [`data`](https://github.com/begidazu/MESAT/tree/main/data) and 
+results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results) (METER LOS NETCDF completos a poder ser, LOS EVA y LO DE FISH). Due to privacy and data ownership, 
+some source data may not be available in the MESAT application. In those cases, please contact <benat.egidazu@bc3research.org>. However, data sources also include other author contributions, in 
+that case, you may need to contact those authors for specific datasets. 
 
 
