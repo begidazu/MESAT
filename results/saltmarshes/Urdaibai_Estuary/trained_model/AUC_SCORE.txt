@@ -1,0 +1,13 @@
+ROC AUC SCORE values: [0.98363326 0.96767564 0.94760892 0.9527472  0.98515264 0.93793269
+ 0.94709055 0.95779617 0.94550345 0.97496817 0.93210414 0.9820957 
+ 0.96896455 0.98902581 0.93461651 0.99306442 0.94979557 0.94970622
+ 0.95875844 0.96134778 0.9922696  0.95955752 0.9347786  0.9920736 
+ 0.94900785]
+
+Average ROC AUC Score in the Outer CV process: 0.961891 +- (0.019418)
+
+Parameters of the Best Estimator obtained in the Inner Loop (Notice that this is the estimator that we use in the modelling):
+Learning rate: 0.027391737850754105
+Subsample: 0.3640631276341636      
+Number of Estimators: 139
+Max Depth: 2
