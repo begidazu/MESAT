@@ -61,7 +61,18 @@ For more details about the methodology see [Franco *et al.* (2026)](add book cha
 
 ## How to navigate EVA Overscale?
 
-## How to interpret affection results?
+1. Draw or upload a file to select the context of analysis.
+2. Create the desired functional groups clicking on the + button.
+3. Configure each funtional group (taxon IDs are based on [WoRMS](https://www.marinespecies.org/)). Click on the created buttons to open the configuration window and save.
+4. Configure the desired assessment grid.
+5. Run the assessment to obtain the EVA results in the desired context and download the results if needed.
+6. Reset the results to restart the configuration.  
+
+## How to interpret EVA overscale results?
+
+EVA Overscale results could be interpreted as a condition ranking, based on biodiversity and rareness criteria, of the desired context. It reflects the relaive biodiverity and/or rareness importance in each assessment grid based on the previous AQs, reflecting the 
+areas in the context with the highest value for Locally Rare Features (AQ1), Nationally Rare Features (AQ5), overall biodiversity (AQ7), Ecologivally Significant Features (AQ10), Habitat Forming Species and Biogenic Habitats (AQ12) and Mutualistic or Symbiotic Species (AQ14). 
+It can also be used to identify areas with low condition where either policy or management interventions are needed. Moreover, for a more complete condition assessment, users can incorporate to these results other ecological characteristicts using their own data. 
 
 ## References
 
