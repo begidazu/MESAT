@@ -36,6 +36,25 @@ def create_layout():  # definir función que construye el layout
                                     ),
                                     # Layers where we store the raster tiles for the saltmarsh model
                                     dl.FeatureGroup(id='reg-rcp45', children=[]),
+                                    # Layers where we store the training points for the saltmarsh model
+                                    dl.FeatureGroup(id='training-points', children=[]),
+                                    html.Div(  # contenedor de la leyenda flotante
+                                        id='training-points-legend-div',  # id para actualizar desde callbacks
+                                        style={  # estilos para posicionarla sobre el mapa
+                                            'position': 'absolute',  # posición absoluta dentro del mapa
+                                            'bottom': '10px',  # distancia al borde inferior
+                                            'left': '10px',  # distancia al borde izquierdo
+                                            'zIndex': 1001,  # por encima del mapa
+                                            'background': 'rgba(255,255,255,0.92)',  # fondo semitransparente
+                                            'border': '1px solid #ccc',  # borde sutil
+                                            'borderRadius': '8px',  # esquinas redondeadas
+                                            'padding': '8px 10px',  # espaciado interno
+                                            'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  # sombra suave
+                                            'fontSize': '12px'  # tamaño de fuente
+                                        },
+                                        children=[]  # vacío al inicio; se completa al ejecutar OPSA
+                                    ),
+
                                     # Layer where we store the EUNIS habitat polygons:
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
                                      # OPSA legend:
