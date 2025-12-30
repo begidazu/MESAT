@@ -129,6 +129,27 @@ def row3(*cols):
         cols.append(dbc.Col(html.Div(), md=4))   # Col vacío mantiene el hueco/alineación
     return dbc.Row(cols, className="g-2 mb-2", align="center")
 
+def _legend_item(color: str, label: str) -> html.Div:  # crear un ítem de leyenda con color sólido
+    return html.Div(  # contenedor del ítem
+        className="legend-item",
+        style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'},  # estilo
+        children=[  # hijos
+            html.Div(style={'width':'14px','height':'14px','background':color,'border':'1px solid #888', 'borderRadius': '50%'}),  # cuadrito color
+            html.Span(label)  # texto del ítem
+        ]
+    )
+
+def _build_training_points_legend() -> html.Div:  # construir la leyenda completa
+    colors = ['#8B4513','#006400','#636363','#31C2F3']  # paleta 
+    labels = ['Mudflat','Saltmarsh','Upland Areas','Channel']  # etiquetas
+    return html.Div(  # contenedor de leyenda
+        className="legend",
+        children=[
+            html.Div("Training Points", style={'fontWeight':'bold','marginBottom':'6px'}),  # título
+            *[_legend_item(c, l) for c, l in zip(colors, labels)]  # items de clases
+        ]
+    )
+
 
 
 # =============================
@@ -914,12 +935,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
     @app.callback(
         Output("reg-rcp45", "children", allow_duplicate=True),
+        Output("training-points","children", allow_duplicate= True),
+        Output("training-points-legend-div", "children", allow_duplicate= True),
         Input("tabs", "value"),
         prevent_initial_call=True
     )
     def clear_overlay_on_tab_change(tab_value):
         if tab_value != "tab-saltmarsh":
-            return []            # limpiar overlay al salir del tab
+            return [], [], []            # limpiar overlay al salir del tab
         raise PreventUpdate       # no toques nada cuando estás en Saltmarsh
 
 
@@ -968,6 +991,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output("year-dropdown", "disabled", allow_duplicate=True),
         Output("run-button", "disabled"),
         Output('marsh-results', 'hidden'),
+        Output("training-points-legend-div", "children", allow_duplicate=True),
         Input("run-button","n_clicks"),
         State("study-area-dropdown","value"),
         State("year-dropdown","value"),
@@ -975,7 +999,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
     )
     def update_map(n, area, year):  # añadir overlays
         if not (n and area and year):
-            return [], [], [], True, False, False, True, True
+            return [], [], True, False, False, True, True, []
         
         scen = 'regional_rcp45'
         tif_dir = os.path.join(os.getcwd(),"results","saltmarshes",area,scen)  # construir ruta al directorio de TIFs
@@ -1007,6 +1031,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             points_path = None
 
         markers = []
+
+        legend = _build_training_points_legend()
 
         if points_path and os.path.exists(points_path):
             gdf_points = gpd.read_parquet(points_path)
@@ -1056,16 +1082,16 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     center=[lat, lon],
                     radius=5,
                     color="#000000",        # borde (puede ser igual al relleno)
-                    weight=1,
+                    weight=2,
                     fill=True,
                     fillColor= color,
-                    fillOpacity=1,
+                    fillOpacity=0.9,
                     opacity=1,
                     children=[dl.Tooltip(habitat_label or "")]
                 )
                 markers.append(m)
 
-        return overlay, markers, False, True, True, True, False  # estados de UI
+        return overlay, markers, False, True, True, True, False, legend  # estados de UI
 
     @app.callback(  # reset total
         Output("study-area-dropdown", "value", allow_duplicate=True),
@@ -1082,12 +1108,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('scenario-radio', 'value'),
         Output('map', 'viewport'),
         Output("training-points","children"),
+        Output("training-points-legend-div", "children"),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45', {"center": [40, -3.5], "zoom": 7}, []]
+            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45', {"center": [40, -3.5], "zoom": 7}, [], []]
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario
