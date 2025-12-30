@@ -7,7 +7,7 @@ import math, os, pyproj
 import numpy as np
 import geopandas as gpd
 import pandas as pd
-import s3fs
+import s3fs, sys
 import pyarrow as pa
 import pyarrow.dataset as ds
 import rasterio as rio
@@ -16,7 +16,7 @@ from shapely import intersects
 from rasterio.features import geometry_mask
 from rasterio.windows import from_bounds, Window
 from pathlib import PurePosixPath
-from eva_obis import create_h3_grid, create_quadrat_grid
+from .eva_obis import create_h3_grid, create_quadrat_grid
 
 from scipy.spatial import cKDTree
 
@@ -80,7 +80,8 @@ class MPAEU_AWS_Utils:
                 masked_prediction = np.where(prediction_mask==1, prediction, np.nan)
                 masked_presence = np.where(masked_prediction>=presence_threshold, 1, np.where((masked_prediction<presence_threshold) & (masked_prediction>=0), 0, np.nan))
                 left, bottom, right, top = src.bounds
-                extent = (left, bottom, right, top) 
+                extent = (left, bottom, right, top)
+                print(f"[{taxonid}] Presence cells (value == 1): {np.nansum(masked_presence == 1)}", file=sys.stderr, flush=True) 
                 return masked_prediction, masked_presence, extent, src.crs
         
 
@@ -260,6 +261,13 @@ class EVA_MPAEU:
                     y[nan_and_inside] = vals_known[indices]
 
 
+        print(f"[DEBUG] Grid CRS: {grid.crs}", file=sys.stderr, flush=True)
+        print(f"[DEBUG] Raster CRS: {raster_crs}", file=sys.stderr, flush = True)
+        print(f"[DEBUG] Raster shape: {presence.shape}", file=sys.stderr, flush=True)
+        print(f"[DEBUG] Raster extent: {extent}",file=sys.stderr, flush=True)
+        print(f"[DEBUG] Grid bounds: {grid.total_bounds}", file=sys.stderr, flush=True)
+        print(f"[DEBUG] Intersection: {box(*grid.total_bounds).intersects(box(*extent))}", file=sys.stderr, flush=True)
+
         # --- Return grid indices with presence  ---
         return [idx_pos_map[i] for i in np.where(y == 1.0)[0]]
 
@@ -308,23 +316,36 @@ class EVA_MPAEU:
                 continue
 
             included_ids.append(taxonid)
-            print(f"[{taxonid}] Raster leído correctamente")
+            print(f"[{taxonid}] Raster leído correctamente", file=sys.stderr, flush=True)
+
 
             # Presenc cells
             try:
                 idxs = self._present_indices_with_nearest_optimized(results, presence, extent, raster_crs)
+                print(f"[{taxonid}] RASTER extent: {extent}")
+                print(f"[{taxonid}] GRID bounds: {results.total_bounds}")
+                print(f"[{taxonid}] Intersecta: {box(*extent).intersects(box(*results.total_bounds))}")
                 coverage_pct = (len(idxs) / total_cells) * 100 if total_cells else 0.0
-
+                print(f"[{taxonid}] Coverage percentage: {coverage_pct}", file=sys.stderr, flush=True)
                 if coverage_pct <= cut_lrf:
                     lrf_ids.append(taxonid)
 
                     if idxs:
                         results.loc[idxs, "aggregation"] += 5
+                        print(f"[{taxonid}] acumulado", file=sys.stderr, flush=True)
             except Exception as e:
+                print(f"[{taxonid}] Exception: {e}")
                 pass
 
-        den = len(lrf_ids) or 1
-        results[target_col] = results["aggregation"] / den
+        if len(included_ids) == 0:
+            # If there is no IDs to asses:
+            results[target_col] = -9999.0
+        else:
+            den = max(len(lrf_ids), 1)  
+            results[target_col] = results["aggregation"] / den
+
+        # den = len(lrf_ids) or 1
+        # results[target_col] = results["aggregation"] / den
 
         return (
             results,
@@ -387,12 +408,14 @@ class EVA_MPAEU:
             except Exception:
                 skipped_ids.append(taxonid)
                 continue
-
+            
+            print(f"[{taxonid}] Presence cells (value == 1): {np.nansum(presence == 1)}", file=sys.stderr, flush=True)
             included_ids.append(taxonid)
 
             try:
                 # --- 3) Check if TaxonID i presence cover on EEZ grid ---
                 eez_idxs = self._present_indices(eez_grid, presence, extent, raster_crs)
+                print(f"[{taxonid}] Presence cells EEZ: {len(eez_idxs)}", file=sys.stderr, flush=True)
                 coverage_pct = (len(eez_idxs) / total_eez_cells) * 100 if total_eez_cells else 0.0
 
                 if coverage_pct <= cut_nrf:
@@ -403,9 +426,15 @@ class EVA_MPAEU:
 
             except Exception:
                 continue
+        
+        if len(included_ids) == 0:
+            results[target_col] = -9999.0
+        else:
+            den = max(len(nrf_ids), 1)
+            results[target_col] = results["aggregation"] / den
 
-        den = len(nrf_ids) or 1
-        results[target_col] = results["aggregation"] / den
+        # den = len(nrf_ids) or 1
+        # results[target_col] = results["aggregation"] / den
 
         return (
             results,
@@ -455,9 +484,16 @@ class EVA_MPAEU:
                     results.loc[idxs, "aggregation"] += 5
             except Exception as e:
                 pass
+        
+        if len(included_ids) == 0:
+            # If there is no IDs assessed:
+            results[target_col] = -9999.0
+        else:
+            den = max(len(included_ids), 1)
+            results[target_col] = results["aggregation"] / den
 
-        den = len(included_ids) or 1
-        results[target_col] = results["aggregation"] / den
+        # den = len(included_ids) or 1
+        # results[target_col] = results["aggregation"] / den
 
         return results, list(dict.fromkeys(included_ids)), list(dict.fromkeys(skipped_ids))
 
@@ -490,8 +526,8 @@ class EVA_MPAEU:
 def run_selected_assessments(
     eva: EVA_MPAEU,              # instance
     grid: gpd.GeoDataFrame,      # assessment grid
-    params: Dict[str, Dict],     
-) -> gpd.GeoDataFrame:
+    params: Dict[str, Dict],
+) -> Tuple[gpd.GeoDataFrame, Dict[str, Dict[str, List[int]]]]:
     function_map = {
         "aq1":  eva.locally_rare_features_presence,
         "aq5":  eva.nationally_rare_feature_presence,
@@ -502,48 +538,75 @@ def run_selected_assessments(
     }
 
     results = grid.copy()
+    print(f"[DEBUG] AQs to run: {list(params.keys())}", file=sys.stderr, flush=True)
+
+    aq_meta: Dict[str, Dict[str, List[int]]] = {}
+
     for aq_key, func_args in params.items():
         func = function_map.get(aq_key)
+        print(f"[CALLING AQ] {aq_key} with args: {func_args}", file=sys.stderr, flush=True)
         if not func:
+            print(f"[SKIP] No function for {aq_key}", file=sys.stderr, flush=True)
             continue
-        results, *rest = func(assessment_grid=results, **func_args)
-    return results
+
+        if aq_key == "aq1":
+            results, included, skipped, lrf = func(assessment_grid=results, **func_args)
+            aq_meta["aq1"] = {
+                "included_ids": included,
+                "skipped_ids": skipped,
+                "lrf_ids": lrf,
+            }
+        elif aq_key == "aq5":
+            results, included, skipped, nrf = func(assessment_grid=results, **func_args)
+            aq_meta["aq5"] = {
+                "included_ids": included,
+                "skipped_ids": skipped,
+                "nrf_ids": nrf,
+            }
+        else:  # aq7, aq10, aq12, aq14
+            results, included, skipped = func(assessment_grid=results, **func_args)
+            aq_meta[aq_key] = {
+                "included_ids": included,
+                "skipped_ids": skipped,
+            }
+
+    return results, aq_meta
 
 # ===================
 # Testing / examples 
 # ===================
-if __name__ == "__main__":
-    # Study Area .parquet path
-    aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria\BBT_Gulf_of_Biscay.parquet"
+# if __name__ == "__main__":
+#     # Study Area .parquet path
+#     aoi_path = r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria\BBT_Gulf_of_Biscay.parquet"
 
-    # Create H3 grid at resolution 8
-    grid = create_h3_grid(aoi_path, 8)
-    # grid = create_quadrat_grid(aoi_path, 10000)  # alternatively, a quadrat grid of 10km cells
+#     # Create H3 grid at resolution 8
+#     grid = create_h3_grid(aoi_path, 8)
+#     # grid = create_quadrat_grid(aoi_path, 10000)  # alternatively, a quadrat grid of 10km cells
 
-    # Taxon IDs for different assessments
-    lrf_id_list  = [495082,127165]
-    nrf_id_list  = [495082,  145782]
-    esf_id_list  = [145092, 145367, 145782]
-    hfs_bh_id_list = [145108,  145735]
-    mss_id_list  = [495082, 145092]
+#     # Taxon IDs for different assessments
+#     lrf_id_list  = [495082,127165]
+#     nrf_id_list  = [495082,  145782]
+#     esf_id_list  = [145092, 145367, 145782]
+#     hfs_bh_id_list = [145108,  145735]
+#     mss_id_list  = [495082, 145092]
 
-    fn_ids = lrf_id_list + nrf_id_list + esf_id_list + hfs_bh_id_list + mss_id_list
-    all_ids_unique = list(dict.fromkeys(fn_ids))  
+#     fn_ids = lrf_id_list + nrf_id_list + esf_id_list + hfs_bh_id_list + mss_id_list
+#     all_ids_unique = list(dict.fromkeys(fn_ids))  
 
-    # Create EVA instance with parameters
-    eva = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog") #Check MPAEU project for further model configurations: https://iobis.github.io/mpaeu_docs/datause.html
+#     # Create EVA instance with parameters
+#     eva = EVA_MPAEU(model="mpaeu", method="ensemble", scenario="current_cog") #Check MPAEU project for further model configurations: https://iobis.github.io/mpaeu_docs/datause.html
 
-    params = {
-        "aq1":  {"taxon_ids": lrf_id_list, "cut_lrf": 100},
-        "aq5":  {"taxon_ids": nrf_id_list, "country_name": "Spain", "grid_size": 10_000, "cut_nrf": 100},
-        "aq7":  {"taxon_ids": all_ids_unique},
-        "aq10": {"taxon_ids": esf_id_list},
-        "aq12": {"taxon_ids": hfs_bh_id_list},
-        "aq14": {"taxon_ids": mss_id_list},
-    }
+#     params = {
+#         "aq1":  {"taxon_ids": lrf_id_list, "cut_lrf": 100},
+#         "aq5":  {"taxon_ids": nrf_id_list, "country_name": "Spain", "grid_size": 10000, "cut_nrf": 100},
+#         "aq7":  {"taxon_ids": all_ids_unique},
+#         "aq10": {"taxon_ids": esf_id_list},
+#         "aq12": {"taxon_ids": hfs_bh_id_list},
+#         "aq14": {"taxon_ids": mss_id_list},
+#     }
 
-    # Execute the assessment:
-    result = run_selected_assessments(eva=eva, grid=grid, params=params)
+#     # Execute the assessment:
+#     result = run_selected_assessments(eva=eva, grid=grid, params=params)
 
-    # Save results as parquet file:
-    result.to_parquet(os.path.join(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae.parquet"))
+#     # Save results as parquet file:
+#     result.to_parquet(os.path.join(r"C:\Users\beñat.egidazu\Desktop\Tests\EVA_OBIS\Cantabria", "subtidal_macroalgae.parquet"))

@@ -12,7 +12,8 @@ import dash_bootstrap_components as dbc  # componentes Bootstrap
 import matplotlib.pyplot as plt  # dibujar PNGs
 import plotly.express as px  # gráficas interactivas
 import numpy as np  # numérico
-import time
+import time, json
+import geopandas as gpd
 
 # =============================
 # Constantes y utilidades
@@ -33,6 +34,14 @@ row_style = {
         'columnGap': '12px',
         'width': '100%',
     }
+fg_row_style = {
+    'display': 'grid',
+    'gridTemplateColumns': 'repeat(3, minmax(0, 1fr))',
+    'gap': '12px',
+    'alignItems': 'center',
+    'justifyItems': 'stretch',
+    'width': '100%',
+}
 
 def _acc_tif_from_class_tif(class_tif):  # localizar tif de acreción emparejado
     base, ext = os.path.splitext(class_tif)  # separar base y extensión
@@ -113,6 +122,36 @@ def _png_grafico_accretion(titulo, etiquetas, valores):  # crear PNG de acreció
     buf.seek(0)  # rebobinar
     return buf  # devolver
 
+# Functions to style the EVA Overscale Modal:
+def row3(*cols):
+    cols = list(cols)
+    while len(cols) < 3:
+        cols.append(dbc.Col(html.Div(), md=4))   # Col vacío mantiene el hueco/alineación
+    return dbc.Row(cols, className="g-2 mb-2", align="center")
+
+def _legend_item(color: str, label: str) -> html.Div:  # crear un ítem de leyenda con color sólido
+    return html.Div(  # contenedor del ítem
+        className="legend-item",
+        style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'},  # estilo
+        children=[  # hijos
+            html.Div(style={'width':'14px','height':'14px','background':color,'border':'1px solid #888', 'borderRadius': '50%'}),  # cuadrito color
+            html.Span(label)  # texto del ítem
+        ]
+    )
+
+def _build_training_points_legend() -> html.Div:  # construir la leyenda completa
+    colors = ['#8B4513','#006400','#636363','#31C2F3']  # paleta 
+    labels = ['Mudflat','Saltmarsh','Upland Areas','Channel']  # etiquetas
+    return html.Div(  # contenedor de leyenda
+        className="legend",
+        children=[
+            html.Div("Training Points", style={'fontWeight':'bold','marginBottom':'6px'}),  # título
+            *[_legend_item(c, l) for c, l in zip(colors, labels)]  # items de clases
+        ]
+    )
+
+
+
 # =============================
 # Registro de callbacks
 # =============================
@@ -136,6 +175,314 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             # return fish_layout(key)
             # mientras tanto, un placeholder:
             return html.Div("Fish Stocks — coming soon", key=key, style={'padding':'20px'})
+        
+        elif tab == "tab-eva-overscale":
+            return html.Div(
+                key=key,
+                children=[
+                    html.Div(
+                        id='eva-mpaeu-div',
+                        style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
+                        children=[
+                            html.Div(
+                                id='functional-groups-div',
+                                className='d-flex flex-column',
+                                children=[
+                                    html.Legend(html.B("Assessment Area")),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                html.Button(
+                                                    "Draw",
+                                                    id="eva-overscale-sa-draw",
+                                                    n_clicks=0,
+                                                    disabled=False,
+                                                    className="btn btn-outline-primary w-100",
+                                                ),
+                                                xs=12, md=6, 
+                                            ),
+                                            dbc.Col(
+                                                dcc.Upload(
+                                                    id="eva-overscale-sa-file",
+                                                    multiple=False,
+                                                    accept=".geojson,.json,.parquet",
+                                                    className="upload-as-input form-control form-control-lg",
+                                                    children=html.Div(
+                                                        id="eva-overscale-sa-file-label",
+                                                        children="Choose json or parquet file"
+                                                    ),
+                                                    
+                                                ),
+                                                xs=12, md=6,
+                                            ),
+                                        ],
+                                        className="g-2 mb-2 align-items-center-stretch",
+                                    ),
+                                    
+                                    html.Legend(html.B("Functional Groups Configuration:")),
+                                    html.Div(
+                                        className="input-group mb-2",
+                                        children=[
+                                            dcc.Input(
+                                                id="fg",
+                                                type="text",
+                                                placeholder="Add Functional Group",  # usa value en vez de placeholder para medir
+                                                readOnly=True,
+                                                className="form-control",
+                                                style={"width": "70%"},  # NO crecer al 100%
+                                            ),
+                                            html.Button(
+                                                "+",
+                                                id="add-functional-group",
+                                                n_clicks=0,
+                                                className="btn btn-outline-primary",
+                                                style={"width": "64px"}  # ancho fijo del botón (48–56px va bien)
+                                            ),
+                                            dbc.Tooltip(
+                                                "Add functional group",  # el texto del hover
+                                                target="add-functional-group",  # id del botón al que se engancha
+                                                placement="bottom",   # posición del tooltip (top, bottom, left, right)
+                                            )
+                                        ],
+                                    ),
+
+                                    # Div containers to store functional group buttons and tooltips:
+                                    html.Div(id = "fg-button-container", className="mt-2 w-100", style=fg_row_style),
+                                    html.Div(id = "fg-button-tooltips", className="mt-2 w-100"),
+
+                                    # Modal reutilizable
+                                    dbc.Modal(
+                                        id="fg-config-modal",
+                                        is_open=False,
+                                        size="xl",
+                                        children=[
+                                            dbc.ModalHeader(dbc.ModalTitle(id="fg-modal-title")),
+                                            dbc.ModalBody([
+                                                html.Div(
+                                                    id='acronyms-div',
+                                                    children=[
+                                                        html.Legend("Acronyms:"),
+                                                        html.H5(html.Ul(
+                                                            children=[
+                                                                html.Li(["LRF: ", "Locally Rare Features"]),
+                                                                html.Li(["NRF: ", "Natinally Rare Features"]),
+                                                                html.Li(["ESF: ", "Ecollogically Significant Features"]),
+                                                                html.Li(["HFS-BH: ", "Habitat Forming Species - Biogenic Habitats"]),
+                                                                html.Li(["MSS: ", "Mutualistic or Symbiotic Species"])
+                                                            ]
+                                                        ))
+                                                    ]
+                                                ),
+                                                html.Legend(html.B("Group Configuration:")),
+                                                # inputs de configuración (ejemplo básico)
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-input-name", type="text", placeholder="Group name"), md=4),
+                                                    dbc.Tooltip("Type group name", target="fg-input-name", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-input-eez", type="text", placeholder="EEZ country"), md=4),
+                                                    dbc.Tooltip("Target EEZ country name", target="fg-input-eez", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-input-eez-grid-size", type= "number", placeholder="EEZ grid size", min=10000, max=50000, step=10000), md=4),
+                                                    dbc.Tooltip("Target EEZ grid size to evaluate NRF rareness (in m)", target="fg-input-eez-grid-size", placement="auto"),
+                                                ),
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-lrf-taxonid", type="text", placeholder="LRF Taxon IDs"), md=4),
+                                                    dbc.Tooltip("LRF taxon ID list, separated by commas", target="fg-lrf-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-lrf-threshold", type= "number", placeholder="LRF threshold (%)", min=0, max=100, step=1), md=4),
+                                                    dbc.Tooltip("Percentage of grid cells to consider a taxon as LRF or not", target="fg-lrf-threshold", placement="auto"),
+                                                ),
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-nrf-taxonid", type="text", placeholder="NRF Taxon IDs"), md=4),
+                                                    dbc.Tooltip("NRF taxon ID list, separated by commas", target="fg-nrf-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-nrf-threshold", type= "number", placeholder="NRF threshold (%)", min=0, max=100, step=1), md=4),
+                                                    dbc.Tooltip("Percentage of grid cells over the EEZ grid to consider a taxon as NRF or not", target="fg-nrf-threshold", placement="auto"),
+                                                ),
+                                                row3(
+                                                    dbc.Col(dbc.Input(id="fg-esf-taxonid", type="text", placeholder="ESF Taxon IDs"), md=4),
+                                                    dbc.Tooltip("ESF taxon ID list, separated by commas", target="fg-esf-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-hfsbh-taxonid", type="text", placeholder="HFS-BH Taxon IDs"), md=4),
+                                                    dbc.Tooltip("HFSBH taxon ID list, separated by commas", target="fg-hfsbh-taxonid", placement="auto"),
+                                                    dbc.Col(dbc.Input(id="fg-mss-taxonid", type= "text", placeholder="MSS Taxon IDs"), md=4),
+                                                    dbc.Tooltip("MSS taxon ID list, separated by commas", target="fg-mss-taxonid", placement="auto"),
+                                                )
+                                            ]),
+                                            dbc.ModalFooter([
+                                                dbc.Button("Save", id="fg-modal-save", n_clicks=0, className="btn btn-primary"),
+                                                dbc.Button("Close", id="fg-modal-close", n_clicks=0, className="ms-2")
+                                            ])
+                                        ], scrollable=True, centered= True
+                                    )
+                                    
+                                ]
+                            ),
+
+                            html.Div(
+                                id='grid-config-div',
+                                children=[
+                                    html.Legend(html.B("Assessment Grid Configuration:")),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col(
+                                                dcc.RadioItems(
+                                                    id="opt-radio",
+                                                    options=[
+                                                        {"label": " Hexagonal H3 Grid", "value": "h3"},
+                                                        {"label": " Quadrat Grid", "value": "quadrat"},
+                                                    ],
+                                                    value="h3",
+                                                    className="d-flex flex-column gap-2",
+                                                    inputClassName="form-check-input",
+                                                    labelClassName="form-check-label",
+                                                ),
+                                                xs=12, md=6,
+                                            ), 
+                                            dbc.Col(
+                                                html.Div(
+                                                    [
+                                                        dcc.Input(
+                                                            id='eva-overscale-h3-level',
+                                                            type="number", min=5, max=7, step=1,
+                                                            placeholder="H3 Grid Level",
+                                                            className="form-control mb-2",
+                                                            disabled=False
+                                                        ),
+                                                        dbc.Tooltip(
+                                                            "H3 Level. Decreasing cell size from 5 to 7",
+                                                            target="eva-overscale-h3-level", placement="auto"
+                                                        ),
+                                                        dcc.Input(
+                                                            id='eva-overscale-quadrat-size',
+                                                            type="number", min=250, max=5000, step=250,
+                                                            placeholder="Quadrat Grid Size in meters",
+                                                            className="form-control",
+                                                            disabled=True
+                                                        ),
+                                                        dbc.Tooltip(
+                                                            "Quadrat grid size. Min 250, max 5000. Use multiples of 250",
+                                                            target="eva-overscale-quadrat-size", placement="auto"
+                                                        ),
+                                                    ],
+                                                    className="w-100"
+                                                ),
+                                                xs=12, md=6,
+                                            ),
+                                        ],
+                                        className="g-3 align-items-start" 
+                                    ),
+                                ]
+                            ),
+
+                            # Assessment Grid Size store:
+                            dcc.Store(id="ag-size-store"),
+
+
+                            # Run, Download and Info buttons:
+                            dcc.Loading(
+                                type="dot",  # tipo de spinner
+                                color='#2c3e50',
+                                children = [
+                                    html.Div(
+                                        id='eva-overscale-button-bar',
+                                        style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
+                                        children=[
+                                            html.Button(  # botón Run
+                                                html.Span("Run"),
+                                                id="eva-overscale-run-button",
+                                                n_clicks=0,
+                                                disabled=True,
+                                                className='btn btn-outline-primary'  
+                                            ),
+                                            html.Button(  # botón Reset
+                                                html.Span("Reset"),
+                                                id="eva-overscale-reset-button",
+                                                n_clicks=0,
+                                                className='btn btn-outline-primary',
+                                                disabled=False
+                                            ),
+                                            html.Div(  # contenedor de descarga
+                                                [
+                                                    html.Button(  # botón de descarga
+                                                        id='eva-overscale-results',
+                                                        disabled=True,
+                                                        children=[html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
+                                                        n_clicks=0,  # contador
+                                                        className='btn btn-outline-primary'
+                                                    ),
+                                                    dcc.Store(id="eva-results-store"),
+                                                    dcc.Download(id='eva-overscale-download')  # componente de descarga
+                                                ]
+                                            ),
+                                            html.Button(  # botón info
+                                                [html.Img(src='/assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
+                                                id='eva-overscale-info-button',
+                                                className='btn btn-outline-primary',
+                                                n_clicks=0  # contador
+                                            )
+                                        ]
+                                    ),
+                                ] 
+                            ),
+
+
+                            # html.Div(
+                            #     id='eva-overscale-button-bar',
+                            #     style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
+                            #     children=[
+                            #         html.Button(  # botón Run
+                            #             html.Span("Run"),
+                            #             id="eva-overscale-run-button",
+                            #             n_clicks=0,
+                            #             disabled=True,
+                            #             className='btn btn-outline-primary'  
+                            #         ),
+                            #         html.Button(  # botón Reset
+                            #             html.Span("Reset"),
+                            #             id="eva-overscale-reset-button",
+                            #             n_clicks=0,
+                            #             className='btn btn-outline-primary',
+                            #             disabled=False
+                            #         ),
+                            #         html.Div(  # contenedor de descarga
+                            #             [
+                            #                 html.Button(  # botón de descarga
+                            #                     id='eva-overscale-results',
+                            #                     disabled=True,
+                            #                     children=[html.Img(src='/assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
+                            #                     n_clicks=0,  # contador
+                            #                     className='btn btn-outline-primary'
+                            #                 ),
+                            #                 dcc.Store(id="eva-results-store"),
+                            #                 dcc.Download(id='eva-overscale-download')  # componente de descarga
+                            #             ]
+                            #         ),
+                            #         html.Button(  # botón info
+                            #             [html.Img(src='/assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
+                            #             id='eva-overscale-info-button',
+                            #             className='btn btn-outline-primary',
+                            #             n_clicks=0  # contador
+                            #         )
+                            #     ]
+                            # ),
+
+                            html.Div(
+                                id = 'area-selection-div',
+                                children = [
+
+                                ]
+                            ),
+                            html.Div(
+                                id = 'buttons-div',
+                                children = [
+
+                                ]
+                            ),
+
+                            # Test button to download functional group configuration as JSON:
+
+
+                        ]
+                    )
+
+                ],
+                style={'padding':'20px'})
         
         elif tab == "tab-physical":
             # return physical_layout(key)
@@ -588,12 +935,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
     @app.callback(
         Output("reg-rcp45", "children", allow_duplicate=True),
+        Output("training-points","children", allow_duplicate= True),
+        Output("training-points-legend-div", "children", allow_duplicate= True),
         Input("tabs", "value"),
         prevent_initial_call=True
     )
     def clear_overlay_on_tab_change(tab_value):
         if tab_value != "tab-saltmarsh":
-            return []            # limpiar overlay al salir del tab
+            return [], [], []            # limpiar overlay al salir del tab
         raise PreventUpdate       # no toques nada cuando estás en Saltmarsh
 
 
@@ -636,11 +985,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
     @app.callback(  # pintar overlays para 3 escenarios
         Output("reg-rcp45","children", allow_duplicate=True),
+        Output("training-points","children", allow_duplicate=True),
         Output("reset-button", "disabled", allow_duplicate=True),
         Output("study-area-dropdown", "disabled", allow_duplicate=True),
         Output("year-dropdown", "disabled", allow_duplicate=True),
         Output("run-button", "disabled"),
         Output('marsh-results', 'hidden'),
+        Output("training-points-legend-div", "children", allow_duplicate=True),
         Input("run-button","n_clicks"),
         State("study-area-dropdown","value"),
         State("year-dropdown","value"),
@@ -648,7 +999,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
     )
     def update_map(n, area, year):  # añadir overlays
         if not (n and area and year):
-            return [], [], [], True, False, False, True, True
+            return [], [], True, False, False, True, True, []
         
         scen = 'regional_rcp45'
         tif_dir = os.path.join(os.getcwd(),"results","saltmarshes",area,scen)  # construir ruta al directorio de TIFs
@@ -662,8 +1013,85 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             data = np.ma.masked_where(data.data==0,data)  # enmascarar clase 0 como nodata por coherencia visual
             b = vrt.bounds  # extraer límites geográficos
         url = f"/raster/{area}/{scen}/{year}.png"  # construir URL del PNG servido por Flask
-        overlay = dl.ImageOverlay(url=url,bounds=[[b.bottom, b.left], [b.top, b.right]],opacity=1)  # crear capa de imagen
-        return overlay, False, True, True, True, False  # estados de UI
+
+        overlay = dl.ImageOverlay(
+            url=url,
+            bounds=[[b.bottom, b.left], [b.top, b.right]],
+            opacity=0.95
+        )
+
+        # Get the training dataset of the study areas and add it to map:
+        if area == "Urdaibai_Estuary":
+            points_path = os.path.join(os.getcwd(), "data", "Urdaibai_Estuary", "urdaibai_estuary_training_dataset.parquet")
+        elif area == "Bay_of_Santander":
+            points_path = os.path.join(os.getcwd(), "data", "Bay_of_Santander", "bay_santander_training_dataset.parquet")
+        elif area == "Cadiz_Bay":
+            points_path = os.path.join(os.getcwd(), "data", "Cadiz_Bay", "cadiz_bay_training_dataset.parquet")
+        else:
+            points_path = None
+
+        markers = []
+
+        legend = _build_training_points_legend()
+
+        if points_path and os.path.exists(points_path):
+            gdf_points = gpd.read_parquet(points_path)
+
+            # reproyectar a EPSG:4326 (requerido)
+            gdf_wgs = gdf_points.to_crs(epsg=4326) if gdf_points.crs is not None else gdf_points.copy()
+
+            # crear marcadores (dl.CircleMarker) por cada punto y asignar color según la clase
+            for _, row in gdf_wgs.iterrows():
+                geom = row.geometry
+                if geom is None:
+                    continue
+                # obtener lat/lon (WGS84)
+                try:
+                    lat, lon = float(geom.y), float(geom.x)
+                except Exception:
+                    try:
+                        coords = list(geom.coords)[0]
+                        lon, lat = float(coords[0]), float(coords[1])
+                    except Exception:
+                        continue
+
+                # leer valor de clase (puede ser int o etiqueta str)
+                if area == "Urdaibai_Estuary":
+                    raw = row.get('Class') if 'Class' in row.index else row.get('class', None)
+                else:
+                    raw = row.get('class') if 'class' in row.index else row.get('Class', None)
+
+                # normalizar a etiqueta y obtener color
+                habitat_label = None
+                color = "#000000"
+                try:
+                    # si es entero -> mapear desde CLASS_INFO
+                    if isinstance(raw, (int, float, np.integer)) or (isinstance(raw, (str,)) and raw.isdigit()):
+                        idx = int(raw)
+                        if idx in CLASS_INFO:
+                            habitat_label, color = CLASS_INFO[idx]
+                    else:
+                        # tratar como texto (p. ej. "Mudflat", "Saltmarsh", ...)
+                        habitat_label = str(raw) if raw is not None else "unknown"
+                        color = LABEL_TO_COLOR.get(habitat_label, "#000000")
+                except Exception:
+                    habitat_label = str(raw)
+
+                # crear CircleMarker con fillColor para que se vea el color
+                m = dl.CircleMarker(
+                    center=[lat, lon],
+                    radius=5,
+                    color="#000000",        # borde (puede ser igual al relleno)
+                    weight=2,
+                    fill=True,
+                    fillColor= color,
+                    fillOpacity=0.9,
+                    opacity=1,
+                    children=[dl.Tooltip(habitat_label or "")]
+                )
+                markers.append(m)
+
+        return overlay, markers, False, True, True, True, False, legend  # estados de UI
 
     @app.callback(  # reset total
         Output("study-area-dropdown", "value", allow_duplicate=True),
@@ -679,12 +1107,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         Output('saltmarsh-legend', 'hidden', allow_duplicate=True),
         Output('scenario-radio', 'value'),
         Output('map', 'viewport'),
+        Output("training-points","children"),
+        Output("training-points-legend-div", "children"),
         Input("reset-button", "n_clicks"),
         prevent_initial_call=True
     )
     def reset(n):  # limpiar todo
         if n:
-            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45', {"center": [40, -3.5], "zoom": 7}]
+            return [None, False, None, True, [], [], True, True, True, True, True, 'reg45', {"center": [40, -3.5], "zoom": 7}, [], []]
         raise PreventUpdate
 
     @app.callback(  # gráficas con sub-tabs por escenario
