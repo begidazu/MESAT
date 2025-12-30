@@ -5,7 +5,6 @@ from .callbacks.draw_callbacks import register_draw_callbacks
 from .callbacks.marsh_callbacks import register_tab_callbacks
 from .callbacks.opsa_callbacks import register_opsa_tab_callbacks
 from .callbacks.management_callbacks import register_management_callbacks
-from .callbacks.eva_mpaeu_callbacks import register_eva_mpaeu_callbacks
 import dash_bootstrap_components as dbc
 
 def create_app():
@@ -21,5 +20,4 @@ def create_app():
     register_tab_callbacks(app)
     register_opsa_tab_callbacks(app)
     register_management_callbacks(app)
-    register_eva_mpaeu_callbacks(app)
     return app

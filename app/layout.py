@@ -19,11 +19,9 @@ def create_layout():  # definir función que construye el layout
                                 id='map',  # id del mapa
                                 center=[40, -3.5],  # centro por defecto
                                 zoom=7,  # zoom por defecto
-                                zoomControl = False,
                                 style={'width': '100%', 'height': '100%'},  # ocupar 100%
                                 children=[  # hijos del mapa
                                     dl.TileLayer(),  # capa base OSM
-                                    dl.ZoomControl(position="topright"),
                                     dl.FeatureGroup(  # grupo de dibujo
                                         id='draw-layer',  # id del grupo de dibujo
                                         children=[  # hijos del grupo de dibujo
@@ -36,25 +34,6 @@ def create_layout():  # definir función que construye el layout
                                     ),
                                     # Layers where we store the raster tiles for the saltmarsh model
                                     dl.FeatureGroup(id='reg-rcp45', children=[]),
-                                    # Layers where we store the training points for the saltmarsh model
-                                    dl.FeatureGroup(id='training-points', children=[]),
-                                    html.Div(  # contenedor de la leyenda flotante
-                                        id='training-points-legend-div',  # id para actualizar desde callbacks
-                                        style={  # estilos para posicionarla sobre el mapa
-                                            'position': 'absolute',  # posición absoluta dentro del mapa
-                                            'bottom': '10px',  # distancia al borde inferior
-                                            'left': '10px',  # distancia al borde izquierdo
-                                            'zIndex': 1001,  # por encima del mapa
-                                            'background': 'rgba(255,255,255,0.92)',  # fondo semitransparente
-                                            'border': '1px solid #ccc',  # borde sutil
-                                            'borderRadius': '8px',  # esquinas redondeadas
-                                            'padding': '8px 10px',  # espaciado interno
-                                            'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  # sombra suave
-                                            'fontSize': '12px'  # tamaño de fuente
-                                        },
-                                        children=[]  # vacío al inicio; se completa al ejecutar OPSA
-                                    ),
-
                                     # Layer where we store the EUNIS habitat polygons:
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
                                      # OPSA legend:
@@ -74,6 +53,7 @@ def create_layout():  # definir función que construye el layout
                                         },
                                         children=[]  # vacío al inicio; se completa al ejecutar OPSA
                                     ),
+
                                     
                                     # Layers where we store the management polygons
                                     dl.FeatureGroup(id="mgmt-wind", children=[]),
@@ -85,37 +65,7 @@ def create_layout():  # definir función que construye el layout
                                     dl.FeatureGroup(id="mgmt-wind-upload", children=[]),  # capa para los datos subidos (Wind)
                                     dl.FeatureGroup(id="mgmt-aquaculture-upload", children=[]),  # capa para los datos subidos (Aquaculture)
                                     dl.FeatureGroup(id="mgmt-vessel-upload", children=[]),# capa para los datos subidos (Vessel Routes)
-                                    dl.FeatureGroup(id="mgmt-defence-upload", children=[]),# capa para los datos subidos (Defence)
-
-                                    # Layers where we store the uploaded files of eva-overscale, the drew study area and the results
-                                    dl.FeatureGroup(id="eva-overscale-draw", children=[]),
-                                    dl.FeatureGroup(id="eva-overscale-upload", children=[]),
-
-                                    # Div to Store EVA Overscale Accordion:
-                                    html.Div(
-                                        id="eva-results-accordion-container",
-                                        className="card shadow-sm position-absolute",
-                                        style={"left":"10px","top":"10px","zIndex":1000,"minWidth":"260px"},
-                                    ),
-                                    html.Div(  # contenedor de la leyenda flotante
-                                        id='eva-overscale-legend-div',  # id para actualizar desde callbacks
-                                        style={  # estilos para posicionarla sobre el mapa
-                                            'position': 'absolute',  # posición absoluta dentro del mapa
-                                            'bottom': '10px',  # distancia al borde inferior
-                                            'left': '10px',  # distancia al borde izquierdo
-                                            'zIndex': 1000,  # por encima del mapa
-                                            'background': 'rgba(255,255,255,0.92)',  # fondo semitransparente
-                                            'border': '1px solid #ccc',  # borde sutil
-                                            'borderRadius': '8px',  # esquinas redondeadas
-                                            'padding': '8px 10px',  # espaciado interno
-                                            'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  # sombra suave
-                                            'fontSize': '12px'  # tamaño de fuente
-                                        },
-                                        children=[]  # vacío al inicio; se completa al ejecutar OPSA
-                                    ),
-                                    # Layers of the Accordion:
-                                    dl.FeatureGroup(id="eva-aq-layer", children=[]),
-
+                                    dl.FeatureGroup(id="mgmt-defence-upload", children=[])# capa para los datos subidos (Defence)
 
                                 ]
                             ),
@@ -128,15 +78,13 @@ def create_layout():  # definir función que construye el layout
                         children=[  # hijos de la barra lateral
                             dcc.Tabs(  # tabs principales
                                 id='tabs',  # id de tabs
-                                value='tab-management',  # tab seleccionada por defecto
+                                value='tab-saltmarsh',  # tab seleccionada por defecto
                                 className="tabs mb-2",  # clases CSS
                                 children=[  # pestañas
-                                    dcc.Tab(label='Management Scenarios', value='tab-management'),  # tab 1
-                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),  # tab 2
+                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),  # tab 1
+                                    dcc.Tab(label='Fish Stocks',          value='tab-fishstock'),  # tab 2
                                     dcc.Tab(label='Physical Accounts',    value='tab-physical'),  # tab 3
-                                    dcc.Tab(label='EVA Overscale', value='tab-eva-overscale'),  # tab 4
-                                    dcc.Tab(label='Fish Stocks', value='tab-fishstock'),  # tab 5 
-                                    
+                                    dcc.Tab(label='Management Scenarios', value='tab-management'),  # tab 4
                                 ],
                                 style={'fontWeight': 'bold'}  # estilo de fuente
                             ),
@@ -208,15 +156,6 @@ def create_layout():  # definir función que construye el layout
                     dcc.Store(id="aquaculture-file-store"),                    # store para Aquaculture
                     dcc.Store(id="vessel-file-store"),                         # store para Vessel Route
                     dcc.Store(id="defence-file-store"),                        # store para Defence
-                    # almacen para los EVA-Overscale funcional groups: 
-                    dcc.Store(id="fg-selected-index"),
-                    dcc.Store(id="fg-last-click-ts", data=0),
-                    dcc.Store(id="fg-configs", data={}),
-                    dcc.Store(id = "eva-overscale-draw-meta", data={"layer": "study-area", "color": "#015B97"}),
-                    dcc.Store(id = "eva-overscale-file-store"),
-
-                    # Debug Store:
-                    # html.Pre(id="eva-debug", style={"display": "none"}),
 
 
                     # modal de bienvenida
