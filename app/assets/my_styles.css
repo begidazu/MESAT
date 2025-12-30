@@ -258,3 +258,50 @@ img, canvas { /* elementos gráficos */
   background-color: #fff5f5 !important;     /* ligero fondo rosado */
   color: #dc3545 !important;                /* texto rojo para enfatizar */
 }
+
+
+/*---------- Estilos para la informacion adicional de las actividades economicas -------------*/
+              /* --- Botón: mismo look que los de Leaflet.Draw --- */
+.dl-like-btn {
+  position: absolute;
+  left: 10px;
+  z-index: 1000;
+  width: 30px; height: 30px;
+  border: 1px solid #c2c8d0;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.dl-like-btn:hover { background: #f3f4f6; }
+
+/* coloca el botón justo DEBAJO del EditControl */
+.layers-btn {  top: 78px; left: 10px; }              /* ajusta 118px a tu layout */
+.layers-icon { width: 18px; height: 18px; pointer-events: none; display: block; }
+
+/* --- Panel --- */
+.layers-panel {
+  position: absolute;
+  top: 114px; left: 10px;                  /* debajo del botón */
+  z-index: 1000;
+  display: none;                          /* cerrado por defecto */
+  min-width: 220px;
+  background: rgba(255,255,255,.96);
+  border: 1px solid #dcdfe4;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  padding: 8px 10px;
+  font: 13px/1.3 system-ui, sans-serif;
+}
+.layers-panel.open { display: block; }
+
+.lm-header { font-weight: 600; margin-bottom: 4px; }
+.lm-group-title { margin-top: 8px; font-weight: 600; }
+.lm-checklist .form-check { margin: 2px 0; }
+
+/* Ocúltalo fuera del tab Management si ya usas esa lógica */
+.layers-panel.hidden, .layers-btn.hidden { display: none !important; }
