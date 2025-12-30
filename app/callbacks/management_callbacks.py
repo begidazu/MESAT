@@ -1469,15 +1469,23 @@ def register_management_callbacks(app: dash.Dash):
     @app.callback(
         Output("mgmt-legend-div", "hidden", allow_duplicate=True),
         Output("layers-btn", "disabled"),
+        Output("mgmt-wind", "children", allow_duplicate=True),
+        Output("mgmt-aquaculture", "children", allow_duplicate=True),
+        Output("mgmt-vessel", "children", allow_duplicate=True),
+        Output("mgmt-defence", "children", allow_duplicate=True),
+        Output("mgmt-wind-upload", "children", allow_duplicate=True),
+        Output("mgmt-aquaculture-upload", "children", allow_duplicate=True),
+        Output("mgmt-vessel-upload", "children", allow_duplicate=True),
+        Output("mgmt-defence-upload", "children", allow_duplicate=True),
         Input("tabs", "value"),
         prevent_initial_call=True
     )
     def clear_overlay_on_tab_change(tab_value):
         if tab_value == "tab-management":
-            return False, False            # limpiar overlay al salir del tab
+            return False, False, [], [], [], [], [], [], [], []            # limpiar overlay al salir del tab
         else:
-            return True, True
-        
+            return True, True, [], [], [], [], [], [], [], []
+
 # Add LayerGroup with the additional information for management activities location selection.
     # @app.callback(
     #     Output("mgmt-layers-control", "children"),
