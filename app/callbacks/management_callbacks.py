@@ -1465,10 +1465,11 @@ def register_management_callbacks(app: dash.Dash):
             # opcional: not saltmarsh_enabled
         )
     
-# Add management activity legend:
+    # Add management activity legend + auto-open layers panel when in management tab
     @app.callback(
         Output("mgmt-legend-div", "hidden", allow_duplicate=True),
         Output("layers-btn", "disabled"),
+        Output("layer-menu", "className", allow_duplicate=True),
         Output("mgmt-wind", "children", allow_duplicate=True),
         Output("mgmt-aquaculture", "children", allow_duplicate=True),
         Output("mgmt-vessel", "children", allow_duplicate=True),
@@ -1478,13 +1479,22 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-vessel-upload", "children", allow_duplicate=True),
         Output("mgmt-defence-upload", "children", allow_duplicate=True),
         Input("tabs", "value"),
-        prevent_initial_call=True
+        prevent_initial_call='initial_duplicate'
     )
     def clear_overlay_on_tab_change(tab_value):
+        # panel base class (collapsed)
+        base = "card shadow-sm position-absolute collapse"
+        # default collapsed class for layer menu
+        layer_menu_class = base
+
+        # If we're on management tab, show legend, enable layers button and open the layers panel
         if tab_value == "tab-management":
-            return False, False, [], [], [], [], [], [], [], []            # limpiar overlay al salir del tab
-        else:
-            return True, True, [], [], [], [], [], [], [], []
+            layer_menu_class = f"{base} show"
+            # show legend (hidden=False), enable button (disabled=False), open panel, clear layer children placeholders
+            return False, False, layer_menu_class, [], [], [], [], [], [], [], []
+
+        # Otherwise hide legend, disable layers button and collapse the panel
+        return True, True, layer_menu_class, [], [], [], [], [], [], [], []
 
 # Add LayerGroup with the additional information for management activities location selection.
     # @app.callback(
