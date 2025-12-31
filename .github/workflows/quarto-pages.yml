@@ -2,7 +2,7 @@ name: Publish Quarto docs to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "docs/**"
       - ".github/workflows/quarto-pages.yml"
@@ -20,13 +20,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout (docs only)
         uses: actions/checkout@v4
         with:
-            lfs: true
+          fetch-depth: 1
+          lfs: true
+          sparse-checkout: |
+            docs
+            .github
+          sparse-checkout-cone-mode: true
 
-      - name: Pull Git LFS files
-        run: git lfs pull
+      - name: Pull Git LFS files for docs images only
+        run: |
+          git lfs install
+          git lfs pull --include="docs/images/**"
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
