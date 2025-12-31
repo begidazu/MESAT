@@ -972,6 +972,8 @@ def create_layout():  # definir función que construye el layout
                     # almacen para guardar los poligonos dibujados por los susuarios sobre actividades economicas
                     dcc.Store(id="draw-meta", data={"layer": "wind", "color": "#f59e0b"}),
                     dcc.Store(id="draw-len", data=0),
+                    # almacen para guardar el modo de dibujo activo (management o eva-overscale)
+                    dcc.Store(id="draw-mode", data=None),
                     # almacen para guardar los ficheros subidos por actividad economica
                     dcc.Store(id="wind-file-store"),                           # store para Wind Farm
                     dcc.Store(id="aquaculture-file-store"),                    # store para Aquaculture

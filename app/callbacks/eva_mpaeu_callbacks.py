@@ -457,7 +457,6 @@ def build_results_ui(fg_configs: Dict) -> Tuple[html.Div, List[dl.LayerGroup]]:
 
 # Main Callback function:
 def register_eva_mpaeu_callbacks(app: dash.Dash):
-
         @app.callback(
             Output("fg-button-container", "children"),
             Output("fg-button-tooltips", "children"),
@@ -813,6 +812,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
         @app.callback(
             Output("eva-overscale-draw-meta", "data", allow_duplicate=True),
             Output("edit-control", "drawToolbar", allow_duplicate= True),
+            Output("draw-mode", "data", allow_duplicate=True),
             Input("eva-overscale-sa-draw", "n_clicks"),
             prevent_initial_call=True
         )
@@ -821,7 +821,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 raise PreventUpdate
             ctx = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
             layer_key, color = COLOR[ctx]
-            return {"layer": layer_key, "color": color}, {"mode": "polygon", "n_clicks": int(time.time())}
+            return {"layer": layer_key, "color": color}, {"mode": "polygon", "n_clicks": int(time.time())}, "eva-overscale"
         
         # Callback to add the polygon to the map
         @app.callback(
@@ -831,10 +831,15 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             Input("edit-control", "geojson"),
             State("draw-len", "data"),
             State("eva-overscale-draw-meta", "data"),
+            State("draw-mode", "data"),
             State("eva-overscale-draw", "children"),
             prevent_initial_call=True
         )
-        def add_sa_polygon(gj, prev_len, meta, ch_sa):
+        def add_sa_polygon(gj, prev_len, meta, draw_mode, ch_sa):
+            # Guard: solo procesar si estamos en modo "eva-overscale"
+            if draw_mode != "eva-overscale":
+                raise PreventUpdate
+            
             ctx = dash.callback_context
             trig = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
 
@@ -866,8 +871,10 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
                 return ch_sa, 0, clear
 
-            color = (meta or {}).get("color", "#ff00ff")
-            layer = (meta or {}).get("layer", "wind")
+            if not meta or not isinstance(meta, dict) or "layer" not in meta:
+                raise PreventUpdate
+            color = meta.get("color", "#ff00ff")
+            layer = meta["layer"]
             comps = [dl.Polygon(positions=p, color=color, fillColor=color, fillOpacity=0.6, weight=4)
                     for p in new_polys]
 
@@ -1190,3 +1197,58 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                 did_zoom = True
 
             return layers
+        
+        # Callback to reset all when tab changes:
+        @app.callback(
+            Output("fg-configs", "data", allow_duplicate=True),
+            Output("fg-selected-index", "data", allow_duplicate=True),
+            Output("fg-last-click-ts", "data", allow_duplicate=True),
+            Output("fg-button-container", "children", allow_duplicate=True),
+            Output("fg-button-tooltips", "children", allow_duplicate=True),
+            Output("opt-radio", "value", allow_duplicate=True),
+            Output("eva-overscale-h3-level", "value", allow_duplicate=True),
+            Output("eva-overscale-quadrat-size", "value", allow_duplicate=True),
+            Output("eva-overscale-h3-level", "disabled", allow_duplicate=True),
+            Output("eva-overscale-quadrat-size", "disabled", allow_duplicate=True),
+            Output("ag-size-store", "data", allow_duplicate=True),
+            Output("eva-overscale-run-button", "disabled", allow_duplicate=True),
+            Output("eva-overscale-draw", "children", allow_duplicate=True),
+            Output("eva-overscale-sa-draw", "disabled", allow_duplicate=True),
+            Output("eva-overscale-upload", "children", allow_duplicate=True),
+            Output("eva-overscale-sa-file", "disabled", allow_duplicate=True),
+            Output("eva-overscale-sa-file-label", "children", allow_duplicate=True),
+            Output("eva-overscale-file-store", "data", allow_duplicate=True),
+            Output("eva-overscale-results", "disabled", allow_duplicate=True),
+            Output("eva-results-accordion-container", "children", allow_duplicate=True),
+            Output("eva-overscale-legend-div", "children", allow_duplicate=True),
+            Output("eva-aq-layer", "children", allow_duplicate=True),
+            Input("tabs", "value"),
+            prevent_initial_call=True
+        )
+        def clear_on_tab_change(active_tab):
+            # Si cambias a otro tab (no EVA Overscale), limpiar edit-control
+            if active_tab != "tab-eva-overscale":
+                return (
+                    {},           # fg-configs
+                    None,         # fg-selected-index
+                    0,            # fg-last-click-ts
+                    [],           # fg-button-container 
+                    [],           # fg-button-tooltips
+                    "h3",         # radio por default
+                    None,         # h3 value
+                    None,         # quadrat value
+                    False,        # h3 enabled
+                    True,         # quadrat disabled
+                    {},           # ag-size-store empty
+                    True,         # Run disabled
+                    [],           # Clear Study Area polygons Draw
+                    False,        # Enable Draw Button 
+                    [],           # Clear Study Area polygons uploaded
+                    False,        # Enable Upload again
+                    "Choose json or parquet file",
+                    {},
+                    True,         # EVA Overscale results download button
+                    [],           # Clear Accordion
+                    [],           # Clear Legend
+                    []            # Clear GeoJsons of results added to the dl.Map
+                )

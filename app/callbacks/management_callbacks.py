@@ -363,10 +363,11 @@ def register_management_callbacks(app: dash.Dash):
             off(v_defence), off(v_defence),
         )
 
-    # 2) Pulsar DRAW -> fija capa de destino + color, y activa el modo polígono
+    # 2) Pulsar DRAW -> fija capa de destino + color, activa el modo polígono, y establece draw-mode a "management"
     @app.callback(
         Output("draw-meta", "data"),
         Output("edit-control", "drawToolbar"),
+        Output("draw-mode", "data"),
         Input("wind-farm-draw", "n_clicks"),
         Input("aquaculture-draw", "n_clicks"),
         Input("vessel-draw", "n_clicks"),
@@ -378,7 +379,7 @@ def register_management_callbacks(app: dash.Dash):
             raise PreventUpdate
         ctx = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
         layer_key, color = COLOR[ctx]
-        return {"layer": layer_key, "color": color}, {"mode": "polygon", "n_clicks": int(time.time())}
+        return {"layer": layer_key, "color": color}, {"mode": "polygon", "n_clicks": int(time.time())}, "management"
 
     # 3) Pintamos los poligonos en el mapa y los almacenamos en el FeatureGrop correspondiente cuando el usuario acaba un poligono. Tambien limpiamos los FeatureGroup si el trigger fue un checklist.
     @app.callback(
@@ -395,6 +396,7 @@ def register_management_callbacks(app: dash.Dash):
         Input("defence", "value"),
         State("draw-len", "data"),
         State("draw-meta", "data"),
+        State("draw-mode", "data"),
         State("mgmt-wind", "children"),
         State("mgmt-aquaculture", "children"),
         State("mgmt-vessel", "children"),
@@ -402,7 +404,11 @@ def register_management_callbacks(app: dash.Dash):
         prevent_initial_call=True
     )
     def manage_layers(gj, v_wind, v_aqua, v_vessel, v_defence,
-                    prev_len, meta, ch_wind, ch_aqua, ch_vessel, ch_defence):
+                    prev_len, meta, draw_mode, ch_wind, ch_aqua, ch_vessel, ch_defence):
+        # Guard: solo procesar si estamos en modo "management"
+        if draw_mode != "management":
+            raise PreventUpdate
+        
         ctx = dash.callback_context
         trig = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
 
@@ -430,6 +436,7 @@ def register_management_callbacks(app: dash.Dash):
         feats = (gj or {}).get("features", [])
         n = len(feats)
         prev_len = prev_len or 0
+        #print(f"DEBUG manage_layers: n={n}, prev_len={prev_len}, features={[f.get('id') for f in feats]}")
         if n <= prev_len:
             raise PreventUpdate  # sin nuevo dibujo (o updates del clear)
 
@@ -451,8 +458,10 @@ def register_management_callbacks(app: dash.Dash):
             clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
             return ch_wind, ch_aqua, ch_vessel, ch_defence, 0, clear
 
-        color = (meta or {}).get("color", "#ff00ff")
-        layer = (meta or {}).get("layer", "wind")
+        if not meta or not isinstance(meta, dict) or "layer" not in meta:
+            raise PreventUpdate
+        color = meta.get("color", "#ff00ff")
+        layer = meta["layer"]
         comps = [dl.Polygon(positions=p, color=color, fillColor=color, fillOpacity=0.6, weight=4)
                 for p in new_polys]
 
