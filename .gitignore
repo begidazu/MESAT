@@ -70,13 +70,7 @@ docs/.quarto/
 docs/_site/
 docs/_freeze/
 docs/**/.ipynb_checkpoints/
-
-# Si te aparecen estos:
-docs/_book/
-docs/.quarto/idx/
-docs/.quarto/cites/
-docs/.quarto/preview/
-docs/.quarto/project-cache/
+**/*.quarto_ipynb
 docs/**/*.qmd.json
 docs/**/index.json
 docs/**/lock
