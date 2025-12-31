@@ -370,9 +370,17 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 ]
                             ),
 
+                            html.Div(
+                                id = 'eva-overscale-time-div',
+                                style={'marginTop':'10px', 'textAlign':'center'},
+                                children = [
+                                    html.Img(src='/assets/logos/warning.png', style={'width':'32px','height':'32px'}), 
+                                    html.Span(" Be patient! The computation may take several minutes!", className="form-check-label")
+                                ]
+                            ),
+
                             # Assessment Grid Size store:
                             dcc.Store(id="ag-size-store"),
-
 
                             # Run, Download and Info buttons:
                             dcc.Loading(
