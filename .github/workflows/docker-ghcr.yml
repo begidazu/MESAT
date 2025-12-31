@@ -3,6 +3,18 @@ name: Build and push Docker image to GHCR
 on:
   push:
     branches: ["main"]
+    paths:
+      - "app/**"
+      - "assets/**"
+      - "dashExtensions/**"
+      - "run.py"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "requirements*.txt"
+      - "requirements/**"
+      - "deploy/**"
+      - "docker-compose*.yml"
+      - ".github/workflows/docker-ghcr.yml"
   workflow_dispatch:
 
 permissions:
