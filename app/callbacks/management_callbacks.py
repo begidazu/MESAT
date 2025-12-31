@@ -47,57 +47,6 @@ SCEN_LABEL = {
 }
 SCEN_KEYS = ["regional_rcp45", "regional_rcp85", "global_rcp45"]
 
-# Function to build tabs of saltmarsh scenario affection:
-# def _build_saltmarsh_scenarios_layout(area: str):
-#     def scenario_tabs(activity_key: str):
-#         # años por cada escenario (solo si existe en esa área)
-#         scen_tabs = []
-#         for scen in SCEN_KEYS:
-#             if not saltmarsh_scenario_available(area, scen):
-#                 continue
-#             years = saltmarsh_scenario_years(area, scen)
-#             scen_tabs.append(
-#                 dcc.Tab(
-#                     label=SCEN_LABEL[scen], value=scen,
-#                     children=[
-#                         dcc.Tabs(
-#                             id=f"mgmt-scen-{activity_key}-years-{scen}",
-#                             value=(years[0] if years else None),
-#                             children=[dcc.Tab(label=y, value=y) for y in years],
-#                             style={"padding": "0.25rem 0.5rem"}
-#                         ),
-#                     ],
-#                     style={"padding":"0.5rem 0.75rem"},
-#                     selected_style={"padding":"0.5rem 0.75rem"}
-#                 )
-#             )
-#         return dcc.Tabs(
-#             id=f"mgmt-scen-{activity_key}-scenarios",
-#             value=(SCEN_KEYS[0] if scen_tabs else None),
-#             children=scen_tabs,
-#             style={"marginBottom":"0.5rem"}
-#         )
-
-#     def activity_panel(label, key):
-#         return dcc.Tab(
-#             label=label, value=key,
-#             children=[
-#                 scenario_tabs(key),
-#                 html.Div(id=f"mgmt-scen-{key}-table")  # un único contenedor por actividad
-#             ],
-#             style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
-#             selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
-#         )
-
-#     return dcc.Tabs(
-#         id="mgmt-scenarios-tabs-main", value="wind",
-#         children=[
-#             activity_panel("Wind Farms",  "wind"),
-#             activity_panel("Aquaculture","aquaculture"),
-#             activity_panel("Vessel Routes","vessel"),
-#             activity_panel("Defence","defence"),
-#         ]
-#     )
 def _render_table(df, empty_text):
     if df is None or df.empty:
         return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
@@ -387,8 +336,7 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
         ]
     )
 
-
-# Definimos los callbacks que vienen de la app para el tab-management:
+# Definis los callbacks que vienen de la app para el tab-management:
 def register_management_callbacks(app: dash.Dash):
 
     # (1) Enable/disable por checklist (tu versión correcta)
@@ -415,10 +363,11 @@ def register_management_callbacks(app: dash.Dash):
             off(v_defence), off(v_defence),
         )
 
-    # 2) Pulsar DRAW -> fija capa de destino + color, y activa el modo polígono
+    # 2) Pulsar DRAW -> fija capa de destino + color, activa el modo polígono, y establece draw-mode a "management"
     @app.callback(
         Output("draw-meta", "data"),
         Output("edit-control", "drawToolbar"),
+        Output("draw-mode", "data"),
         Input("wind-farm-draw", "n_clicks"),
         Input("aquaculture-draw", "n_clicks"),
         Input("vessel-draw", "n_clicks"),
@@ -430,7 +379,7 @@ def register_management_callbacks(app: dash.Dash):
             raise PreventUpdate
         ctx = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
         layer_key, color = COLOR[ctx]
-        return {"layer": layer_key, "color": color}, {"mode": "polygon", "n_clicks": int(time.time())}
+        return {"layer": layer_key, "color": color}, {"mode": "polygon", "n_clicks": int(time.time())}, "management"
 
     # 3) Pintamos los poligonos en el mapa y los almacenamos en el FeatureGrop correspondiente cuando el usuario acaba un poligono. Tambien limpiamos los FeatureGroup si el trigger fue un checklist.
     @app.callback(
@@ -447,6 +396,7 @@ def register_management_callbacks(app: dash.Dash):
         Input("defence", "value"),
         State("draw-len", "data"),
         State("draw-meta", "data"),
+        State("draw-mode", "data"),
         State("mgmt-wind", "children"),
         State("mgmt-aquaculture", "children"),
         State("mgmt-vessel", "children"),
@@ -454,7 +404,11 @@ def register_management_callbacks(app: dash.Dash):
         prevent_initial_call=True
     )
     def manage_layers(gj, v_wind, v_aqua, v_vessel, v_defence,
-                    prev_len, meta, ch_wind, ch_aqua, ch_vessel, ch_defence):
+                    prev_len, meta, draw_mode, ch_wind, ch_aqua, ch_vessel, ch_defence):
+        # Guard: solo procesar si estamos en modo "management"
+        if draw_mode != "management":
+            raise PreventUpdate
+        
         ctx = dash.callback_context
         trig = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else None
 
@@ -482,6 +436,7 @@ def register_management_callbacks(app: dash.Dash):
         feats = (gj or {}).get("features", [])
         n = len(feats)
         prev_len = prev_len or 0
+        #print(f"DEBUG manage_layers: n={n}, prev_len={prev_len}, features={[f.get('id') for f in feats]}")
         if n <= prev_len:
             raise PreventUpdate  # sin nuevo dibujo (o updates del clear)
 
@@ -503,8 +458,10 @@ def register_management_callbacks(app: dash.Dash):
             clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
             return ch_wind, ch_aqua, ch_vessel, ch_defence, 0, clear
 
-        color = (meta or {}).get("color", "#ff00ff")
-        layer = (meta or {}).get("layer", "wind")
+        if not meta or not isinstance(meta, dict) or "layer" not in meta:
+            raise PreventUpdate
+        color = meta.get("color", "#ff00ff")
+        layer = meta["layer"]
         comps = [dl.Polygon(positions=p, color=color, fillColor=color, fillOpacity=0.6, weight=4)
                 for p in new_polys]
 
@@ -1499,8 +1456,6 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
         Output("mgmt-current-button", "hidden", allow_duplicate=True),
-        # opcional: re-sincronizar el disabled del botón de escenarios
-        # Output("mgmt-scenarios-button", "disabled", allow_duplicate=True),
         Input("mgmt-current-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
         prevent_initial_call=True
@@ -1517,4 +1472,109 @@ def register_management_callbacks(app: dash.Dash):
             False,  # muestro botón "Scenarios"
             True,   # oculto botón "Current"
             # opcional: not saltmarsh_enabled
+        )
+    
+    # Add management activity legend + auto-open layers panel when in management tab
+    @app.callback(
+        Output("mgmt-legend-div", "hidden", allow_duplicate=True),
+        Output("layers-btn", "disabled"),
+        Output("layer-menu", "className", allow_duplicate=True),
+        Output("mgmt-wind", "children", allow_duplicate=True),
+        Output("mgmt-aquaculture", "children", allow_duplicate=True),
+        Output("mgmt-vessel", "children", allow_duplicate=True),
+        Output("mgmt-defence", "children", allow_duplicate=True),
+        Output("mgmt-wind-upload", "children", allow_duplicate=True),
+        Output("mgmt-aquaculture-upload", "children", allow_duplicate=True),
+        Output("mgmt-vessel-upload", "children", allow_duplicate=True),
+        Output("mgmt-defence-upload", "children", allow_duplicate=True),
+        Input("tabs", "value"),
+        prevent_initial_call='initial_duplicate'
+    )
+    def clear_overlay_on_tab_change(tab_value):
+        # panel base class (collapsed)
+        base = "card shadow-sm position-absolute collapse"
+        # default collapsed class for layer menu
+        layer_menu_class = base
+
+        # If we're on management tab, show legend, enable layers button and open the layers panel
+        if tab_value == "tab-management":
+            layer_menu_class = f"{base} show"
+            # show legend (hidden=False), enable button (disabled=False), open panel, clear layer children placeholders
+            return False, False, layer_menu_class, [], [], [], [], [], [], [], []
+
+        # Otherwise hide legend, disable layers button and collapse the panel
+        return True, True, layer_menu_class, [], [], [], [], [], [], [], []
+
+# Add LayerGroup with the additional information for management activities location selection.
+    # @app.callback(
+    #     Output("mgmt-layers-control", "children"),
+    #     Output("mgmt-layers-control", "style"),
+    #     Input("tabs", "value"),
+    #     State("mgmt-layers-control", "children"),
+    #     prevent_initial_call=False
+    # )
+    # def toggle_mgmt_layers(tab_value, current_children):
+    #     if tab_value == "tab-management":
+    #         overlays = [
+    #             # Grupo 1: Human activities
+    #             dl.Overlay(
+    #                 name="Human activities", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-ha-1"),
+    #                     dl.LayerGroup(id="mgmt-ha-2"),
+    #                     # añade más capas del grupo aquí…
+    #                 ])
+    #             ),
+    #             # Grupo 2: Fishery
+    #             dl.Overlay(
+    #                 name="Fishery", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-fish-effort"),
+    #                     dl.LayerGroup(id="mgmt-fish-closures"),
+    #                     # …
+    #                 ])
+    #             ),
+    #             # Grupo 3: (otro)
+    #             dl.Overlay(
+    #                 name="Environmental", checked=False,
+    #                 children=dl.LayerGroup([
+    #                     dl.LayerGroup(id="mgmt-env-mpas"),
+    #                     dl.LayerGroup(id="mgmt-env-habitats"),
+    #                 ])
+    #             ),
+    #         ]
+    #         return overlays, {}                # visible
+    #     # al salir de management:
+    #     return [], {"display": "none", 'pointer-events': 'none'}         # oculto y sin hijos
+
+
+    @app.callback(
+        Output("layer-menu", "className"),
+        Input("layers-btn", "n_clicks"),
+        prevent_initial_call=False
+    )
+    def toggle_layers_panel(n):
+        base = "card shadow-sm position-absolute collapse"
+        return f"{base} show" if (n or 0) % 2 == 1 else base
+    
+    @app.callback(
+        Output("mgmt-ha-1", "children"),
+        Output("mgmt-ha-2", "children"),
+        Output("mgmt-fish-effort", "children"),
+        Output("mgmt-fish-closures", "children"),
+        Input("chk-human", "value"),
+        Input("chk-fish", "value"),
+        prevent_initial_call=False
+    )
+    def toggle_sub_layers(human_vals, fish_vals):
+        active = set((human_vals or []) + (fish_vals or []))
+
+        def on(layer_id, component):
+            return [component] if layer_id in active else []
+
+        return (
+            on("mgmt-ha-1", dl.GeoJSON(id="ha1")),          # <-- tu capa
+            on("mgmt-ha-2", dl.GeoJSON(id="ha2")),
+            on("mgmt-fish-effort",   dl.GeoJSON(id="feff")),
+            on("mgmt-fish-closures", dl.GeoJSON(id="fclo")),
         )
