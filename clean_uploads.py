@@ -4,7 +4,7 @@ from pathlib import Path
 TTL_HOURS = int(os.getenv("UPLOADS_TTL_HOURS", "6"))
 GC_INTERVAL_MIN = int(os.getenv("UPLOADS_GC_MIN", "30"))
 ROOT = os.getenv("UPLOADS_ROOT", "uploads")
-
+ 
 def main():
     ttl = TTL_HOURS * 3600
     while True:
