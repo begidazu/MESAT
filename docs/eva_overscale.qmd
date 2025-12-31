@@ -1,0 +1,82 @@
+---
+title: "EVA Overscale"
+---
+
+The Ecological Value Assessment (EVA) is an adaptation, developed by [Franco *et al.* (2026)](add book chapter link), of the Biological Valuation methodology proposed by 
+[Derous *et al.* (2007a)](https://pureportal.inbo.be/en/publications/a-concept-for-biological-valuation-in-the-marine-environment/) 
+and [Derous *et al.* (2007b)](https://bibliotekanauki.pl/articles/48603). EVA can be defined as the process of assigning a value to an area based on the 
+integration of the inherent value of its ecosystem qualities. This value is estimated as the combination 
+of a set of metrics (calculated using defined algorithms to answer multiple assessment questions) measuring 
+multiple qualities of biodiversity for multiple ecosystem components. Like Biological Valuation, EVA facilitates 
+the spatial evaluation of ecosystem properties and allows for the comparative analysis of ecological value (EV) 
+among subzones within the study area and can be applied from intertidal to deep-sea areas.
+
+EVA Overscale tab gives you the option to apply partially the EVA methodology worldwide, whilst the species are also present in Europe, based on the work of [Ocean Biodiversity Information System (2024)](https://shiny.obis.org/distmaps/) & 
+[OBIS (2025)](https://obis.org).  
+
+## Applied methodology
+
+Due to the data limitations to compute all assessment questions (AQs) worldwide, in particular those AQs related to abundance metrics, we applied the overscaling options using the AQs that could be assessed using Species Distribution Models. 
+In the following table the AQs applied in the overcaling option are defined:
+
+| Assessment question                                                                                       |
+| ------------------  | ----------------------------------------------------------------------------------- |
+| AQ1                 | Is the subzone characterized by the presence of many Locally Rare Features?         |          
+| AQ5                 | Is the subzone characterized by the presence of many Nationally Rare Features?      |           
+| AQ7                 | Is the Feature Number in the subzone high?                                          | 
+| AQ10                | Is the presence of Ecologically Significant Features high in the subzone?           |          
+| AQ12                | Is the presence of Habitat Forming Species/Biogenic Habitats high in the subzone?   |
+| AQ14                | Is the presence of Mutualistic or Symbiotic species high in the subzone?            |
+
+We computed the AQs based on the SDMs developed by [Ocean Biodiversity Information System (2024)](https://shiny.obis.org/distmaps) available at [https://mpaeu-dist.s3.amazonaws.com/index.html#](https://mpaeu-dist.s3.amazonaws.com/index.html#). 
+The overscaling methodology follows the subsequent steps:
+
+1. Creates the assessment grid from the user study area and grid configuration.
+2. Computes the Ecological Value score (very low: 0–1; low: 1–2; medium: 2–3; high: 3–4; very high: 4–5) for each AQ and Ecosystem Component:
+    1. **AQ1**
+        1. Parses the Locally Rare Feature TaxonIDs configured by the user.
+        2. Gets the predicted suitability maps for each TaxonID from the [Amazon S3 bucket](https://mpaeu-dist.s3.amazonaws.com/index.html#).
+        3. Converts the suitability maps into binary presence/absence using percentile 10 as threshold.
+        4. Selects the Locally Rare Features based on the user-defined threshold.
+        5. Computes the score using those TaxonIDs identified as Locally Rare Features.
+    2. **AQ5**
+        1. Parses the Nationally Rare Features configured by the user.
+        2. Gets the predicted suitability maps for each TaxonID from the [Amazon S3 bucket](https://mpaeu-dist.s3.amazonaws.com/index.html#).
+        3. Converts the suitability maps into binary presence/absence using percentile 10 as threshold.
+        4. Selects the Nationally Rare Features based on the EEZ and grid configuration (if presence < threshold → Nationally Rare).
+        5. Computes the score using those TaxonIDs identified as Nationally Rare Features.
+    3. **AQ7**
+        1. Parses the Locally Rare Feature TaxonIDs configured by the user.
+        2. Gets the predicted suitability maps for each TaxonID from the [Amazon S3 bucket](https://mpaeu-dist.s3.amazonaws.com/index.html#).
+        3. Converts the suitability maps into binary presence/absence using percentile 10 as threshold.
+        4. Computes the score using all TaxonIDs passed in the other AQs.
+    4. **AQ10**
+        1. Same as AQ7 but using only Ecologically Significant Features.
+    5. **AQ12**
+        1. Same as AQ7 but using only Habitat Forming Species / Biogenic Habitats.
+    6. **AQ14**
+        1. Same as AQ7 but using only Mutualistic or Symbiotic species.
+
+For more details about the methodology see [Franco *et al.* (2026)](add book chapter link) and [Egidazu-de la Parte *et al.* (2026)](https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit#heading=h.i7jku579q3oc).
+
+## How to navigate EVA Overscale?
+
+1. Draw or upload a file to select the context of analysis.
+2. Create the desired functional groups clicking on the + button.
+3. Configure each funtional group (taxon IDs are based on [WoRMS](https://www.marinespecies.org/)). Click on the created buttons to open the configuration window and save.
+4. Configure the desired assessment grid.
+5. Run the assessment to obtain the EVA results in the desired context and download the results if needed.
+6. Reset the results to restart the configuration.  
+
+## How to interpret EVA overscale results?
+
+EVA Overscale results could be interpreted as a condition ranking, based on biodiversity and rareness criteria, of the desired context. It reflects the relaive biodiverity and/or rareness importance in each assessment grid based on the previous AQs, reflecting the 
+areas in the context with the highest value for Locally Rare Features (AQ1), Nationally Rare Features (AQ5), overall biodiversity (AQ7), Ecologivally Significant Features (AQ10), Habitat Forming Species and Biogenic Habitats (AQ12) and Mutualistic or Symbiotic Species (AQ14). 
+It can also be used to identify areas with low condition where either policy or management interventions are needed. Moreover, for a more complete condition assessment, users can incorporate to these results other ecological characteristicts using their own data. 
+
+## References
+
+1. Derous, S., Agardy, T., Hillewaert, H., Hostens, K., Jamieson, G., Lieberknecht, L., Mees, J., Moulaert, I., Olenin, S., Paelinckx, D., Rabaut, M., Rachor, E., Roff, J., Stienen, E.W.M., van der Wal, J.T., Van Lancker, V., Verfaillie, E., Vincx, M., Weslawski, J.M. and Degraer, S., A concept for biological valuation in the marine environment, *Oceanologia 49* (1) (2007) 99-128.
+2. Derous, S., Austen, M, Claus, S., Daan, N., Dauvin, J.-C., Deneudt, K., Depestele, J., Desroy, N., Heessen, H., Hostens, K., Marboe, A.H., Lescrauwaet, A.-K., Moreno, M.P., Moulaert, I., Paelinckx, D., Rabaut, M., Rees, H., Ressurreicao, A., Roff, J., Santos, P.T., Speybroeck, J., Stienen, E.W.M., Tatarek, A., Hofstede, R.T., Vincx, M., Zarzycki, T. and Degraer, S., Building on the concept of marine biological valuation with respect to translating it to a practical protocol: Viewpoints derived from a joint ENCORA-MARBEF initiative, *Oceanologia 49* (4) (2007) 579-586. https://bibliotekanauki.pl/articles/48603
+3. OBIS (2025) Ocean Biodiversity Information System. Intergovernmental Oceanographic Commission of UNESCO. https://obis.org.
+4. Ocean Biodiversity information System (OBIS). (2024). Species distribution dashboard for MPA Europe. (version 0.1.0). https://shiny.obis.org/distmaps. Zenodo. https://doi.org/10.5281/zenodo.14524781
