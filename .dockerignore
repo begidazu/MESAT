@@ -20,6 +20,9 @@ data/
 # Results:
 results/
 
+# Uploads:
+uploads/
+
 # Artefactos de documentación
 _book/
 
