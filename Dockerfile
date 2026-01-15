@@ -75,7 +75,7 @@ EXPOSE 8050
 # Gunicorn WSGI
 ENV PORT=8050
 ## CMD ["gunicorn", "-b", "0.0.0.0:8050","--workers", "4", "--threads", "8", "--timeout", "120", "run:server"]
-CMD ["python", "run.py"]
+ENTRYPOINT ["python", "run.py"]
 
 
 
