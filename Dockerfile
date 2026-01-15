@@ -44,7 +44,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-WORKDIR /app
+WORKDIR /root
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -67,11 +67,8 @@ COPY requirements-docker.txt /app/requirements.txt
 RUN python -m pip install -r /app/requirements.txt \
     && python -m pip install gunicorn
 
-COPY . /app
+COPY . /root
 
-# Usuario no-root
-RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
-USER appuser
 
 EXPOSE 8050
 
