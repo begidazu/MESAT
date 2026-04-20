@@ -170,10 +170,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
     def render_tab(tab):  # función de renderizado
         key = f"{tab}-{int(time.time()*1000)}"
 
-        if tab == 'tab-fishstock':  # si es el tab de fishstock
-            # si tienes una función de layout:
-            # return fish_layout(key)
-            # mientras tanto, un placeholder:
+        if tab == 'tab-fishstock': 
             return html.Div("Fish Stocks — coming soon", key=key, style={'padding':'20px'})
         
         elif tab == "tab-eva-overscale":
