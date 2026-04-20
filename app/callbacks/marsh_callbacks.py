@@ -171,7 +171,85 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         key = f"{tab}-{int(time.time()*1000)}"
 
         if tab == 'tab-fishstock': 
-            return html.Div("Fish Stocks — coming soon", key=key, style={'padding':'20px'})
+            return html.Div(
+                key=key, 
+                children=[
+                    html.Div(
+                        style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
+                        children=[
+                            dcc.Dropdown(
+                                id='fish-stocks-dropdown',
+                                options=[
+                                    {'label': 'Anchovy in Bay of Biscay', 'value': 'ANE8'},
+                                    {'label': 'Anchovy  in Gulf of Cadiz and southern coast of Portugal', 'value': 'ANE9AS'},
+                                    {'label': 'Sardine in Cantabrian Sea and Atlantic Iberian water', 'value': 'PIL8C9A'},
+                                    {'label': 'Horse mackerel in Atlantic Iberian waters', 'value': 'HOM9A'},
+                                    {'label': 'Horse mackerel in Northeast Atlantic and adjacent waters', 'value': 'HOMNEA'},
+                                    {'label': 'Mackerel in Northeast Atlantic and adjacent waters', 'value': 'MACNEA'}
+                                ],
+                                placeholder= 'Select Fish Stock',
+                                className='dropdown-text',
+                                searchable=False
+                            ),
+                            html.Div(  # fila de botones
+                                style={'display':'flex','gap':'10px','alignItems':'center', 'padding-top': '1.5%'},  # estilos
+                                children=[  # hijos
+                                    html.Button(  # botón Run
+                                        html.Span("Run"),  # texto
+                                        id="run-fish-button",  # id
+                                        n_clicks=0,  # contador
+                                        disabled=True,  # deshabilitado al inicio
+                                        className='btn btn-outline-primary'  # clase css
+                                        #style={'width':'100px','height':'60px','borderRadius':'50%','display':'flex','justifyContent':'center','alignItems':'center'}  # estilo
+                                    ),
+                                    html.Button(  # botón Reset
+                                        html.Span("Reset"),  # texto
+                                        id="reset-fish-button",  # id
+                                        n_clicks=0,  # contador
+                                        className='btn btn-outline-primary',  # clase css
+                                        disabled=False  # deshabilitado al inicio
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                    dcc.Loading(  # contenedor con spinner
+                        id="loading-fish",  # id
+                        type="dot",  # tipo de spinner
+                        color='#2c3e50',
+                        children=[  # hijos
+                            #html.Legend("Ocean Physical Stock Account compilation: summary by habitat type", className='mt-4', id='opsa-legend', hidden=True),
+                            html.Div(id="fish-chart", style={'marginTop':'20px'}),
+                            html.Div(  # barra inferior
+                                    id='button-bar-fish',  # id
+                                    style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', 'padding': '20px'},  # estilos
+                                    children=[  # hijos
+                                        html.Button(  # botón info
+                                            [html.Img(src='./assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Ocean Physycal Stock Account compilation info")],  # contenido
+                                            id='info-button-fish',  # id
+                                            className='btn btn-outline-primary',
+                                            hidden=True,  # oculto al inicio
+                                            n_clicks=0  # contador
+                                        ),
+                                        html.Div(  # contenedor de descarga
+                                            [
+                                                html.Button(  # botón de descarga
+                                                    [html.Img(src='./assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")],  # contenido
+                                                    id='fish-results',  # id
+                                                    hidden=True,  # oculto al inicio
+                                                    n_clicks=0,  # contador
+                                                    className='btn btn-outline-primary'
+                                                ),
+                                                dcc.Download(id='fish-download')  # componente de descarga
+                                            ]
+                                        )
+                                    ]
+                                )
+                            ]  # contenedor de gráficas
+                    )
+                ],
+                style={'padding':'20px'}
+            )
         
         elif tab == "tab-eva-overscale":
             return html.Div(

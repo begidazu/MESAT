@@ -126,7 +126,7 @@
 #             selected_style={"fontSize":"var(--font-lg)", "padding":"0.55rem 1rem"},
 #         )
 
-#     # Sum all activities geometries for Total affection:
+#     # Sum all activities geometries for Total impact:
 #     def _as_list(x):
 #         if x is None:
 #             return []
@@ -1868,7 +1868,7 @@ def _to_geojson_from_parquet(path):
     # 2.d) si no se pudo inferir geometría, devolver vacío
     return {"type": "FeatureCollection", "features": []}          # devolver vacío si no hay geometría detectable
 
-# Function to build tabs where we will store the management scenarios affection graphs:
+# Function to build tabs where we will store the management scenarios impact graphs:
 
 def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
 
@@ -2779,7 +2779,7 @@ def register_management_callbacks(app: dash.Dash):
         return eunis_div, saltmarsh_div
 
 
-# Callback to compute the aquaculture affection to eunis and saltmarshes:   
+# Callback to compute the aquaculture impact to eunis and saltmarshes:   
     @app.callback(
         Output("mgmt-aquaculture-eunis", "children"),
         Output("mgmt-aquaculture-saltmarshes", "children"),
@@ -2833,7 +2833,7 @@ def register_management_callbacks(app: dash.Dash):
         return eunis_div, saltmarsh_div
 
     
-# Callback to compute the vessel route affection to eunis and saltmarshes:   
+# Callback to compute the vessel route impact to eunis and saltmarshes:   
     @app.callback(
         Output("mgmt-vessel-eunis", "children"),
         Output("mgmt-vessel-saltmarshes", "children"),
@@ -2886,7 +2886,7 @@ def register_management_callbacks(app: dash.Dash):
 
         return eunis_div, saltmarsh_div
     
-# Callback to compute the defence affection to eunis and saltmarshes:   
+# Callback to compute the defence impact to eunis and saltmarshes:   
     @app.callback(
         Output("mgmt-defence-eunis", "children"),
         Output("mgmt-defence-saltmarshes", "children"),
@@ -2958,7 +2958,7 @@ def register_management_callbacks(app: dash.Dash):
         if not _tabs_ready:
             raise PreventUpdate
         
-        # Sum all activities geometries for Total affection:
+        # Sum all activities geometries for Total impact:
         def _as_list(x):
             if x is None:
                 return []
@@ -3009,7 +3009,7 @@ def register_management_callbacks(app: dash.Dash):
 
         return eunis_div, saltmarsh_div
 
-# Callback to create tabs of saltmarsh scenario affection:
+# Callback to create tabs of saltmarsh scenario impact:
     @app.callback(
         Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden"),
