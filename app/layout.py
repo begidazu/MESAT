@@ -900,11 +900,11 @@ def create_layout():  # definir función que construye el layout
                                 value='tab-management',  # tab seleccionada por defecto
                                 className="tabs mb-2",  # clases CSS
                                 children=[  # pestañas
-                                    dcc.Tab(label='Management Scenarios', value='tab-management'),  # tab 1
-                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),  # tab 2
-                                    dcc.Tab(label='Physical Accounts',    value='tab-physical'),  # tab 3
-                                    dcc.Tab(label='EVA Overscale', value='tab-eva-overscale'),  # tab 4
-                                    dcc.Tab(label='Fish Stocks', value='tab-fishstock'),  # tab 5 
+                                    dcc.Tab(label='NHA scenarios', value='tab-management'),  # tab 1
+                                    dcc.Tab(label='OEA physical accounts',    value='tab-physical'),  # tab 2
+                                    dcc.Tab(label='SPF accounting', value='tab-fishstock'),  # tab 3 
+                                    dcc.Tab(label='Saltmarsh evolution',  value='tab-saltmarsh'),  # tab 4
+                                    dcc.Tab(label='EVA Overscale', value='tab-eva-overscale'),  # tab 5
                                     
                                 ],
                                 style={'fontWeight': 'bold'}  # estilo de fuente
@@ -992,43 +992,6 @@ def create_layout():  # definir función que construye el layout
                     # almacen para los layer de activities additional information
                     dcc.Store(id="layer-order", data=[]),
 
-                    # MODAL DE BIENVENIDA - ORIGINAL (COMENTADO)
-                    # dbc.Modal(
-                    #     [
-                    #         dbc.ModalHeader(dbc.ModalTitle("Welcome")),
-                    #         dbc.ModalBody(
-                    #             html.Div(
-                    #                 [
-                    #                     html.Div(
-                    #                         ["Welcome to the Marine Ecosystem Service Assessment Tool (MESAT). Here you can explore different management scenarios and their impacts on marine ecosystems, developed under the Ph.D. Thesis ",
-                    #                         html.A("Egidazu-de la Parte(2026)", href="link/to/phd/thesis", target="_blank")
-                    #                         ]),
-                    #                     html.P(html.A("Read the documentation", href="https://begidazu.github.io/MESAT/")),
-                    #                     html.Div(
-                    #                         dbc.Checkbox(
-                    #                             id="welcome-dont-show",
-                    #                             label="Don't show this again",
-                    #                             value=False,
-                    #                             className="mt-2"
-                    #                         )
-                    #                     ),
-                    #                 ]
-                    #             )
-                    #         ),
-                    #         dbc.ModalFooter(
-                    #             dbc.Button("Continue", id="welcome-close", n_clicks=0, className="ms-auto")
-                    #         ),
-                    #     ],
-                    #     id="welcome-modal",
-                    #     is_open=True,
-                    #     centered=True,
-                    #     scrollable=True,
-                    #     backdrop="static",
-                    #     keyboard=False,
-                    #     size="xl",
-                    # ),
-
-                    # MODAL DE BIENVENIDA - VERSIÓN MEJORADA RESPONSIVE
                     dbc.Modal(
                         [
                             dbc.ModalBody(
@@ -1045,7 +1008,7 @@ def create_layout():  # definir función que construye el layout
                                         
                                         # Descripción
                                         html.P(
-                                            "Welcome to the Marine Ecosystem Service Assessment Tool (MESAT). Here you can explore different management scenarios and their impacts on marine ecosystems.",
+                                            "Welcome to the Marine Ecosystem & Services Impact Tool (MESIT). Here you can explore different management scenarios and their impacts on marine ecosystems.",
                                             className="text-center text-muted mb-4"
                                         ),
                                         
@@ -1074,7 +1037,7 @@ def create_layout():  # definir función que construye el layout
                                                 ),
                                                 className="border-0 shadow-sm mb-4"
                                             ),
-                                            href="https://begidazu.github.io/MESAT/",
+                                            href="https://begidazu.github.io/MESIT/",
                                             target="_blank",     # Abre en pestaña nueva
                                             style={"textDecoration": "none"} # Quita el subrayado azul de link
                                         ),
