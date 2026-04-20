@@ -121,4 +121,20 @@ def register_fish_stock_callbacks(app: dash.Dash):
             if not info_clicks and not close_clicks:
                 raise PreventUpdate
             return not is_open
+        
+        @app.callback(  # descargar tabla
+            Output("fish-download", "data"),
+            Input("fish-results", "n_clicks"),
+            State("fish-stock-table", "data"),
+            State("fish-stocks-dropdown", "value"),
+            prevent_initial_call=True
+        )
+        def download_fish_table(n, table_data, area):  # descargar tabla como CSV
+            if not n or not table_data:
+                raise PreventUpdate
+            
+            df = pd.DataFrame(table_data)
+            filename = f"fish_stock_{area}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            
+            return dcc.send_data_frame(df.to_csv, filename=filename, index=False)
 
