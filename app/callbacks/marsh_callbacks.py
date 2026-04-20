@@ -225,7 +225,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', 'padding': '20px'},  # estilos
                                     children=[  # hijos
                                         html.Button(  # botón info
-                                            [html.Img(src='./assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Ocean Physycal Stock Account compilation info")],  # contenido
+                                            [html.Img(src='./assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("SPF accounting info")],  # contenido
                                             id='info-button-fish',  # id
                                             className='btn btn-outline-primary',
                                             hidden=True,  # oculto al inicio
@@ -246,6 +246,50 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     ]
                                 )
                             ]  # contenedor de gráficas
+                    ),
+                    dbc.Modal(  # modal de información
+                        [
+                            dbc.ModalHeader(dbc.ModalTitle("Small and mid-pelagic Fish (SPF) accounting compilation")),  # cabecera
+                            dbc.ModalBody(  # cuerpo
+                                 html.Div(
+                                    [
+                                        # 1) Texto introductorio
+                                        html.P([
+                                            "The ", html.B("System of Environmental–Economic Accounting – Ecosystem Accounting (SEEA-EA)"),
+                                            " is the globally adopted statistical standard that organises biophysical information on ecosystems and ecosystem services, tracks changes in ecosystem extent and condition, and links this information to human activities. SEEA-EA accounts are divided into two subgroups — stock and flow accounts — that are further categorised into physical or monetary accounts."
+                                        ], className="mb-3", style={"textAlign": "justify"}),
+
+                                        # 2) Imagen centrada + pie
+                                        html.Figure(
+                                            [
+                                                html.Img(
+                                                    src="./assets/images/SEEA_spf.png",
+                                                    alt="SEEA-EA framework diagram",
+                                                    style={"maxWidth": "100%", "height": "auto"}  # responsive
+                                                ),
+                                                html.Figcaption(
+                                                    "adopted from SEEA-EA framework (UN, 2021).",
+                                                    className="text-muted mt-1",
+                                                    style={"fontSize": "var(--font-sm)"}          # opcional
+                                                ),
+                                            ],
+                                            className="text-center my-3"  # margen vertical + centrado
+                                        ),
+
+                                        # 3) Texto posterior (y lo que necesites debajo)
+                                        html.P(
+                                            [
+                                                "SPF accounts are composed of ecosystem extent, ecosystem condition and food provisioning ecosystem services supply, demand and balance. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the six studied stocks assessed in Chapter 2 of the Ph.D. For detailed information of the methodology and additional results, please go to: ",
+                                                html.A("https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0", href='https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0')
+                                            ],
+                                            className="mb-2", style={"textAlign": "justify"}
+                                        )
+                                    ]
+                                )
+                            ),
+                            dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-fish-close", n_clicks=0)) 
+                        ],
+                        id="info-fish-modal", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
                     )
                 ],
                 style={'padding':'20px'}
