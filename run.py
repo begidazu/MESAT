@@ -186,6 +186,15 @@ from app import create_app  # crear app
 import threading, time
 from pathlib import Path
 import shutil, os
+import numpy as np
+
+from PIL import Image
+from rasterio.warp import calculate_default_transform
+from rasterio.windows import from_bounds
+
+from rasterio.io import MemoryFile
+from pyproj import Transformer
+
 
 
 # ------------------------------------------------------- LOCAL TEST ----------------------------------------------------------
@@ -280,6 +289,220 @@ def serve_reprojected_raster(area, scenario, year):  # servir PNG desde tif de c
     buf.seek(0)  # rebobinar
 
     return send_file(buf, mimetype="image/png")  # devolver PNG
+
+
+# @app.server.route("/raster/fish/<area>/<period>.png")
+# def serve_fish_stock_raster(area, period):
+#     BASE_DIR = Path(__file__).resolve().parent
+
+#     # Mapeo de stocks a rutas y resolutions
+#     stock_to_taxon = {
+#         'ANE8': ('126426', None),
+#         'ANE9AS': ('126426', None),
+#         'PIL8C9A': ('126421', None),
+#         'HOM9A': ('126822', '0_05deg'),
+#         'HOMNEA': ('126822', '0_25deg'),
+#         'MACNEA': ('127023', None)
+#     }
+
+#     if area not in stock_to_taxon:
+#         return abort(404)
+
+#     taxonid, resolution = stock_to_taxon[area]
+
+#     # Construir ruta base
+#     dirpath = (
+#         BASE_DIR / "results" / "pelagic_fish_stocks" / "presence_absence"
+#         / f"taxonid={taxonid}" / "method=ensemble" / "threshold=max_spec_sens"
+#     )
+
+#     if not dirpath.is_dir():
+#         return abort(404)
+
+#     # Buscar el TIF correcto según el período
+#     tif_filename = f"{period}_{resolution}.tif" if resolution else f"{period}.tif"
+#     tif_path = dirpath / tif_filename
+
+#     if not tif_path.exists():
+#         return abort(404)
+
+#     # 1. Reproyectar a EPSG:4326 — bounds y datos alineados para Leaflet
+#     with rasterio.open(str(tif_path)) as src, \
+#          WarpedVRT(src, crs="EPSG:3857", resampling=Resampling.nearest) as vrt:
+#         data = vrt.read(1, masked=True)
+#         b = vrt.bounds
+#         w, h = vrt.width, vrt.height
+#         lon_min, lon_max = b.left, b.right
+#         lat_min, lat_max = b.bottom, b.top
+
+#     # 2. Colormap: 0=dark blue (absence), 1=dark red (presence), NoData=transparent
+#     cmap = ListedColormap(["#00008B", "#8B0000"])
+#     cmap.set_bad(alpha=0)
+#     norm = BoundaryNorm([-0.5, 0.5, 1.5], ncolors=2)
+
+#     # 3. Renderizar — tamaño exacto en píxeles, sin márgenes
+#     dpi = 100
+#     fig = plt.figure(frameon=False)
+#     fig.set_size_inches(w / dpi, h / dpi)
+#     ax = fig.add_axes([0, 0, 1, 1])
+#     ax.set_axis_off()
+
+#     ax.imshow(
+#         data,
+#         cmap=cmap,
+#         norm=norm,
+#         extent=(lon_min, lon_max, lat_min, lat_max),
+#         interpolation="nearest",
+#         origin="upper",
+#         aspect="auto",   # ← evita que matplotlib distorsione el extent
+#     )
+
+#     buf = BytesIO()
+#     fig.savefig(buf, format="png", dpi=dpi, transparent=True, bbox_inches="tight", pad_inches=0)
+#     plt.close(fig)
+#     buf.seek(0)
+
+#     return send_file(buf, mimetype="image/png")
+
+@app.server.route("/raster/fish/<area>/<period>.png")
+def serve_fish_stock_raster(area, period):
+    BASE_DIR = Path(__file__).resolve().parent
+
+    stock_to_taxon = {
+        'ANE8':    ('126426', None),
+        'ANE9AS':  ('126426', None),
+        'PIL8C9A': ('126421', None),
+        'HOM9A':   ('126822', '0_05deg'),
+        'HOMNEA':  ('126822', '0_25deg'),
+        'MACNEA':  ('127023', None)
+    }
+
+    AXIS_FLIPPED_STOCKS = {'HOMNEA', 'MACNEA'}
+
+    if area not in stock_to_taxon:
+        return abort(404)
+
+    taxonid, resolution = stock_to_taxon[area]
+
+    dirpath = (
+        BASE_DIR / "results" / "pelagic_fish_stocks" / "presence_absence"
+        / f"taxonid={taxonid}" / "method=ensemble" / "threshold=max_spec_sens"
+    )
+
+    if not dirpath.is_dir():
+        return abort(404)
+
+    tif_filename = f"{period}_{resolution}.tif" if resolution else f"{period}.tif"
+    tif_path = dirpath / tif_filename
+
+    if not tif_path.exists():
+        return abort(404)
+
+    try:
+        import numpy as np
+        from collections import namedtuple
+        from pyproj import Transformer as ProjTransformer
+        from rasterio.transform import from_bounds as rio_from_bounds
+        from rasterio.warp import reproject, Resampling as WarpResampling
+        import rasterio.crs
+
+        BBox = namedtuple('BBox', ['left', 'bottom', 'right', 'top'])
+
+        with rasterio.open(str(tif_path)) as src:
+            if area in AXIS_FLIPPED_STOCKS:
+                nodata = src.nodata if src.nodata is not None else 255
+                data_raw = src.read(1)
+                orig_h, orig_w = data_raw.shape
+
+                # Extent ORIGINAL completo del TIF (incluyendo hasta 89.875°N)
+                lon_min_src, lon_max_src = -45.125, 70.125
+                lat_min_orig, lat_max_orig = 34.875, 89.875  # ← extent real del TIF
+
+                # Extent destino clipeado al límite válido de 3857
+                lat_min_dst = lat_min_orig
+                lat_max_dst = 85.051129
+
+                src_crs = rasterio.crs.CRS.from_wkt(
+                    'GEOGCS["WGS 84",DATUM["WGS_1984",'
+                    'SPHEROID["WGS 84",6378137,298.257223563]],'
+                    'PRIMEM["Greenwich",0],'
+                    'UNIT["degree",0.0174532925199433],'
+                    'AXIS["Longitude",EAST],'
+                    'AXIS["Latitude",NORTH]]'
+                )
+                dst_crs = rasterio.crs.CRS.from_epsg(3857)
+
+                # src_transform usa el extent ORIGINAL completo
+                src_transform = rio_from_bounds(
+                    lon_min_src, lat_min_orig,
+                    lon_max_src, lat_max_orig,
+                    orig_w, orig_h
+                )
+
+                # dst bounds clipeados a 3857 válido
+                t = ProjTransformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+                x_min, y_min = t.transform(lon_min_src, lat_min_dst)
+                x_max, y_max = t.transform(lon_max_src, lat_max_dst)
+
+                dst_w, dst_h = orig_w, orig_h
+                dst_transform = rio_from_bounds(x_min, y_min, x_max, y_max, dst_w, dst_h)
+
+                dst_data = np.full((dst_h, dst_w), nodata, dtype=data_raw.dtype)
+
+                reproject(
+                    source=data_raw,
+                    destination=dst_data,
+                    src_transform=src_transform,
+                    src_crs=src_crs,
+                    dst_transform=dst_transform,
+                    dst_crs=dst_crs,
+                    resampling=WarpResampling.nearest,
+                    src_nodata=nodata,
+                    dst_nodata=nodata,
+                )
+
+                data = np.ma.masked_equal(dst_data, nodata)
+                b = BBox(x_min, y_min, x_max, y_max)
+                w, h = dst_w, dst_h
+
+            else:
+                with WarpedVRT(src, crs="EPSG:3857", resampling=Resampling.nearest) as vrt:
+                    data = vrt.read(1, masked=True)
+                    b = vrt.bounds
+                    w, h = vrt.width, vrt.height
+
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] serve_fish_stock_raster: {e}")
+        traceback.print_exc()
+        return abort(500)
+
+    cmap = ListedColormap(["#00008B", "#8B0000"])
+    cmap.set_bad(alpha=0)
+    norm = BoundaryNorm([-0.5, 0.5, 1.5], ncolors=2)
+
+    dpi = 500
+    fig = plt.figure(frameon=False)
+    fig.set_size_inches(w / dpi, h / dpi)
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_axis_off()
+
+    ax.imshow(
+        data,
+        cmap=cmap,
+        norm=norm,
+        extent=(b.left, b.right, b.bottom, b.top),
+        interpolation="nearest",
+        origin="upper",
+        aspect="auto",
+    )
+
+    buf = BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi, transparent=True, bbox_inches="tight", pad_inches=0)
+    plt.close(fig)
+    buf.seek(0)
+
+    return send_file(buf, mimetype="image/png")
 
 if __name__ == "__main__":  # arrancar servidor en local
     app.run(debug=False, host="0.0.0.0", port=8050, dev_tools_ui=False, dev_tools_props_check=False)

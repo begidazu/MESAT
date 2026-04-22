@@ -48,6 +48,8 @@ venv.bak/
 # macOS
 .DS_Store
 
+.xml
+
 # Windows
 Thumbs.db
 ehthumbs.db

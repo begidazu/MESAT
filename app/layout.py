@@ -57,6 +57,8 @@ def create_layout():  # definir función que construye el layout
 
                                     # Layer where we store the EUNIS habitat polygons:
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
+                                    # Layer where we store the fish stocks presence/absence rasters:
+                                    dl.FeatureGroup(id='fish-stocks-overlay', children=[]),
                                      # OPSA legend:
                                     html.Div(  # contenedor de la leyenda flotante
                                         id='opsa-legend-div',  # id para actualizar desde callbacks
@@ -127,6 +129,42 @@ def create_layout():  # definir función que construye el layout
                                         ]  
                                     ),
 
+                                    # Fish stocks legend:
+                                    html.Div(
+                                        id='fish-stocks-legend-div',
+                                        style={
+                                            'position': 'absolute',
+                                            'bottom': '10px',
+                                            'left': '10px',
+                                            'zIndex': 1000, 
+                                            'background': 'rgba(255,255,255,0.92)',  
+                                            'border': '1px solid #ccc', 
+                                            'borderRadius': '8px',  
+                                            'padding': '8px 10px',  
+                                            'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  
+                                        },
+                                        className='legend',
+                                        hidden=True,
+                                        children=[
+                                            html.Div("Fish Stock Presence/Absence", style={'fontWeight':'bold','marginBottom':'6px'}),
+                                            html.Div(
+                                                [
+                                                    html.Div(
+                                                        style={'width':'14px','height':'14px','background':"#8B0000",'border':'1px solid #888'}
+                                                    ),
+                                                    html.Span("Presence")
+                                                ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
+                                            ),
+                                            html.Div(
+                                                [
+                                                    html.Div(
+                                                        style={'width':'14px','height':'14px','background':"#00008B",'border':'1px solid #888'}
+                                                    ),
+                                                    html.Span("Absence")
+                                                ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
+                                            )
+                                        ]  
+                                    ),
                                     
                                     # Layers where we store the management polygons
                                     dl.FeatureGroup(id="mgmt-wind", children=[]),

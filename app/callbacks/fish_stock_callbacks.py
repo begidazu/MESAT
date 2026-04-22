@@ -15,6 +15,26 @@ import numpy as np  # numérico
 import pandas as pd  # datos tabulares
 import time, json
 import geopandas as gpd
+from pyproj import Transformer
+
+from rasterio.io import MemoryFile
+from pyproj import Transformer
+
+# Dictionary to map stocks to their presence/absence raster paths:
+pres_abs = {
+    'ANE8': "results/pelagic_fish_stocks/presence_absence/taxonid=126426/method=ensemble/threshold=max_spec_sens",
+    'ANE9AS': "results/pelagic_fish_stocks/presence_absence/taxonid=126426/method=ensemble/threshold=max_spec_sens",
+    'PIL8C9A': "results/pelagic_fish_stocks/presence_absence/taxonid=126421/method=ensemble/threshold=max_spec_sens",
+    'HOM9A': "results/pelagic_fish_stocks/presence_absence/taxonid=126822/method=ensemble/threshold=max_spec_sens",
+    'HOMNEA': "results/pelagic_fish_stocks/presence_absence/taxonid=126822/method=ensemble/threshold=max_spec_sens",
+    'MACNEA': "results/pelagic_fish_stocks/presence_absence/taxonid=127023/method=ensemble/threshold=max_spec_sens"
+}
+
+# Dicionary to map specific resolutions for stocks (only HOM and HOMNEA need it):
+stock_resolutions = {
+    'HOM9A': '0_05deg',
+    'HOMNEA': '0_25deg'
+}
 
 def register_fish_stock_callbacks(app: dash.Dash):
         @app.callback(  # centrar/zoom por área
@@ -44,18 +64,26 @@ def register_fish_stock_callbacks(app: dash.Dash):
             Output("fish-chart", "children", allow_duplicate=True),
             Output("info-button-fish", "hidden", allow_duplicate=True),
             Output("fish-results", "hidden", allow_duplicate=True),
+            Output('fish-stocks-overlay', 'children', allow_duplicate=True),
+            Output('fish-stocks-legend-div', 'hidden', allow_duplicate=True),
+            Output('fish-stocks-period-div', 'hidden', allow_duplicate=True),
+            Output('fish-stocks-period-div', 'children', allow_duplicate=True),
+            Output("fish-stocks-dropdown", "disabled", allow_duplicate=True),
             Input("reset-fish-button", "n_clicks"),
             prevent_initial_call=True
         )
         def reset(n):  # limpiar todo
             if n:
-                return [None, {"center": [40, -3.5], "zoom": 7}, True, None, True, True]
+                return [None, {"center": [40, -3.5], "zoom": 7}, True, None, True, True, [], True, True, [], False]
             raise PreventUpdate
         
         @app.callback(
             Output("fish-chart", "children"),
             Output("info-button-fish", "hidden"),
             Output("fish-results", "hidden"),
+            Output("fish-stocks-period-div", "hidden"),  # mostrar radio buttons
+            Output("fish-stocks-period-div", "children"),  # actualizar contenido de radio buttons
+            Output("fish-stocks-dropdown", "disabled", allow_duplicate=True),
             Input("run-fish-button", "n_clicks"),
             State("fish-stocks-dropdown", "value"),
             prevent_initial_call=True
@@ -70,11 +98,11 @@ def register_fish_stock_callbacks(app: dash.Dash):
             try:
                 df = pd.read_parquet(parquet_path)
             except Exception as e:
-                return html.Div(f"Error reading data: {e}", style={"color": "crimson", "whiteSpace": "pre-wrap"})
+                return html.Div(f"Error reading data: {e}", style={"color": "crimson", "whiteSpace": "pre-wrap"}), False, False, True, []
 
             df_filtered = df[df["Stock"] == area].copy()
             if df_filtered.empty:
-                return html.Div(f"No records found for stock {area}.", style={"fontStyle": "italic", "color": "#666"})
+                return html.Div(f"No records found for stock {area}.", style={"fontStyle": "italic", "color": "#666"}), False, False, True, []
 
             table_fieldnames = {
                 'Extent': 'Extent (km²)',
@@ -100,7 +128,30 @@ def register_fish_stock_callbacks(app: dash.Dash):
                     {"if": {"row_index": "odd"}, "backgroundColor": "#fafafa"}
                 ],
             )
-            return [html.Div([html.Hr(), html.H4("Pelagic Fish Stock results"), table], style={"marginTop": "8px"}), False, False]
+            
+            # Crear radio buttons dinámicamente
+            radio_buttons = html.Div(
+                children=[
+                    html.Legend(
+                        "Select Time Period",
+                        className="mt-4"
+                    ),
+                    dcc.RadioItems(
+                        id='fish-stocks-period-radio',
+                        options=[
+                            {'label': ' 2000-2009', 'value': '2000_2010'},
+                            {'label': ' 2010-2019', 'value': '2010_2020'}
+                        ],
+                        value='2000_2010',
+                        inline=False,
+                        inputClassName='form-check-input',
+                        className='form-check',
+                        labelClassName='form-check-label'
+                    )
+                ]
+            )
+            
+            return [html.Div([html.Hr(), html.H4("Pelagic Fish Stock results"), table], style={"marginTop": "8px"}), False, False, False, radio_buttons, True]
         
         @app.callback(
              Output("run-fish-button", "disabled"),
@@ -138,3 +189,117 @@ def register_fish_stock_callbacks(app: dash.Dash):
             
             return dcc.send_data_frame(df.to_csv, filename=filename, index=False)
 
+        # @app.callback(  # mostrar overlay de presence/absence en el mapa
+        #     Output('fish-stocks-overlay', 'children'),
+        #     Output('fish-stocks-legend-div', 'hidden'),
+        #     Input('fish-stocks-period-radio', 'value'),
+        #     State('fish-stocks-dropdown', 'value'),
+        #     prevent_initial_call=True
+        # )
+        # def show_fish_stock_overlay(period, area):  # mostrar overlay cuando cambia el período
+        #     if not area or not period:
+        #         raise PreventUpdate
+            
+        #     # Construir la ruta al TIF
+        #     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        #     base_path = os.path.join(base_dir, pres_abs[area])
+            
+        #     # Para HOM9A y HOMNEA/MACNEA, añadir la resolution al nombre del archivo
+        #     resolution = stock_resolutions.get(area, '')
+        #     if resolution:
+        #         tif_filename = f"{period}_{resolution}.tif"
+        #     else:
+        #         tif_filename = f"{period}.tif"
+            
+        #     tif_path = os.path.join(base_path, tif_filename)
+            
+        #     # Verificar que el TIF existe
+        #     if not os.path.exists(tif_path):
+        #         return [], True  # retornar overlay vacío y leyenda oculta
+            
+        #     # Leer el TIF para obtener bounds y metadata
+        #     # Usar WarpedVRT para asegurar alineación correcta con la imagen PNG generada
+        #     try:
+        #         with rasterio.open(tif_path) as src, WarpedVRT(src, crs="EPSG:3857", resampling=Resampling.nearest) as vrt:
+        #             bounds_3857 = vrt.bounds
+
+        #         # Transform bounds from EPSG:3857 → EPSG:4326 for Leaflet
+        #         transformer = Transformer.from_crs("EPSG:3857", "EPSG:4326", always_xy=True)
+        #         lon_min, lat_min = transformer.transform(bounds_3857.left, bounds_3857.bottom)
+        #         lon_max, lat_max = transformer.transform(bounds_3857.right, bounds_3857.top)
+
+        #     except Exception as e:
+        #         return [], True
+
+        #     url = f"/raster/fish/{area}/{period}.png"
+
+        #     overlay = dl.ImageOverlay(
+        #         url=url,
+        #         bounds=[[lat_min, lon_min], [lat_max, lon_max]],  # ✅ Now in lat/lng
+        #         opacity=0.85
+        #     )
+            
+        #     return [overlay], False  # mostrar overlay y leyenda
+
+        @app.callback(
+            Output('fish-stocks-overlay', 'children'),
+            Output('fish-stocks-legend-div', 'hidden'),
+            Input('fish-stocks-period-radio', 'value'),
+            State('fish-stocks-dropdown', 'value'),
+            prevent_initial_call=True
+        )
+        def show_fish_stock_overlay(period, area):
+            if not area or not period:
+                raise PreventUpdate
+
+            AXIS_FLIPPED_STOCKS = {'HOMNEA', 'MACNEA'}
+
+            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+            base_path = os.path.join(base_dir, pres_abs[area])
+
+            resolution = stock_resolutions.get(area, '')
+            tif_filename = f"{period}_{resolution}.tif" if resolution else f"{period}.tif"
+            tif_path = os.path.join(base_path, tif_filename)
+
+            if not os.path.exists(tif_path):
+                return [], True
+
+            try:
+                from pyproj import Transformer as ProjTransformer
+                from collections import namedtuple
+
+                BBox = namedtuple('BBox', ['left', 'bottom', 'right', 'top'])
+
+                with rasterio.open(tif_path) as src:
+                    if area in AXIS_FLIPPED_STOCKS:
+                        # Mismos bounds que usa el servidor — pyproj directo
+                        lon_min_src, lon_max_src = -45.125, 70.125
+                        lat_min_src, lat_max_src = 34.875, 85.051129
+
+                        t = ProjTransformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+                        x_min, y_min = t.transform(lon_min_src, lat_min_src)
+                        x_max, y_max = t.transform(lon_max_src, lat_max_src)
+                        bounds_3857 = BBox(x_min, y_min, x_max, y_max)
+
+                    else:
+                        with WarpedVRT(src, crs="EPSG:3857", resampling=Resampling.nearest) as vrt:
+                            bounds_3857 = vrt.bounds
+
+                # Ambos casos: convertir 3857 → 4326 para Leaflet
+                transformer = ProjTransformer.from_crs("EPSG:3857", "EPSG:4326", always_xy=True)
+                lon_min, lat_min = transformer.transform(bounds_3857.left, bounds_3857.bottom)
+                lon_max, lat_max = transformer.transform(bounds_3857.right, bounds_3857.top)
+
+            except Exception as e:
+                print(f"[ERROR] show_fish_stock_overlay: {e}")
+                return [], True
+
+            url = f"/raster/fish/{area}/{period}.png"
+
+            overlay = dl.ImageOverlay(
+                url=url,
+                bounds=[[lat_min, lon_min], [lat_max, lon_max]],
+                opacity=0.85
+            )
+
+            return [overlay], False

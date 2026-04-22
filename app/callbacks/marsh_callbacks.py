@@ -191,6 +191,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 className='dropdown-text',
                                 searchable=False
                             ),
+                            html.Div(  # contenedor para los radio buttons (dinámico)
+                                id='fish-stocks-period-div',
+                                hidden=True,
+                                children=[]
+                            ),
                             html.Div(  # fila de botones
                                 style={'display':'flex','gap':'10px','alignItems':'center', 'padding-top': '1.5%'},  # estilos
                                 children=[  # hijos
@@ -1529,7 +1534,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             "https://github.com/begidazu/PhD_Web_App/tree/main/saltmarsh"),
             "tab-physical":   ("https://doi.org/10.1016/j.indic.2026.101163",
                             "https://github.com/begidazu/PhD_Web_App/blob/physical_accounts/app/models/opsa.py"),
-            "tab-fishstock":  (),
+            "tab-fishstock":  ("https://docs.google.com/document/d/1ZN8tYWCwRVDPAVdRLo3Cx7ugnGhPgeUfBRQtZ1HTKYk/edit?usp=sharing",
+                               "https://github.com/begidazu/MESIT/tree/main/app/models"),
             "tab-management": ("https://begidazu.github.io/MESIT/management_scenarios.html", 
                                "https://github.com/begidazu/MESIT/tree/main/app"),
             "tab-eva-overscale": ("https://begidazu.github.io/MESIT/eva_overscale.html",
