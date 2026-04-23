@@ -11,11 +11,23 @@ def run():
     # Lógica de Model B
     return {"message": "Resultado de Model B"}
 
-# # shp = gpd.read_parquet(r"C:\Users\beñat.egidazu\Downloads\Fish.parquet")
-# # shp.to_file(r"C:\Users\beñat.egidazu\Downloads\Fish.shp")
+# ane8 = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\ane8.shp")
+# ane8.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\ane8.parquet')
 
-# table = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\NAS\PhD\Papers\Fisheries_2\Data_nca2\Stock_ICES_Areas\mac_27_nea.shp")
-# table.to_parquet(r"C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\macnea.parquet")
+# ane9as = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\ane9aS.shp")
+# ane9as.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\ane9as.parquet')
+
+# hom9a = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\hom9a.shp")
+# hom9a.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\hom9a.parquet')
+
+# homnea = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\homnea.shp")
+# homnea.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\homnea.parquet')
+
+# macnea = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\macnea.shp")
+# macnea.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\macnea.parquet')
+
+# pil8c9a = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\pil8c9a.shp")
+# pil8c9a.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\pil8c9a.parquet')
 
 # import rasterio
 

@@ -36,6 +36,16 @@ stock_resolutions = {
     'HOMNEA': '0_25deg'
 }
 
+# Dictionary to map stocks to a specific border color:
+stock_colors = {
+    'ANE8': '#0764E6',      
+    'ANE9AS': '#07E6D9',    
+    'PIL8C9A': '#366663',   
+    'HOM9A': '#E57A06',     
+    'HOMNEA': '#664F36',    
+    'MACNEA': '#364A66'     
+}
+
 def register_fish_stock_callbacks(app: dash.Dash):
         @app.callback(  # centrar/zoom por área
             Output("map", "viewport", allow_duplicate=True),
@@ -69,12 +79,13 @@ def register_fish_stock_callbacks(app: dash.Dash):
             Output('fish-stocks-period-div', 'hidden', allow_duplicate=True),
             Output('fish-stocks-period-div', 'children', allow_duplicate=True),
             Output("fish-stocks-dropdown", "disabled", allow_duplicate=True),
+            Output("capa-parquet", "children", allow_duplicate=True),
             Input("reset-fish-button", "n_clicks"),
             prevent_initial_call=True
         )
         def reset(n):  # limpiar todo
             if n:
-                return [None, {"center": [40, -3.5], "zoom": 7}, True, None, True, True, [], True, True, [], False]
+                return [None, {"center": [40, -3.5], "zoom": 7}, True, None, True, True, [], True, True, [], False, []]
             raise PreventUpdate
         
         @app.callback(
@@ -193,6 +204,7 @@ def register_fish_stock_callbacks(app: dash.Dash):
         @app.callback(
             Output('fish-stocks-overlay', 'children'),
             Output('fish-stocks-legend-div', 'hidden'),
+            Output('fish-stocks-legend-div', 'children'),
             Input('fish-stocks-period-radio', 'value'),
             State('fish-stocks-dropdown', 'value'),
             prevent_initial_call=True
@@ -211,7 +223,7 @@ def register_fish_stock_callbacks(app: dash.Dash):
             tif_path = os.path.join(base_path, tif_filename)
 
             if not os.path.exists(tif_path):
-                return [], True
+                return [], True, []
 
             try:
                 from pyproj import Transformer as ProjTransformer
@@ -241,7 +253,7 @@ def register_fish_stock_callbacks(app: dash.Dash):
 
             except Exception as e:
                 print(f"[ERROR] show_fish_stock_overlay: {e}")
-                return [], True
+                return [], True, []
 
             url = f"/raster/fish/{area}/{period}.png"
 
@@ -251,8 +263,86 @@ def register_fish_stock_callbacks(app: dash.Dash):
                 opacity=0.85
             )
 
-            return [overlay], False
+            border_color = stock_colors.get(area, "#000000")
+            legend_children = [
+                html.Div("Fish Stock Presence/Absence", style={'fontWeight':'bold','marginBottom':'6px'}),
+                html.Div(
+                    [
+                        html.Div(style={'width':'14px','height':'14px','background':'#8B0000','border':'1px solid #888'}),
+                        html.Span("Presence")
+                    ], style={'display':'flex', 'alignItems':'center', 'gap':'6px', 'marginBottom':'4px'}
+                ),
+                html.Div(
+                    [
+                        html.Div(style={'width':'14px','height':'14px','background':'#00008B','border':'1px solid #888'}),
+                        html.Span("Absence")
+                    ], style={'display':'flex', 'alignItems':'center', 'gap':'6px', 'marginBottom':'4px'}
+                ),
+                html.Hr(style={'margin': '8px 0', 'borderColor': '#ccc'}),
+                html.Div("Stock ICES area", style={'fontWeight':'bold','marginBottom':'6px'}),
+                html.Div(
+                    [
+                        # html.Div(style={'width':'14px','height':'14px','background': border_color, 'border':'1px solid #888'}),
+                        html.Div(style={'width':'14px', 'height':'14px', 'background': 'transparent', 'border': f'3px solid {border_color}'}),
+                        html.Span(area)
+                    ], style={'display':'flex', 'alignItems':'center', 'gap':'6px', 'marginBottom':'4px'}
+                )
+            ]
+
+            return [overlay], False, legend_children
         
+        @app.callback(
+            Output("capa-parquet", "children"),
+            Input("run-fish-button", "n_clicks"),
+            State("fish-stocks-dropdown", "value"),
+            prevent_initial_call=True
+        )
+        def charge_paint_stock_area(trigger_value, area):
+            if not trigger_value or not area:
+                raise PreventUpdate
+
+            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+            parquet_filename = f"{area.lower()}.parquet"
+            parquet_path = os.path.join(base_dir, "results", "pelagic_fish_stocks", parquet_filename)
+
+            if not os.path.exists(parquet_path):
+                print(f"[WARN] charge_paint_stock_area: parquet not found for stock {area} in {parquet_path}")
+                return []
+
+            try:
+                gdf = gpd.read_parquet(parquet_path)
+            except Exception as e:
+                print(f"[ERROR] charge_paint_stock_area: {e}")
+                return []
+
+            if gdf.empty:
+                return []
+
+            if gdf.crs is None or gdf.crs.to_string() != "EPSG:4326":
+                try:
+                    gdf = gdf.to_crs("EPSG:4326")
+                except Exception as e:
+                    print(f"[ERROR] convert CRS to EPSG:4326: {e}")
+                    return []
+
+            geojson_data = json.loads(gdf.to_json())
+            border_color = stock_colors.get(area, "#000000")
+
+            capa_vectorial = dl.GeoJSON(
+                data=geojson_data,
+                id="parquet-stock-geojson",
+                style={
+                    "color": border_color,
+                    "weight": 5,
+                    "opacity": 1.0,
+                    "fillColor": "transparent",
+                    "fillOpacity": 0.0
+                }
+            )
+
+            return [capa_vectorial]
+
+
         @app.callback(
             Output('fish-stocks-overlay', 'children', allow_duplicate=True),
             Output('fish-stocks-legend-div', 'hidden', allow_duplicate=True),
@@ -263,10 +353,11 @@ def register_fish_stock_callbacks(app: dash.Dash):
             Output('fish-chart', 'children', allow_duplicate=True),
             Output('info-button-fish', 'hidden', allow_duplicate=True),
             Output('fish-results', 'hidden', allow_duplicate=True),
+            Output("capa-parquet", "children", allow_duplicate=True),
             Input('tabs', 'value'),
             prevent_initial_call=True
         )
         def clear_fish_on_tab_change(tab_value):
             if tab_value != 'tab-fishstock':
-                return [], True, True, [], None, False, None, True, True
+                return [], True, True, [], None, False, None, True, True, []
             raise PreventUpdate

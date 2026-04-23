@@ -54,7 +54,7 @@ def create_layout():  # definir función que construye el layout
                                         },
                                         children=[]  # vacío al inicio; se completa al ejecutar OPSA
                                     ),
-
+                                    dl.FeatureGroup(id="capa-parquet", children=[]),
                                     # Layer where we store the EUNIS habitat polygons:
                                     dl.FeatureGroup(id='opsa-layer', children=[]),
                                     # Layer where we store the fish stocks presence/absence rasters:
