@@ -254,7 +254,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     ),
                     dbc.Modal(  # modal de información
                         [
-                            dbc.ModalHeader(dbc.ModalTitle("Small and mid-pelagic Fish (SPF) accounting compilation")),  # cabecera
+                            dbc.ModalHeader(dbc.ModalTitle("Small and mid-pelagic fish (SPF) accounting compilation")),  # cabecera
                             dbc.ModalBody(  # cuerpo
                                  html.Div(
                                     [
@@ -284,7 +284,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         # 3) Texto posterior (y lo que necesites debajo)
                                         html.P(
                                             [
-                                                "SPF accounts are composed of ecosystem extent, ecosystem condition and food provisioning ecosystem services supply, demand and balance. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the six studied stocks assessed in Chapter 2 of the Ph.D. For detailed information of the methodology and additional results, please go to: ",
+                                                "In this application, SPF accounts are composed of ecosystem extent, ecosystem condition and food provisioning ecosystem services supply, demand and balance. In this tab we present the physical account compilation for the six studied stocks assessed in Chapter 2 of the Ph.D. SPF stock extents are computed from species distribution models, and SPF condition scores are computed from fisheries management, biophysical, and ecological indicators. Furthermore, SPF food provisioning supply equals the surplus production of the stock, and SPF food provisioning demand equals the landings. For detailed information of the methodology and additional results, please go to: ",
                                                 html.A("https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0", href='https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0')
                                             ],
                                             className="mb-2", style={"textAlign": "justify"}
