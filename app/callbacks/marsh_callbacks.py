@@ -175,6 +175,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key, 
                 children=[
+                    html.Legend("Which stock you want to analyse?"),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
                         children=[
@@ -629,6 +630,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
+                    html.Legend("In which study area do you wish to analyse physical accounts?"),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
                         children=[
@@ -764,7 +766,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
-                    html.Legend("In wich study area you want to simulate?"),
+                    html.Legend("In which study area you want to simulate the impacts based on ocean ecosystem accounting?"),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
                         children=dcc.Dropdown(
@@ -902,14 +904,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         type="dot",
                         color='#2c3e50',
                         children=[
-                            html.Legend("Economic activities impact to ecosystems", className="mt-4", id="mgmt-legend-affection", hidden=True),
+                            html.Legend("Activities impact to ecosystems", className="mt-4", id="mgmt-legend-affection", hidden=True),
                             html.Div(id="mgmt-table", style={'marginTop': '20px'}),
                             html.Div(
                                 id='mgmt-button-bar',
                                 style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
                                 children=[
                                     html.Button(  # botón info
-                                        [html.Img(src='./assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Management scenarios info")],
+                                        [html.Img(src='./assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Activity scenarios info")],
                                         id='mgmt-info-button',  # id
                                         className='btn btn-outline-primary',
                                         hidden=True,  # oculto al inicio
@@ -944,6 +946,15 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 ]
                             )
                         ]   
+                    ),
+                    dbc.Modal(  # modal de información
+                        [
+                            dbc.ModalHeader(dbc.ModalTitle("New human activity scenario information")),  # cabecera
+                            dbc.ModalBody(  # cuerpo
+                                html.P("Information about new human activity scenario impact.")
+                            ),
+                            dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close-nha", n_clicks=0)) 
+                        ], id="info-modal-nha", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
                     )
                 ], style={'padding':'20px'})
 
@@ -951,6 +962,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key= key, 
                 children=[  # UI del tab
+                    html.Legend("In which study area do you wish to analyse saltmarsh evolution and accretion?"),
                     html.Div(  # panel de selects y botones
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
                         children=[  # hijos del panel

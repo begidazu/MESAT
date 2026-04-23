@@ -1590,7 +1590,7 @@
 # ----------------------------------------- VERSION TO TRY TO FIX THE PATH PROBLEM IN THE ONLINE APP --------------------------------
 import os, base64, uuid
 import dash
-from dash import Input, Output, State, no_update, html, dcc, dash_table
+from dash import Input, Output, State, no_update, html, dcc, dash_table, callback_context
 from dash.exceptions import PreventUpdate
 import dash_leaflet as dl
 import io, json, time, zipfile
@@ -3331,5 +3331,21 @@ def register_management_callbacks(app: dash.Dash):
 
         zip_buf.seek(0)
         return dcc.send_bytes(lambda f: f.write(zip_buf.getvalue()), filename=f"management_scenarios_{area}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.zip")
+    
+    @app.callback(  # toggle modal info
+        Output("info-modal-nha", "is_open"),
+        Input("mgmt-info-button", "n_clicks"),
+        Input("info-close-nha",  "n_clicks"),
+        State("info-modal-nha",  "is_open"),
+        prevent_initial_call=True
+    )
+    def toggle_info_modal_nha(open_clicks, close_clicks, is_open):  # alternar modal
+        ctx = callback_context  # contexto
+        if not ctx.triggered:  # si no hay disparador
+            raise PreventUpdate  # no actualizar
+        trigger = ctx.triggered[0]["prop_id"].split(".")[0]  # id del disparador
+        if trigger in ["mgmt-info-button", "info-close-nha"]:  # si es abrir/cerrar 
+            return not is_open  # alternar
+        return is_open  # mantener 
     
 
