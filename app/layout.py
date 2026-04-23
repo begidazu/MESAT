@@ -1023,6 +1023,8 @@ def create_layout():  # definir función que construye el layout
                     dcc.Store(id="fg-configs", data={}),
                     dcc.Store(id = "eva-overscale-draw-meta", data={"layer": "study-area", "color": "#015B97"}),
                     dcc.Store(id = "eva-overscale-file-store"),
+                    # almacen para las tablas de management scenarios
+                    dcc.Store(id="mgmt-tables-store"),
 
                     # Debug Store:
                     # html.Pre(id="eva-debug", style={"display": "none"}),

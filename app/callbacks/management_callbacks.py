@@ -1593,7 +1593,7 @@ import dash
 from dash import Input, Output, State, no_update, html, dcc, dash_table
 from dash.exceptions import PreventUpdate
 import dash_leaflet as dl
-import json, time
+import io, json, time, zipfile
 import shutil
 from pathlib import Path 
 import pandas as pd                                              # leer parquet con pandas
@@ -1651,11 +1651,32 @@ def _render_table(df, empty_text):
     return html.Div([html.Hr(), table], style={"marginTop":"8px"})
 
 
+def _table_store_entry(df, name, activity=None, layer=None, scenario=None, year=None, entry_type="current"):
+    if df is None or df.empty:
+        return None
+    try:
+        records = json.loads(df.to_json(orient="records"))
+    except Exception:
+        records = df.to_dict(orient="records")
+    return {
+        "type": entry_type,
+        "activity": activity,
+        "layer": layer,
+        "scenario": scenario,
+        "year": year,
+        "name": name,
+        "columns": df.columns.tolist(),
+        "data": records,
+    }
+
+
 def _build_saltmarsh_scenarios_layout(area: str,
                                       mgmt_w, mgmt_wu,
                                       mgmt_a, mgmt_au,
                                       mgmt_v, mgmt_vu,
                                       mgmt_d, mgmt_du):
+
+    all_tables = []  # Lista para recolectar todas las tablas generadas
 
     def _years_tabs_for(activity_key: str, act_children, act_upload_children):
         scen_tabs = []
@@ -1671,6 +1692,17 @@ def _build_saltmarsh_scenarios_layout(area: str,
             for y in years:
                 try:
                     df = activity_saltmarsh_scenario_table(area, scen, y, act_children, act_upload_children)
+                    entry = _table_store_entry(
+                        df,
+                        name=f"{activity_key}_{scen}_{y}",
+                        activity=activity_key,
+                        layer="saltmarsh_scenario",
+                        scenario=scen,
+                        year=y,
+                        entry_type="scenario"
+                    )
+                    if entry is not None:
+                        all_tables.append(entry)
                     div = _render_table(df, f"No saltmarshes and mudflats within polygons for {SCEN_LABEL[scen]} {y}.")
                 except Exception as e:
                     import traceback; traceback.print_exc()
@@ -1726,7 +1758,7 @@ def _build_saltmarsh_scenarios_layout(area: str,
     total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))
 
 
-    return dcc.Tabs(
+    tabs = dcc.Tabs(
         id="mgmt-scenarios-tabs-main", value="wind",
         children=[
             activity_panel("Wind Farms",   "wind",       mgmt_w,  mgmt_wu),
@@ -1736,6 +1768,8 @@ def _build_saltmarsh_scenarios_layout(area: str,
             activity_panel("TOTAL",        "total",      total_children, total_upload_children)
         ]
     )
+
+    return tabs, all_tables
 
 # Funcion para validar la extension del fichero subido por los usuarios:
 def _valid_ext(filename: str) -> bool:                                                
@@ -2651,6 +2685,7 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-results", "hidden", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
         Output("mgmt-current-button", "hidden", allow_duplicate=True),
+        Output("mgmt-tables-store", "data", allow_duplicate=True),
         Input("mgmt-reset-button", "n_clicks"),
         State("wind-farm", "options"),
         State("aquaculture", "options"),
@@ -2676,7 +2711,8 @@ def register_management_callbacks(app: dash.Dash):
             [], [], [], [], # values de los 4 checklists
             default_view,   # viewport
             True,           # deshabilitar botón reset
-            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True, True, True
+            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True, True, True,
+            []
         )
     
 # Callback to enable run when any drawn or layer has a children:
@@ -2714,16 +2750,101 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-results", "hidden"),
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
         Output("mgmt-scenarios-button", "disabled", allow_duplicate=True),
+        Output("mgmt-tables-store", "data", allow_duplicate=True),
         Input("mgmt-run-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-tables-store", "data"),
+        State("mgmt-wind", "children"),
+        State("mgmt-wind-upload", "children"),
+        State("mgmt-aquaculture", "children"),
+        State("mgmt-aquaculture-upload", "children"),
+        State("mgmt-vessel", "children"),
+        State("mgmt-vessel-upload", "children"),
+        State("mgmt-defence", "children"),
+        State("mgmt-defence-upload", "children"),
         prevent_initial_call=True
     )
-    def render_mgmt_tabs(n, area):
+    def render_mgmt_tabs(n, area, current_store,
+                         mgmt_w, mgmt_wu,
+                         mgmt_a, mgmt_au,
+                         mgmt_v, mgmt_vu,
+                         mgmt_d, mgmt_du):
         if not (n and area):
             raise PreventUpdate
         eunis_enabled = eunis_available(area)
         saltmarsh_enabled = saltmarsh_available(area)
-        return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False, False, not saltmarsh_enabled
+
+        def _as_list(x):
+            if x is None:
+                return []
+            if isinstance(x, list):
+                return x
+            return [x]
+
+        current_store = current_store or []
+        preserved_scenarios = [entry for entry in current_store if entry.get("type") != "current"]
+        new_store = preserved_scenarios
+
+        def add_current_table(df, activity, layer, name):
+            entry = _table_store_entry(df, name=name, activity=activity, layer=layer, entry_type="current")
+            if entry is not None:
+                new_store.append(entry)
+
+        if eunis_enabled:
+            try:
+                df_wind = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
+                add_current_table(df_wind, "wind", "eunis", "wind_eunis")
+            except Exception:
+                pass
+            try:
+                df_aqua = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
+                add_current_table(df_aqua, "aquaculture", "eunis", "aquaculture_eunis")
+            except Exception:
+                pass
+            try:
+                df_vessel = activity_eunis_table(area, mgmt_v, mgmt_vu, label_col="AllcombD")
+                add_current_table(df_vessel, "vessel", "eunis", "vessel_eunis")
+            except Exception:
+                pass
+            try:
+                df_defence = activity_eunis_table(area, mgmt_d, mgmt_du, label_col="AllcombD")
+                add_current_table(df_defence, "defence", "eunis", "defence_eunis")
+            except Exception:
+                pass
+            try:
+                df_total_eu = activity_eunis_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a) + _as_list(mgmt_v) + _as_list(mgmt_d))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))], label_col="AllcombD")
+                add_current_table(df_total_eu, "total", "eunis", "total_eunis")
+            except Exception:
+                pass
+
+        if saltmarsh_enabled:
+            try:
+                df_wind_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
+                add_current_table(df_wind_sm, "wind", "saltmarsh", "wind_saltmarsh")
+            except Exception:
+                pass
+            try:
+                df_aqua_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
+                add_current_table(df_aqua_sm, "aquaculture", "saltmarsh", "aquaculture_saltmarsh")
+            except Exception:
+                pass
+            try:
+                df_vessel_sm = activity_saltmarsh_table(area, mgmt_v, mgmt_vu)
+                add_current_table(df_vessel_sm, "vessel", "saltmarsh", "vessel_saltmarsh")
+            except Exception:
+                pass
+            try:
+                df_defence_sm = activity_saltmarsh_table(area, mgmt_d, mgmt_du)
+                add_current_table(df_defence_sm, "defence", "saltmarsh", "defence_saltmarsh")
+            except Exception:
+                pass
+            try:
+                df_total_sm = activity_saltmarsh_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a) + _as_list(mgmt_v) + _as_list(mgmt_d))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))])
+                add_current_table(df_total_sm, "total", "saltmarsh", "total_saltmarsh")
+            except Exception:
+                pass
+
+        return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False, False, not saltmarsh_enabled, new_store
 
 # Callback to compute the wind farm afection to eunis and saltmarshes:
     @app.callback(
@@ -3014,8 +3135,10 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-scenarios-button", "hidden"),
         Output("mgmt-current-button", "hidden"),
+        Output("mgmt-tables-store", "data", allow_duplicate=True),
         Input("mgmt-scenarios-button", "n_clicks"),
         State("mgmt-study-area-dropdown", "value"),
+        State("mgmt-tables-store", "data"),
         State("mgmt-wind", "children"),
         State("mgmt-wind-upload", "children"),
         State("mgmt-aquaculture", "children"),
@@ -3026,20 +3149,24 @@ def register_management_callbacks(app: dash.Dash):
         State("mgmt-defence-upload", "children"),
         prevent_initial_call=True
     )
-    def satlmarsh_scenarios_activities(clicks, area,
+    def satlmarsh_scenarios_activities(clicks, area, current_store,
                                     mgmt_w, mgmt_wu,
                                     mgmt_a, mgmt_au,
                                     mgmt_v, mgmt_vu,
                                     mgmt_d, mgmt_du):
         if not clicks or not area:
             raise PreventUpdate
-        return _build_saltmarsh_scenarios_layout(
+        layout, tables = _build_saltmarsh_scenarios_layout(
             area,
             mgmt_w, mgmt_wu,
             mgmt_a, mgmt_au,
             mgmt_v, mgmt_vu,
             mgmt_d, mgmt_du
-        ), True, False
+        )
+        current_store = current_store or []
+        preserved_current = [entry for entry in current_store if entry.get("type") != "scenario"]
+        new_store = preserved_current + tables
+        return layout, True, False, new_store
     
 # Callback: volver a las tabs “Current”
     @app.callback(
@@ -3168,3 +3295,41 @@ def register_management_callbacks(app: dash.Dash):
             on("mgmt-fish-effort",   dl.GeoJSON(id="feff")),
             on("mgmt-fish-closures", dl.GeoJSON(id="fclo")),
         )
+    
+    @app.callback(
+        Output("mgmt-download", "data"),
+        Input("mgmt-results", "n_clicks"),
+        State("mgmt-tables-store", "data"),
+        State("mgmt-study-area-dropdown", "value"),
+        prevent_initial_call=True
+    )
+    def download_mgmt_csv(n, tables_data, area):
+        if not n or not tables_data:
+            raise PreventUpdate
+
+        if not isinstance(tables_data, list):
+            raise PreventUpdate
+
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for idx, entry in enumerate(tables_data):
+                if not isinstance(entry, dict) or not entry.get("data"):
+                    continue
+                try:
+                    df = pd.DataFrame(entry["data"])
+                except Exception:
+                    continue
+
+                name = entry.get("name") or f"table_{idx}"
+                safe_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in name)
+                if not safe_name.lower().endswith(".csv"):
+                    safe_name += ".csv"
+                zf.writestr(safe_name, df.to_csv(index=False).encode("utf-8"))
+
+        if not zip_buf.getvalue():
+            raise PreventUpdate
+
+        zip_buf.seek(0)
+        return dcc.send_bytes(lambda f: f.write(zip_buf.getvalue()), filename=f"management_scenarios_{area}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.zip")
+    
+
