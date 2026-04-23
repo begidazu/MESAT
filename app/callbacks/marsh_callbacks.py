@@ -287,7 +287,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         html.P(
                                             [
                                                 "In this application, SPF accounts are composed of ecosystem extent, ecosystem condition and food provisioning ecosystem services supply, demand and balance. In this tab we present the physical account compilation for the six studied stocks assessed in Chapter 2 of the Ph.D. SPF stock extents are computed from species distribution models, and SPF condition scores are computed from fisheries management, biophysical, and ecological indicators. Furthermore, SPF food provisioning supply equals the surplus production of the stock, and SPF food provisioning demand equals the landings. For detailed information of the methodology and additional results, please go to: ",
-                                                html.A("https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0", href='https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0')
+                                                html.A("Small and mid-pelagic physical accounting", href='https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0')
                                             ],
                                             className="mb-2", style={"textAlign": "justify"}
                                         )
@@ -949,9 +949,55 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                     ),
                     dbc.Modal(  # modal de información
                         [
-                            dbc.ModalHeader(dbc.ModalTitle("New human activity scenario information")),  # cabecera
+                            dbc.ModalHeader(dbc.ModalTitle("New human activity scenarios impact information")),
                             dbc.ModalBody(  # cuerpo
-                                html.P("Information about new human activity scenario impact.")
+                                 html.Div(
+                                    [
+                                        # 1) Texto introductorio
+                                        html.P([
+                                            "The ", html.B("System of Environmental–Economic Accounting – Ecosystem Accounting (SEEA-EA)"),
+                                            " is the globally adopted statistical standard that organises biophysical information on ecosystems and ecosystem services, tracks changes in ecosystem extent and condition, and links this information to human activities. SEEA-EA accounts are divided into two subgroups — stock and flow accounts — that are further categorised into physical or monetary accounts."
+                                        ], className="mb-3", style={"textAlign": "justify"}),
+
+                                        # 2) Imagen centrada + pie
+                                        html.Figure(
+                                            [
+                                                html.Img(
+                                                    src="./assets/images/SEEA_original.png",
+                                                    alt="SEEA-EA framework diagram",
+                                                    style={"maxWidth": "100%", "height": "auto"}  # responsive
+                                                ),
+                                                html.Figcaption(
+                                                    "adopted from SEEA-EA framework (UN, 2021).",
+                                                    className="text-muted mt-1",
+                                                    style={"fontSize": "var(--font-sm)"}          # opcional
+                                                ),
+                                            ],
+                                            className="text-center my-3"  # margen vertical + centrado
+                                        ),
+
+                                        # 3) Texto posterior (y lo que necesites debajo)
+                                        html.P(
+                                            [
+                                                "In this tab, you can simulate Ocean Ecosystem Accounting-based two new human activity scenarios impact, following the SEEA-EA framework. The assessment analysis is based on the potential absolute impact of each scenario to: ", html.B("a) "), "EUNIS habitat extent and condition; ", html.B("b) "), "Small and mid-pelagic fish stock extent, condition and food provisioning service; and ", html.B("c) "), "Saltmarsh systems current and future extent and accretion"
+                                            ],
+                                            className="mb-2", style={"textAlign": "justify"}
+                                        ),
+                                        html.P(
+                                            [
+                                                "This tab operationalises long-term Ecosystem Based Management by integrating climate change projections into physical OEA, allowing decision-makers to move beyond retrospective monitoring and proactively anticipate future saltmarsh ecosystem shifts."
+                                            ],
+                                            className="mb-2", style={"textAlign": "justify"}
+                                        ),
+                                                                                html.P(
+                                            [
+                                                "For more information, please go to: ", html.A("New human activities scenarios page", href='https://begidazu.github.io/MESIT/management_scenarios.html')
+                                            ],
+                                            className="mb-2", style={"textAlign": "justify"}
+                                        )
+
+                                    ]
+                                )
                             ),
                             dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close-nha", n_clicks=0)) 
                         ], id="info-modal-nha", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
