@@ -2,7 +2,7 @@
 from typing import Dict, Tuple, List
 
 import dash, json, time, os, sys, shutil, re 
-from dash import Input, Output, State, no_update, html, dcc, ALL, ctx, MATCH
+from dash import Input, Output, State, no_update, html, dcc, ALL, ctx, MATCH, callback_context
 from dash.exceptions import PreventUpdate
 # from dash_extensions.javascript import assign
 from pathlib import Path
@@ -1252,3 +1252,19 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
                     [],           # Clear Legend
                     []            # Clear GeoJsons of results added to the dl.Map
                 )
+            
+        @app.callback(  # toggle modal info
+            Output("info-modal-eva", "is_open"),
+            Input("eva-overscale-info-button", "n_clicks"),
+            Input("info-close-eva",  "n_clicks"),
+            State("info-modal-eva",  "is_open"),
+            prevent_initial_call=True
+        )
+        def toggle_info_modal_eva(open_clicks, close_clicks, is_open):  # alternar modal
+            ctx = callback_context  # contexto
+            if not ctx.triggered:  # si no hay disparador
+                raise PreventUpdate  # no actualizar
+            trigger = ctx.triggered[0]["prop_id"].split(".")[0]  # id del disparador
+            if trigger in ["eva-overscale-info-button", "info-close-eva"]:  # si es abrir/cerrar 
+                return not is_open  # alternar
+            return is_open  # mantener 

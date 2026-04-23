@@ -602,15 +602,22 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 ]
                             ),
                             html.Div(
-                                id = 'buttons-div',
-                                children = [
+                                        id = 'buttons-div',
+                                        children = [
 
-                                ]
-                            ),
+                                        ]
+                                    ),
 
-                            # Test button to download functional group configuration as JSON:
-
-
+                            dbc.Modal(  # modal de información
+                                [
+                                    dbc.ModalHeader(dbc.ModalTitle("EVA overscale information")),  # cabecera
+                                    dbc.ModalBody(  # cuerpo
+                                        html.P("Information about EVA.")
+                                    ),
+                                    dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close-eva", n_clicks=0)) 
+                                ],
+                                id="info-modal-eva", is_open=False, size="xl", centered=True, backdrop=True, scrollable=True # props
+                            )
                         ]
                     )
 
@@ -1584,65 +1591,4 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
     def welcome_callback_button(click):
         if click:
             return True
-
-    # # Callbacks para Management Scenarios
-    # @app.callback(
-    #     Output("mgmt-run-button", "disabled"),
-    #     Input("mgmt-study-area-dropdown", "value"),
-    #     prevent_initial_call=True
-    # )
-    # def toggle_mgmt_run(area):
-    #     return not bool(area)
-
-    # @app.callback(
-    #     Output("mgmt-tables-store", "data"),
-    #     Output("mgmt-table", "children"),
-    #     Output("mgmt-legend-affection", "hidden"),
-    #     Output("mgmt-results", "hidden"),
-    #     Input("mgmt-run-button", "n_clicks"),
-    #     State("mgmt-study-area-dropdown", "value"),
-    #     State("mgmt-wind", "children"),
-    #     State("mgmt-aquaculture", "children"),
-    #     State("mgmt-vessel", "children"),
-    #     State("mgmt-defence", "children"),
-    #     State("mgmt-wind-upload", "children"),
-    #     State("mgmt-aquaculture-upload", "children"),
-    #     State("mgmt-vessel-upload", "children"),
-    #     State("mgmt-defence-upload", "children"),
-    #     prevent_initial_call=True
-    # )
-    # def run_mgmt_scenarios(n, area, wind_drawn, aqua_drawn, vessel_drawn, defence_drawn, wind_upload, aqua_upload, vessel_upload, defence_upload):
-    #     if not n or not area:
-    #         raise PreventUpdate
-
-    #     # Combinar todas las geometrías
-    #     all_children = (wind_drawn or []) + (aqua_drawn or []) + (vessel_drawn or []) + (defence_drawn or []) + \
-    #                    (wind_upload or []) + (aqua_upload or []) + (vessel_upload or []) + (defence_upload or [])
-
-    #     if not all_children:
-    #         return None, html.Div("No activities defined. Draw or upload polygons for economic activities.", style={"color": "#666"}), True, True
-
-    #     # Aquí generar las tablas usando los modelos
-    #     # Por simplicidad, crear una tabla dummy
-    #     df = pd.DataFrame({
-    #         'Activity': ['Wind Farm', 'Aquaculture', 'Vessel Route', 'Defence'],
-    #         'Area_ha': [10.5, 5.2, 15.0, 8.7],
-    #         'Impact': ['High', 'Medium', 'Low', 'High']
-    #     })
-
-    #     table = dash_table.DataTable(
-    #         columns=[{"name": c, "id": c} for c in df.columns],
-    #         data=df.to_dict("records"),
-    #         sort_action="native",
-    #         filter_action="native",
-    #         page_action="none",
-    #         export_headers="display",
-    #         style_table={"maxHeight": "400px", "overflowY": "auto", "border": "1px solid #ddd", "borderRadius": "8px"},
-    #         style_cell={"padding": "8px", "fontSize": "1rem", "textAlign": "center"},
-    #         style_header={"fontWeight": "bold", "backgroundColor": "#f7f7f7", "borderBottom": "1px solid #ccc"},
-    #         style_data_conditional=[{"if": {"row_index": "odd"}, "backgroundColor": "#fafafa"}]
-    #     )
-
-    #     return df.to_dict("records"), [html.H4("Management Scenarios Results"), table], False, False
-
 
