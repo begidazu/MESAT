@@ -554,66 +554,31 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     ),
                                 ] 
                             ),
-
-
-                            # html.Div(
-                            #     id='eva-overscale-button-bar',
-                            #     style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
-                            #     children=[
-                            #         html.Button(  # botón Run
-                            #             html.Span("Run"),
-                            #             id="eva-overscale-run-button",
-                            #             n_clicks=0,
-                            #             disabled=True,
-                            #             className='btn btn-outline-primary'  
-                            #         ),
-                            #         html.Button(  # botón Reset
-                            #             html.Span("Reset"),
-                            #             id="eva-overscale-reset-button",
-                            #             n_clicks=0,
-                            #             className='btn btn-outline-primary',
-                            #             disabled=False
-                            #         ),
-                            #         html.Div(  # contenedor de descarga
-                            #             [
-                            #                 html.Button(  # botón de descarga
-                            #                     id='eva-overscale-results',
-                            #                     disabled=True,
-                            #                     children=[html.Img(src='assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
-                            #                     n_clicks=0,  # contador
-                            #                     className='btn btn-outline-primary'
-                            #                 ),
-                            #                 dcc.Store(id="eva-results-store"),
-                            #                 dcc.Download(id='eva-overscale-download')  # componente de descarga
-                            #             ]
-                            #         ),
-                            #         html.Button(  # botón info
-                            #             [html.Img(src='assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
-                            #             id='eva-overscale-info-button',
-                            #             className='btn btn-outline-primary',
-                            #             n_clicks=0  # contador
-                            #         )
-                            #     ]
-                            # ),
-
                             html.Div(
-                                id = 'area-selection-div',
-                                children = [
-
-                                ]
+                                id = 'area-selection-div', children = []
                             ),
                             html.Div(
-                                        id = 'buttons-div',
-                                        children = [
-
-                                        ]
-                                    ),
-
-                            dbc.Modal(  # modal de información
+                                        id = 'buttons-div',  children = []
+                            ),
+                            dbc.Modal(  # modal de información 
                                 [
                                     dbc.ModalHeader(dbc.ModalTitle("EVA overscale information")),  # cabecera
                                     dbc.ModalBody(  # cuerpo
-                                        html.P("Information about EVA.")
+                                        html.Div(
+                                            [
+                                                # 1) Texto introductorio
+                                                html.P([
+                                                    "The Ecological Value Assessment (EVA) methodology is a recent adaptation of the Biological Valuation methodology described by ", html.A("Derous et al. (2007a)", href='https://www.scopus.com/pages/publications/34047178405'), " and ", html.A("Derous (2007b)", href='https://bibliotekanauki.pl/articles/48603'), ", which encopasses not only biological traits but also habitats. The methodology facilitates the spatial evaluation of ecosystem properties and allows for the comparative analysis of ecological value (EV) among subzones within the study area and can be applied from intertidal to deep-sea areas. The methodology identifies ecosystem components as functional groups that cluster species and/or habitats that share taxonomic groups, ecosystem functions, and/ or spatial characteristics. The EV of the ecosystem components is estimated as the combination of a set of metrics (calculated from available data using defined algorithms to answer multiple assessment questions, AQs) that estimate the presence of ecological processes and biodiversity structure in an area. For more detailed information about the methodology and its application in Ocean Ecosystem Accounting, please go to: ", html.A("Egidazu-de la Parte et al. (2026)", href='https://doi.org/10.1016/j.indic.2026.101163')
+                                                ], className="mb-3", style={"textAlign": "justify"}),
+
+                                                html.P(
+                                                    [
+                                                        "In this tab, you can overscale part of the EVA methodology anywhere in the world (in case the species are also present in Europe), based on the species distribution models developed by ", html.A("Ocean Biodiversity Information System (2024)", href='https://shiny.obis.org/distmaps'), " and available at ", html.A("OBIS STAC Catalog", href='https://radiantearth.github.io/stac-browser/#/external/obis-maps.s3.us-east-1.amazonaws.com/sdm/stac/catalog.json'),". For detailed information on how the EVA methodology is applied, please go to the: ", html.A("EVA overscale documentation page", href='https://begidazu.github.io/MESIT/eva_overscale.html')
+                                                    ],
+                                                    className="mb-2", style={"textAlign": "justify"}
+                                                ),
+                                            ]
+                                        )
                                     ),
                                     dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close-eva", n_clicks=0)) 
                                 ],
@@ -979,13 +944,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         # 3) Texto posterior (y lo que necesites debajo)
                                         html.P(
                                             [
-                                                "In this tab, you can simulate Ocean Ecosystem Accounting-based two new human activity scenarios impact, following the SEEA-EA framework. The assessment analysis is based on the potential absolute impact of each scenario to: ", html.B("a) "), "EUNIS habitat extent and condition; ", html.B("b) "), "Small and mid-pelagic fish stock extent, condition and food provisioning service; and ", html.B("c) "), "Saltmarsh systems current and future extent and accretion"
+                                                "In this tab, you can simulate Ocean Ecosystem Accounting-based two new human activity scenarios impact, following the SEEA-EA framework. The assessment analysis is based on the potential absolute impact of each scenario to: ", html.B("a) "), "EUNIS habitat extent and condition (physical stock accounts); ", html.B("b) "), "Small and mid-pelagic fish stock extent, condition and food provisioning service (physical accounts); and ", html.B("c) "), "Saltmarsh systems current and future extent and accretion (extent and physical ecosystem service accounts)"
                                             ],
                                             className="mb-2", style={"textAlign": "justify"}
                                         ),
                                         html.P(
                                             [
-                                                "This tab operationalises long-term Ecosystem Based Management by integrating climate change projections into physical OEA, allowing decision-makers to move beyond retrospective monitoring and proactively anticipate future saltmarsh ecosystem shifts."
+                                                "In this context, the tab operationalises long-term Ecosystem Based Management by integrating climate change projections into physical OEA, allowing decision-makers to move beyond retrospective monitoring and proactively anticipate future saltmarsh ecosystem shifts."
                                             ],
                                             className="mb-2", style={"textAlign": "justify"}
                                         ),
