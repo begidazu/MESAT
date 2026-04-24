@@ -1,3 +1,39 @@
 ---
-title: "Fish Stocks"
+title: "Small and mid-pelagic fish (SPF) accounting"
 ---
+
+Small and mid-pelagic fish (SPF) occupy intermediate trophic levels, shaping the structure of marine systems and controlling the composition of lower and higher trophic levels.
+Although represented by a relatively small number of species, SPF are highly exposed to human pressures, accounting for more than 30% of the total marine harvests around the world. 
+Their importance to human well-being is beyond doubt. They provide essential food provisioning services and are an important economic source in many countries.
+Despite their importance in human well-being, SPF are not frequently included in Ocean Ecosystem Accounting (System of Environmental-Economic Accounting - Ecosystem Accounting, SEEA, application in ocean) and usually are incorporated into ocean accounts together with benthic species. 
+Nevertheless, assessing pelagic system accounts, together with benthic systems, fails to ecologically link the services to their source (i.e. SPF food provisioning linked to benthic habitats when SPF are accounted together with benthic fish stocks).
+Therefore, to ensure the ecological and accounting consistency in marine systems, the SPF stock accounts should be evaluated as a distinct component from the benthic systems.
+
+[Egidazu-de la Parte *et al.*. 2026, under development](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0) provide a comprehensive assessment of SPF stock physical accounts compliant with the SEEA-EA framework. 
+The methodology integrates species distribution models for extent, SEEA-Ecosystem Condition Typology compliant indicators for condition — incorporating both international management indicators, additional condition indicators and service-linked metrics —, and surplus production and landings to quantify the food provisioning service.
+
+In this tab, you can explore and download the results presented by [Egidazu-de la Parte *et al.*. 2026, under development](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0), assessing six SPF stocks extent, condition and food provisioning supply and demand during the 2000-2019 period.
+
+## How to navigate SPF accounting tab?
+
+1. Select the stock from the dropdown.
+2. Click the Run button to explore the stocks extent, condition and food provisioning service changes.
+3. Explore the extent distribution, condition and food provisioning changes from the selected stock using the table. Also display stocks distributions changing the period in the radio-buttons.
+5. Download the results, if needed, with the 'Download results' button or get additional information with the 'SPF accounting info' button.
+6. Reset the results to restart the configuration.
+
+## How to interpret the results?
+
+Extent results should be interpreted as predicted stock extents under the assumptions detailed by [Egidazu-de la Parte *et al.*. 2026, under development](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0), 
+where species distribution model suitability maps have been converted to binary presence/absence values using the maximising the sum of sensitivity and specificity (maxSSS) metric. 
+Additionally, stock condition (from 0 - worst - to 1 - best -) should be interpreted as an overall condition indicator condensing structural, functional and abiotic indicators of the stock. Low overall condition values (below 0.5)
+do not necessarily represent low food provisioning service, rather than an overall condition below the reference point. For detailed information on specific condition indicators, please read  [Egidazu-de la Parte *et al.*. 2026, under development](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0).
+Finally, food provisioning supply should be interpreted as the surplus production of the stock in a specific year, and the food provisioning demand as the commercial landings in a specific year.
+
+## SPF stock acronyms:
+1. ANE8: Anchovy in Bay of Biscay (ane.27.8)
+2. ANE9AS: Anchovy  in Gulf of Cadiz and southern coast of Portugal (ane.27.9aS)
+3. PIL8C9A: Sardine in Cantabrian Sea and Atlantic Iberian waters (pil.27.8c9a)
+4. HOM9A: Horse mackerel in Atlantic Iberian waters (hom.27.9a)
+5. HOMNEA: Horse mackerel in Northeast Atlantic and adjacent waters (hom.27.2a3a4a5b6a7a-ce-k8)
+6. MACNEA: Mackerel in Northeast Atlantic and adjacent waters (mac.27.nea)

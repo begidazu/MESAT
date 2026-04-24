@@ -1,57 +1,60 @@
 ---
-title: "Management Scenarios"
+title: "New human activity (NHA) scenarios"
 ---
 
-Management Scenarios tab gives you the option to explore the potential impact of a set of marine economic
-activities (i.e. wind farms, aquaculture plants, vessel routes and/or defence/military areas) in the study 
-areas where the Ph.D. studies have been carried out. In this sense, you can select Santander Coast, North Sea, 
-Irish Sea, Urdaibai Estuary and Cadiz Bay study areas. The impact in this Proof of Concept is based on the [Physical 
-Accounts studies](https://docs.google.com/document/d/1qBrr96Hek-HVC-K4_4n9cyR9cEJ_d24o/edit#heading=h.i7jku579q3oc)
-and the [Saltmarsh Evolution studies](https://www.sciencedirect.com/science/article/pii/S0048969724083220?via%3Dihub) (ADD FISH STOCK MODELS WHEN ARE READY!!).
+NHA scenarios tab gives you the option to explore the potential impact of two new human activity scenarios 
+based on Ocean Ecosystem Accounting (herein referring to the System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA) 
+applied to ocean and coastal environments). The assessments could be conducted in the study areas where the Ph.D. studies have been carried out.
+In this sense, you can select Santander Coast, North Sea, Irish Sea, Urdaibai Estuary and Cadiz Bay study areas. The impact of this proof-of-concept 
+web-based tool is based on the following studies:
+
+1. [Integrated methods for marine ecosystem physical accounting](https://doi.org/10.1016/j.indic.2026.101163): OEA physical accounts
+2. [Small pelagic fish stock physical accounting: integrating pelagic systems into the SEEA-EA framework](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0): SPF accounting
+3. [Eco-geomorphic modelling response of tidal marshes to sea level rise and changes in suspended sediment supply](https://doi.org/10.1016/j.scitotenv.2024.178164): Saltmarsh evolution
+
 Thus, it is worth noting that in some study areas you could explore the potential impact on EUNIS habitats and/or 
 saltmarsh and mudflat habitats, under a set of climate change scenarios when projections were conducted. The following table is a summary
 of the available impact in each study area:
 
-| Study Area        | Physical Accounts     | Saltmarsh Evolution   |
-| -------------     | --------------------- | --------------------- |
-| Santander Coast   | ✅                    | ✅                   |
-| North Sea         | ✅                    | ❌                   |
-| Irish Sea         | ✅                    | ❌                   |
-| Urdaibai Estuary  | ❌                    | ✅                   |
-| Cadiz Bay         | ❌                    | ✅                   |                      
+| Study Area        | OEA physical Accounts    | SPF accounting   | Saltmarsh Evolution   |
+| -------------     | -------------------------| ---------------- | --------------------- |
+| Santander Coast   | ✅                       | ✅              | ✅                   |
+| North Sea         | ✅                       | ✅              | ❌                   |
+| Irish Sea         | ✅                       | ✅              | ❌                   |
+| Urdaibai Estuary  | ❌                       | ❌              | ✅                   |
+| Cadiz Bay         | ❌                       | ❌              | ✅                   |                      
 
-In order to guide you where the Physical Accounts and Saltmarsh Studies have been conducted in the study areas, here 
-is a map with the location of Physical Account and Saltmarsh Evolution locations in each study area.
+In order to guide you where the OEA physical accounts and Saltmarsh evolution studies have been conducted in the study areas, here 
+is a map with the location of OEA physical account and Saltmarsh evolution locations in each study area.
 
-![Physical Accounts and Saltmarsh areas](images/PA_MARSH_docs.png){fig-cap="Physical Accounts and Saltmarsh areas" width=75%}
+![OEA physical accounts and Saltmarsh areas](images/PA_MARSH_docs.png){fig-cap="OEA physical accounts and Saltmarsh areas" width=75%}
 
-## How to navigate potential impact?
+## How to navigate NHA scenarios tab?
 
 1. Select the Study Area from the dropdown.
-2. Enable the desired activities clicking on the checkboxes.
-3. Draw the location or upload the file with the desired activity locations.
-4. Run the assessment.
+2. TO FINISH WHEN THE TAB FUNCTIONALITY IS FINISHED
 
 ## How to interpret impact results?
 
-The impact results are presented in table format. Each economic activity potential impact is further divided into three impact 
-subdivisions -- EUNIS, saltmarshes and fish -- that represent the impact of the economic activities to the respective 
-subdivision based on the results presented by [Egidazu-de la Parte *et al.* (2026a)](https://doi.org/10.1016/j.indic.2026.101163) 
-(EUNIS habitats), [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816) (Saltmarshes) and [Egidazu-de la Parte et al., 2026b](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0) (Fish). You can filter the 
-results using SQL queries.
+The impact results are presented in table format. Each new human activity scenario potential impact is further divided into three impact 
+subdivisions -- EUNIS, fish and saltmarshes -- that represent the impact of the economic activities to the respective 
+subdivision based on the results presented by the studies described above. You can also filter the results in the tables using SQL queries.
 
-![Economic activities impact example](images/economic_impact_docs.png){fig-cap="Economic impacts" width=75%}
+(CHANGE FIGURE)
+
+![New human activities impact example](images/economic_impact_docs.png){fig-cap="Impact scenarios" width=75%}
 
 Below is a breakdown of what each of the subdivisions represents:
 
-- EUNIS: *economic activity* + *EUNIS* tab includes the **extent (km^2^)** of EUNIS habitat types affected by each activity and 
+- EUNIS: *EUNIS* tab includes the **extent (km^2^)** of EUNIS habitat types affected by each activity scenario and 
 the **condition** of the affected portion of the habitat. The **condition** metric is an indicator of the 
-underlaying status of the habitat and scores vary from 0 (very low condition) to 5 (very high condition). For more detailed information see [Physical Accounts section](physical_accounts.qmd) and 
+underlaying status of the habitat and scores vary from 0 (very low condition) to 5 (very high condition). For more detailed information see [OEA physical accounts section](physical_accounts.qmd) and 
 [Egidazu-de la Parte *et al.* (2026)](https://doi.org/10.1016/j.indic.2026.101163). 
-- Saltmarshes: *economic activity* + *Saltmarshes* tab includes the **extent** (ha) of *saltmarsh*, *mudflat*, *upland areas* and 
-*channel* affected by the corresponding activity, as well as the **expected accretion** (main driver of carbon sequestration in intertidal ecosystems), under a set of climate change scenarios, 
-in those areas that the activities will be located. For more detailed information on the modelling process see [Saltmarsh Evolution section](saltmarsh.qmd) and [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816). 
-- Fish: ***ADD FISH DOCUMENTATION WHEN WE HAVE THE MODELS AND RESULTS*** 
+- Saltmarshes: *Saltmarshes* tab includes the **extent** (ha) of *saltmarsh*, *mudflat*, *upland areas* and 
+*channel* affected by the corresponding activity scenario, as well as the **expected accretion** (main driver of carbon sequestration in intertidal ecosystems), under a set of climate change scenarios, 
+in those areas that the activities will be located. For more detailed information on the modelling process see [Saltmarsh evolution section](saltmarsh.qmd) and [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816). 
+- Fish: *Fish* tab includes the **extent (km^2^)**, **overall condition**, **food provisioning supply (tons)**, **food provisioning demand (tons)** and **food provisioning balance (tons)** of the fish stock affected by each activity scenario corresponding to the 2000-2019 period (retropective).
+The impact in the food provisioning service is assessed assuming that the service is constant in the entire spatial coverage where the species is present. For detailed information on the modelling process see [Small pelagic fish stock physical accounting: integrating pelagic systems into the SEEA-EA framework](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0).
 
-***Note***: the results have to be interpreted as the maximum potential impact (under the model and scenarios assumptions and limitations) of the economic activities, as they assume that all the selected space is covered by the ecomic activity and will entirely 
-affect the ecosystem extent, condition and ecosystem service delivery.
+***Note***: the results have to be interpreted as the maximum potential impact (under the model and scenarios assumptions and limitations) of the human activity scenarios, as they assume that all the selected space is covered by the activity and will entirely 
+affect the extent, condition and ecosystem service delivery.

@@ -7,25 +7,27 @@ book:
   chapters:
     - index.qmd
     - management_scenarios.qmd
-    - saltmarsh.qmd
     - physical_accounts.qmd
-    - eva_overscale.qmd
     - fish.qmd
+    - saltmarsh.qmd
+    - eva_overscale.qmd
+
 
   navbar:
     left:
       - href: index.qmd
         text: Introduction
       - href: management_scenarios.qmd
-        text: Management scenarios
-      - href: saltmarsh.qmd
-        text: Saltmarsh Evolution
+        text: New human activity impact scenarios
       - href: physical_accounts.qmd
         text: Physical Accounts
-      - href: eva_overscale.qmd
-        text: EVA Overscale
       - href: fish.qmd
         text: Fish Stocks
+      - href: saltmarsh.qmd
+        text: Saltmarsh Evolution
+      - href: eva_overscale.qmd
+        text: EVA Overscale
+
 
 format:
   html:

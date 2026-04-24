@@ -1,5 +1,5 @@
 ---
-title: "Physical Accounts"
+title: "Ocean Ecosystem Accounting (OEA) physical accounts"
 ---
 
 The System of Environmental-Economic Accounting - Ecosystem Accounting (hereinafter SEEA-EA) is a globally adopted statistical 
@@ -12,7 +12,7 @@ be either divided into physical and monetary accounts. Physical Stock Acounts ar
 In this section you can explore the Physical Stock Accounts of three study  areas investigated by 
 [Egidazu-de la Parte *et al.* (2026)](https://doi.org/10.1016/j.indic.2026.101163). You can also download the [Ecological Value Assessment results](https://github.com/begidazu/MESIT/tree/main/results/EVA) used to compute the [Physical Accounts](https://github.com/begidazu/MESIT/tree/main/results/opsa) from the repository. 
 
-## How to navigate Physical Accounts?
+## How to navigate OEA physical accounts?
 
 1. Select the Study Area from the dropdown.
 2. Choose the Ecosystem Components that you want to include in the habitat condition assessment (for a complete condition assessment select all).
@@ -21,7 +21,7 @@ In this section you can explore the Physical Stock Accounts of three study  area
 
 ## How to interpret the results?
 
-Results of the Physical Accounts reflect the EUNIS habitat **extents (km^2^)** (2023) based on [Vasquez *et al.*, 2023](Vasquez, M., Ségeat, B., Cordingley, A., Tilby, E., Wikström, S., Ehrnsten, E., Al Hamdani, Z., Agnesi, S., Andersen, M. S., Annunziatellis, A., Askew, N., Bekkby, T., Bentes, L., Daniels, E., Doncheva, V., Drakopoulou, V., Ernstsen, V. B., Gonçalves, J., Karvinen, V., Laamanen-Nicolas, L., Lillis, H., Loukaidi, V., Manca, E., McGrath, F., Mo, G., Monteiro, P., Muresan, M., Nygard, H., O'keeffe, E., Pelembe, T., Radicioli, M., Sakellariou, D., Teaca, A., Todorova, V., Tunesi, L., Woods, H. (2023). EUSeaMap 2023, A European broad-scale seabed habitat map, Technical Report. Ref. EASME/EMFF/2020/3.1.11/Lot3/SI2.843624 – EMODnet Thematic Lot n° 3 – Seabed Habitats - D1.15. EMODnet. https://doi.org/10.13155/97116) 
+Results of the physical accounts reflect the EUNIS habitat **extents (km^2^)** (2023) based on [Vasquez *et al.*, 2023](Vasquez, M., Ségeat, B., Cordingley, A., Tilby, E., Wikström, S., Ehrnsten, E., Al Hamdani, Z., Agnesi, S., Andersen, M. S., Annunziatellis, A., Askew, N., Bekkby, T., Bentes, L., Daniels, E., Doncheva, V., Drakopoulou, V., Ernstsen, V. B., Gonçalves, J., Karvinen, V., Laamanen-Nicolas, L., Lillis, H., Loukaidi, V., Manca, E., McGrath, F., Mo, G., Monteiro, P., Muresan, M., Nygard, H., O'keeffe, E., Pelembe, T., Radicioli, M., Sakellariou, D., Teaca, A., Todorova, V., Tunesi, L., Woods, H. (2023). EUSeaMap 2023, A European broad-scale seabed habitat map, Technical Report. Ref. EASME/EMFF/2020/3.1.11/Lot3/SI2.843624 – EMODnet Thematic Lot n° 3 – Seabed Habitats - D1.15. EMODnet. https://doi.org/10.13155/97116) 
 and **condition** indicators (from very low condition - 0 to 1 - to very high condition - 4 to 5 -) based on the Ecological Value Assessment (EVA) methodology developed by [Franco *et al.*, 2026](add book chapter link) 
 and adapted in the study of [Egidazu-de la Parte *et al.* (2026)](https://doi.org/10.1016/j.indic.2026.101163).
 
