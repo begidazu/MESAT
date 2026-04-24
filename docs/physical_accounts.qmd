@@ -2,7 +2,8 @@
 title: "Ocean Ecosystem Accounting (OEA) physical accounts"
 ---
 
-The System of Environmental-Economic Accounting - Ecosystem Accounting (hereinafter SEEA-EA) is a globally adopted statistical 
+Ocean Ecosystem Accounting, herein referring to the System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA) 
+applied to ocean and coastal environments, is a globally adopted statistical 
 standard on ecosystem accounts, which constitutes an integrated and comprehensive statistical framework for organizing data about 
 ecosystems and is in use by more than 50 countries worldwide. The SEEA-EA is divided into stock and flow accounts, that can 
 be either divided into physical and monetary accounts. Physical Stock Acounts are divided into ecosystem/habitat extent and condition.

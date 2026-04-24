@@ -14,7 +14,7 @@ def create_app():
         __name__, 
         external_stylesheets=[dbc.themes.FLATLY, "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"],
         suppress_callback_exceptions=True,
-        title = "PhD Web Application"
+        title = "Marine Ecosystem Services Impact Tool (MESIT)"
         )
     app.layout = create_layout()
     register_model_callbacks(app)
