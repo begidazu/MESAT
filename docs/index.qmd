@@ -26,7 +26,7 @@ The MESIT application is divided into five main sections:
 4. Saltmarsh evolution
 5. Ecological Value Assessment (EVA) overscale
 
-These sections are detailed in their corresponding sections and the model codes used to obtain the results of the MESIT app are available in the GitHub repository [app/models](https://github.com/begidazu/PhD_Web_App/tree/main/app/models) ADD SALTMARSH CODES.
+These sections are detailed in their corresponding sections and the model codes used to obtain the results of the MESIT app are available in the GitHub repository [app/models](https://github.com/begidazu/PhD_Web_App/tree/main/app/models).
 
 ## About this Documentation
 
