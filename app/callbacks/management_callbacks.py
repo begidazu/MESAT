@@ -1611,7 +1611,7 @@ except Exception:                                                # si no está d
 from app.models.management_scenarios import (
     eunis_available, saltmarsh_available, activity_eunis_table,
     activity_saltmarsh_table, saltmarsh_scenario_available, saltmarsh_scenario_years,
-    activity_saltmarsh_scenario_table)
+    activity_saltmarsh_scenario_table, activity_fish_table)
 
 # mapping de botones -> (layer_key, color)
 COLOR = {
@@ -2720,6 +2720,88 @@ def register_management_callbacks(app: dash.Dash):
     
 
 # Callback to render the summary tabs:
+    # @app.callback(
+    #     Output("mgmt-table", "children", allow_duplicate=True),
+    #     Output("mgmt-legend-affection", "hidden"),
+    #     Output("mgmt-info-button", "hidden"),
+    #     Output("mgmt-results", "hidden"),
+    #     Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
+    #     Output("mgmt-scenarios-button", "disabled", allow_duplicate=True),
+    #     Output("mgmt-tables-store", "data", allow_duplicate=True),
+    #     Input("mgmt-run-button", "n_clicks"),
+    #     State("mgmt-study-area-dropdown", "value"),
+    #     State("mgmt-tables-store", "data"),
+    #     State("mgmt-wind", "children"),
+    #     State("mgmt-wind-upload", "children"),
+    #     State("mgmt-aquaculture", "children"),
+    #     State("mgmt-aquaculture-upload", "children"),
+    #     # State("mgmt-vessel", "children"),
+    #     # State("mgmt-vessel-upload", "children"),
+    #     # State("mgmt-defence", "children"),
+    #     # State("mgmt-defence-upload", "children"),
+    #     prevent_initial_call=True
+    # )
+    # def render_mgmt_tabs(n, area, current_store,
+    #                      mgmt_w, mgmt_wu,
+    #                      mgmt_a, mgmt_au):
+    #     if not (n and area):
+    #         raise PreventUpdate
+    #     eunis_enabled = eunis_available(area)
+    #     saltmarsh_enabled = saltmarsh_available(area)
+
+    #     def _as_list(x):
+    #         if x is None:
+    #             return []
+    #         if isinstance(x, list):
+    #             return x
+    #         return [x]
+
+    #     current_store = current_store or []
+    #     preserved_scenarios = [entry for entry in current_store if entry.get("type") != "current"]
+    #     new_store = preserved_scenarios
+
+    #     def add_current_table(df, activity, layer, name):
+    #         entry = _table_store_entry(df, name=name, activity=activity, layer=layer, entry_type="current")
+    #         if entry is not None:
+    #             new_store.append(entry)
+
+    #     if eunis_enabled:
+    #         try:
+    #             df_wind = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
+    #             add_current_table(df_wind, "scenario1", "eunis", "scenario1_eunis")
+    #         except Exception:
+    #             pass
+    #         try:
+    #             df_aqua = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
+    #             add_current_table(df_aqua, "scenario2", "eunis", "scenario2_eunis")
+    #         except Exception:
+    #             pass
+    #         try:
+    #             df_total_eu = activity_eunis_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au))], label_col="AllcombD")
+    #             add_current_table(df_total_eu, "total", "eunis", "total_eunis")
+    #         except Exception:
+    #             pass
+
+    #     if saltmarsh_enabled:
+    #         try:
+    #             df_wind_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
+    #             add_current_table(df_wind_sm, "scenario1", "saltmarsh", "scenario1_saltmarsh")
+    #         except Exception:
+    #             pass
+    #         try:
+    #             df_aqua_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
+    #             add_current_table(df_aqua_sm, "scenario2", "saltmarsh", "scnenario2_saltmarsh")
+    #         except Exception:
+    #             pass
+    #         try:
+    #             df_total_sm = activity_saltmarsh_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au))])
+    #             add_current_table(df_total_sm, "total", "saltmarsh", "total_saltmarsh")
+    #         except Exception:
+    #             pass
+
+    #     return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False, False, not saltmarsh_enabled, new_store
+
+    # Callback to render the summary tabs and populate the download store:
     @app.callback(
         Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-legend-affection", "hidden"),
@@ -2735,10 +2817,6 @@ def register_management_callbacks(app: dash.Dash):
         State("mgmt-wind-upload", "children"),
         State("mgmt-aquaculture", "children"),
         State("mgmt-aquaculture-upload", "children"),
-        # State("mgmt-vessel", "children"),
-        # State("mgmt-vessel-upload", "children"),
-        # State("mgmt-defence", "children"),
-        # State("mgmt-defence-upload", "children"),
         prevent_initial_call=True
     )
     def render_mgmt_tabs(n, area, current_store,
@@ -2746,17 +2824,12 @@ def register_management_callbacks(app: dash.Dash):
                          mgmt_a, mgmt_au):
         if not (n and area):
             raise PreventUpdate
+        
         eunis_enabled = eunis_available(area)
         saltmarsh_enabled = saltmarsh_available(area)
 
-        def _as_list(x):
-            if x is None:
-                return []
-            if isinstance(x, list):
-                return x
-            return [x]
-
         current_store = current_store or []
+        # Conservamos solo los datos de "scenarios" climáticos (si los hay), purgando los "current" anteriores
         preserved_scenarios = [entry for entry in current_store if entry.get("type") != "current"]
         new_store = preserved_scenarios
 
@@ -2765,6 +2838,7 @@ def register_management_callbacks(app: dash.Dash):
             if entry is not None:
                 new_store.append(entry)
 
+        # --- EUNIS ---
         if eunis_enabled:
             try:
                 df_wind = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
@@ -2776,12 +2850,8 @@ def register_management_callbacks(app: dash.Dash):
                 add_current_table(df_aqua, "scenario2", "eunis", "scenario2_eunis")
             except Exception:
                 pass
-            try:
-                df_total_eu = activity_eunis_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au))], label_col="AllcombD")
-                add_current_table(df_total_eu, "total", "eunis", "total_eunis")
-            except Exception:
-                pass
 
+        # --- SALTMARSH ---
         if saltmarsh_enabled:
             try:
                 df_wind_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
@@ -2790,21 +2860,85 @@ def register_management_callbacks(app: dash.Dash):
                 pass
             try:
                 df_aqua_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
-                add_current_table(df_aqua_sm, "scenario2", "saltmarsh", "scnenario2_saltmarsh")
+                add_current_table(df_aqua_sm, "scenario2", "saltmarsh", "scenario2_saltmarsh")
             except Exception:
                 pass
-            try:
-                df_total_sm = activity_saltmarsh_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au))])
-                add_current_table(df_total_sm, "total", "saltmarsh", "total_saltmarsh")
-            except Exception:
-                pass
+
+        # --- FISH STOCKS ---
+        from app.models.management_scenarios import activity_fish_table
+        
+        try:
+            df_wind_fish = activity_fish_table(area, mgmt_w, mgmt_wu)
+            add_current_table(df_wind_fish, "scenario1", "fish", "scenario1_fish_stocks")
+        except Exception:
+            pass
+            
+        try:
+            df_aqua_fish = activity_fish_table(area, mgmt_a, mgmt_au)
+            add_current_table(df_aqua_fish, "scenario2", "fish", "scenario2_fish_stocks")
+        except Exception:
+            pass
 
         return _build_mgmt_tabs(eunis_enabled, saltmarsh_enabled), False, False, False, False, not saltmarsh_enabled, new_store
 
 # Callback to compute the wind farm afection to eunis and saltmarshes:
+    # @app.callback(
+    #     Output("mgmt-wind-eunis", "children"),
+    #     Output("mgmt-wind-saltmarshes", "children"),
+    #     Input("mgmt-table", "children"),
+    #     State("mgmt-study-area-dropdown", "value"),
+    #     State("mgmt-wind", "children"),
+    #     State("mgmt-wind-upload", "children"),
+    #     prevent_initial_call=True
+    # )
+    # def fill_wind_tabs(_tabs_ready, area, mgmt_w, mgmt_wu):
+    #     if not _tabs_ready:
+    #         raise PreventUpdate
+
+    #     def render_table(df, empty_text):
+    #         if df is None or df.empty:
+    #             return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
+    #         table = dash_table.DataTable(
+    #             columns=[{"name": c, "id": c} for c in df.columns],
+    #             data=df.to_dict("records"),
+    #             sort_action="native", filter_action="native", page_action="none",
+    #             style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+    #             style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+    #             style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+    #             style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+    #         )
+    #         return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+
+    #     # --- EUNIS (solo si está disponible para el área) ---
+    #     if eunis_available(area):
+    #         try:
+    #             df_eu = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
+    #             eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario1.")
+    #         except Exception:
+    #             import traceback; traceback.print_exc()
+    #             eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+    #     else:
+    #         eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
+
+    #     # --- SALTMARSH (solo si está disponible para el área) ---
+    #     if saltmarsh_available(area):
+    #         try:
+    #             df_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
+    #             saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario1.")
+    #         except Exception:
+    #             import traceback; traceback.print_exc()
+    #             saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+    #     else:
+    #         # El subtab estará disabled; aún así devolvemos un placeholder inocuo
+    #         saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
+
+    #     return eunis_div, saltmarsh_div
+
+    # Callback to compute the wind farm afection to eunis, saltmarshes and fish:
     @app.callback(
         Output("mgmt-wind-eunis", "children"),
         Output("mgmt-wind-saltmarshes", "children"),
+        Output("mgmt-wind-fish", "children"), # <-- AÑADIDO
         Input("mgmt-table", "children"),
         State("mgmt-study-area-dropdown", "value"),
         State("mgmt-wind", "children"),
@@ -2816,6 +2950,7 @@ def register_management_callbacks(app: dash.Dash):
             raise PreventUpdate
 
         def render_table(df, empty_text):
+            # ... (mantén tu función render_table igual) ...
             if df is None or df.empty:
                 return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
             table = dash_table.DataTable(
@@ -2829,36 +2964,100 @@ def register_management_callbacks(app: dash.Dash):
             )
             return html.Div([html.Hr(), table], style={"marginTop":"8px"})
 
-        # --- EUNIS (solo si está disponible para el área) ---
+        # --- EUNIS ---
         if eunis_available(area):
+            # ... (tu código actual EUNIS) ...
             try:
                 df_eu = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario1.")
+                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario 1.")
             except Exception:
                 import traceback; traceback.print_exc()
                 eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
         else:
             eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        # --- SALTMARSH (solo si está disponible para el área) ---
+        # --- SALTMARSH ---
         if saltmarsh_available(area):
+            # ... (tu código actual SALTMARSH) ...
             try:
                 df_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario1.")
+                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario 1.")
             except Exception:
                 import traceback; traceback.print_exc()
                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
         else:
-            # El subtab estará disabled; aún así devolvemos un placeholder inocuo
             saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        return eunis_div, saltmarsh_div
+        # --- FISH STOCKS (AÑADIDO) ---
+        try:
+            df_fish = activity_fish_table(area, mgmt_w, mgmt_wu)
+            fish_div = render_table(df_fish, "No pelagic fish stocks affected by Scenario 1.")
+        except Exception:
+            import traceback; traceback.print_exc()
+            fish_div = html.Div("Couldn't build fish stocks table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+
+        return eunis_div, saltmarsh_div, fish_div # <-- Devolver los 3
 
 
 # Callback to compute the aquaculture impact to eunis and saltmarshes:   
+    # @app.callback(
+    #     Output("mgmt-aquaculture-eunis", "children"),
+    #     Output("mgmt-aquaculture-saltmarshes", "children"),
+    #     Input("mgmt-table", "children"),
+    #     State("mgmt-study-area-dropdown", "value"),
+    #     State("mgmt-aquaculture", "children"),
+    #     State("mgmt-aquaculture-upload", "children"),
+    #     prevent_initial_call=True
+    # )
+    # def fill_aquaculture_tabs(_tabs_ready, area, mgmt_a, mgmt_au):
+    #     if not _tabs_ready:
+    #         raise PreventUpdate
+
+    #     def render_table(df, empty_text):
+    #         if df is None or df.empty:
+    #             return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
+    #         table = dash_table.DataTable(
+    #             columns=[{"name": c, "id": c} for c in df.columns],
+    #             data=df.to_dict("records"),
+    #             sort_action="native", filter_action="native", page_action="none",
+    #             style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+    #             style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+    #             style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+    #             style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+    #         )
+    #         return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+
+    #     # --- EUNIS (solo si está disponible para el área) ---
+    #     if eunis_available(area):
+    #         try:
+    #             df_eu = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
+    #             eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario2.")
+    #         except Exception:
+    #             import traceback; traceback.print_exc()
+    #             eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+    #     else:
+    #         eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
+
+    #     # --- SALTMARSH (solo si está disponible para el área) ---
+    #     if saltmarsh_available(area):
+    #         try:
+    #             df_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
+    #             saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario2.")
+    #         except Exception:
+    #             import traceback; traceback.print_exc()
+    #             saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+    #     else:
+    #         # El subtab estará disabled; aún así devolvemos un placeholder inocuo
+    #         saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
+
+    #     return eunis_div, saltmarsh_div
+
+    # Callback to compute the aquaculture impact to eunis, saltmarshes and fish:   
+# Callback to compute the aquaculture impact to eunis, saltmarshes and fish:   
     @app.callback(
         Output("mgmt-aquaculture-eunis", "children"),
         Output("mgmt-aquaculture-saltmarshes", "children"),
+        Output("mgmt-aquaculture-fish", "children"),  # <-- AÑADIDO
         Input("mgmt-table", "children"),
         State("mgmt-study-area-dropdown", "value"),
         State("mgmt-aquaculture", "children"),
@@ -2883,7 +3082,7 @@ def register_management_callbacks(app: dash.Dash):
             )
             return html.Div([html.Hr(), table], style={"marginTop":"8px"})
 
-        # --- EUNIS (solo si está disponible para el área) ---
+        # --- EUNIS ---
         if eunis_available(area):
             try:
                 df_eu = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
@@ -2894,7 +3093,7 @@ def register_management_callbacks(app: dash.Dash):
         else:
             eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        # --- SALTMARSH (solo si está disponible para el área) ---
+        # --- SALTMARSH ---
         if saltmarsh_available(area):
             try:
                 df_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
@@ -2903,10 +3102,18 @@ def register_management_callbacks(app: dash.Dash):
                 import traceback; traceback.print_exc()
                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
         else:
-            # El subtab estará disabled; aún así devolvemos un placeholder inocuo
             saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        return eunis_div, saltmarsh_div
+        # --- FISH STOCKS ---
+        try:
+            from app.models.management_scenarios import activity_fish_table
+            df_fish = activity_fish_table(area, mgmt_a, mgmt_au)
+            fish_div = render_table(df_fish, "No pelagic fish stocks affected by Scenario2.")
+        except Exception:
+            import traceback; traceback.print_exc()
+            fish_div = html.Div("Couldn't build fish stocks table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+
+        return eunis_div, saltmarsh_div, fish_div
 
     
 # Callback to compute the vessel route impact to eunis and saltmarshes:   

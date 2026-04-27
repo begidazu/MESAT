@@ -590,6 +590,7 @@ from pyproj import Transformer
 import rasterio
 from rasterio.mask import mask as rio_mask
 from rasterio.warp import reproject, Resampling
+from rasterio.features import shapes
 from pathlib import Path
 
 # --- NUEVO: Base path dinámico para producción ---
@@ -1047,3 +1048,249 @@ def activity_saltmarsh_scenario_table(area: str,
             rows.append((name, extent_ha, acc_val))
 
     return pd.DataFrame(rows, columns=["Ecosystem", "Extent (ha)", "Accretion (m³/yr)"])
+
+
+# -------------------------------------------------------------------------
+# --- FISH STOCKS LOGIC ---
+# -------------------------------------------------------------------------
+
+FISH_PRES_ABS_BASE = "results/pelagic_fish_stocks/presence_absence"
+FISH_ACCOUNTS_PATH = "results/pelagic_fish_stocks/SPF_accounts_MESIT.parquet"
+
+STOCKS_CONFIG = {
+    'ANE8':   {'taxon': 'taxonid=126426', 'res': ''},
+    'ANE9AS': {'taxon': 'taxonid=126426', 'res': ''},
+    'PIL8C9A': {'taxon': 'taxonid=126421', 'res': ''},
+    'HOM9A':   {'taxon': 'taxonid=126822', 'res': '0_05deg'},
+    'HOMNEA':  {'taxon': 'taxonid=126822', 'res': '0_25deg'},
+    'MACNEA':  {'taxon': 'taxonid=127023', 'res': ''}
+}
+
+# def _get_affected_extent_km2(geom_4326, stock_id, period_key):
+#     """Calcula el extent (km2) extrayendo polígonos y proyectando a métrico (EPSG:3035)."""
+#     config = STOCKS_CONFIG.get(stock_id)
+#     if not config: return 0.0
+    
+#     res_suffix = f"_{config['res']}" if config['res'] else ""
+#     rel_path = f"{FISH_PRES_ABS_BASE}/{config['taxon']}/method=ensemble/threshold=max_spec_sens/{period_key}{res_suffix}.tif"
+#     tif_path = resolve_path(rel_path)
+    
+#     if not tif_path or not os.path.exists(tif_path):
+#         return 0.0
+
+#     with rasterio.open(tif_path) as src:
+#         if src.crs:
+#             project = Transformer.from_crs("EPSG:4326", src.crs, always_xy=True).transform
+#             geom_raster_crs = shp_transform(project, geom_4326)
+#         else:
+#             geom_raster_crs = geom_4326
+        
+#         try:
+#             out_image, out_transform = rio_mask(src, [geom_raster_crs], crop=True, filled=True)
+            
+#             # Crear una máscara binaria estricta (1 = presencia, el resto a 0)
+#             mask_presence = (out_image[0] == 1).astype('uint8')
+            
+#             if np.sum(mask_presence) == 0:
+#                 return 0.0
+            
+#             # Extraer las geometrías exactas de los píxeles
+#             polygons = []
+#             for geom, val in shapes(mask_presence, transform=out_transform):
+#                 if val == 1:
+#                     polygons.append(shape(geom))
+                    
+#             if not polygons:
+#                 return 0.0
+                
+#             # Convertir a GeoDataFrame y reproyectar a EPSG:3035 para área métrica europea
+#             gdf_presence = gpd.GeoDataFrame(geometry=polygons, crs=src.crs or "EPSG:4326")
+#             if gdf_presence.crs.is_geographic:
+#                 gdf_presence = gdf_presence.to_crs("EPSG:3035")
+                
+#             # Sumar área y convertir a km²
+#             return float(gdf_presence.area.sum() / 1e6)
+#         except Exception as e:
+#             print(f"Error calculating fish overlap for {stock_id}: {e}")
+#             return 0.0
+
+from rasterio.features import rasterize
+from rasterio.windows import from_bounds
+from shapely.ops import transform as shp_transform
+import numpy as np
+
+def _get_affected_extent_km2(geom_4326, stock_id, period_key):
+    """Calcula el extent (km2) rasterizando el polígono y usando matrices Numpy ultrarrápidas."""
+    config = STOCKS_CONFIG.get(stock_id)
+    if not config: return 0.0
+    
+    # 1. Cargar el Stock y hacer un filtro Bounding Box rápido (Descarta si está lejos)
+    stock_parquet_path = resolve_path(f"results/pelagic_fish_stocks/{stock_id.lower()}.parquet")
+    if not stock_parquet_path or not os.path.exists(stock_parquet_path):
+        return 0.0
+        
+    try:
+        stock_gdf = gpd.read_parquet(stock_parquet_path)
+        if stock_gdf.crs is None or stock_gdf.crs.to_string() != "EPSG:4326":
+            stock_gdf = stock_gdf.to_crs("EPSG:4326")
+            
+        minx, miny, maxx, maxy = geom_4326.bounds
+        stock_bounds = stock_gdf.total_bounds
+        
+        # Filtro de sobreposición de cajas: Si ni siquiera rozan, devolvemos 0
+        if not (minx <= stock_bounds[2] and maxx >= stock_bounds[0] and
+                miny <= stock_bounds[3] and maxy >= stock_bounds[1]):
+            return 0.0
+            
+    except Exception as e:
+        print(f"Error cargando los límites del stock {stock_id}: {e}")
+        return 0.0
+        
+    # 2. Cargar el SDM (.tif) y hacer los Numpy Arrays
+    res_suffix = f"_{config['res']}" if config['res'] else ""
+    rel_path = f"{FISH_PRES_ABS_BASE}/{config['taxon']}/method=ensemble/threshold=max_spec_sens/{period_key}{res_suffix}.tif"
+    tif_path = resolve_path(rel_path)
+    
+    if not tif_path or not os.path.exists(tif_path):
+        return 0.0
+
+    with rasterio.open(tif_path) as src:
+        # Asegurar proyección correcta para la Ventana (Window)
+        if src.crs and src.crs.to_string() != "EPSG:4326":
+            from pyproj import Transformer
+            t = Transformer.from_crs("EPSG:4326", src.crs, always_xy=True)
+            rminx, rminy = t.transform(minx, miny)
+            rmaxx, rmaxy = t.transform(maxx, maxy)
+            rminx, rmaxx = min(rminx, rmaxx), max(rminx, rmaxx)
+            rminy, rmaxy = min(rminy, rmaxy), max(rminy, rmaxy)
+            geom_raster = shp_transform(t.transform, geom_4326)
+            stock_raster_crs = stock_gdf.to_crs(src.crs)
+        else:
+            rminx, rminy, rmaxx, rmaxy = minx, miny, maxx, maxy
+            geom_raster = geom_4326
+            stock_raster_crs = stock_gdf
+            
+        # Extraer SOLO el pedacito de mapa que ocupa tu dibujo (Window)
+        window = from_bounds(rminx, rminy, rmaxx, rmaxy, src.transform)
+        window = window.intersection(rasterio.windows.Window(0, 0, src.width, src.height))
+        if window.width <= 0 or window.height <= 0:
+            return 0.0
+            
+        window = window.round_offsets().round_lengths()
+        tif_data = src.read(1, window=window)
+        win_transform = src.window_transform(window)
+        
+        try:
+            # --- Matriz A: Rasterizar tu polígono (1=Dentro, 0=Fuera) ---
+            geoms_to_mask = [geom_raster] if geom_raster.geom_type == 'Polygon' else list(geom_raster.geoms)
+            user_mask = rasterize(
+                [(g, 1) for g in geoms_to_mask],
+                out_shape=tif_data.shape,
+                transform=win_transform,
+                fill=0,
+                dtype='uint8'
+            )
+            
+            poly_pixels = user_mask.sum()
+            if poly_pixels == 0:
+                return 0.0
+                
+            # --- Matriz B: Rasterizar Stock ---
+            # Filtramos solo las partes del stock que están en la zona para no colapsar la RAM
+            stock_clipped = stock_raster_crs.cx[rminx:rmaxx, rminy:rmaxy]
+            if stock_clipped.empty:
+                return 0.0
+                
+            stock_mask = rasterize(
+                [(g, 1) for g in stock_clipped.geometry],
+                out_shape=tif_data.shape,
+                transform=win_transform,
+                fill=0,
+                dtype='uint8'
+            )
+            
+            # --- MATRICES AL PODER: (Tú polígono) AND (Zona de Stock) AND (Presencia de Pez) ---
+            presence_pixels = ((user_mask == 1) & (stock_mask == 1) & (tif_data == 1)).sum()
+            
+            if presence_pixels == 0:
+                return 0.0
+                
+            # Calculamos qué % de nuestro dibujo real ha chocado con peces del stock
+            ratio = presence_pixels / poly_pixels
+            
+            # Y le aplicamos ese % al área métrica europea de nuestro dibujo (en km²)
+            gdf_inter = gpd.GeoDataFrame(geometry=[geom_4326], crs="EPSG:4326")
+            area_total_km2 = float(gdf_inter.to_crs("EPSG:3035").area.sum() / 1e6)
+            
+            return area_total_km2 * ratio
+            
+        except Exception as e:
+            print(f"Error procesando matrices Numpy para {stock_id}: {e}")
+            return 0.0
+
+def activity_fish_table(area: str, activity_children, activity_upload_children) -> pd.DataFrame:
+    """Calcula el impacto anual en peces, agrupando en un resumen '-' si el extent es 0."""
+    act_gdf = _collect_activity_union(activity_children, activity_upload_children)
+    if act_gdf.empty:
+        return pd.DataFrame()
+
+    geom = act_gdf.geometry.iloc[0]
+    df_accounts = pd.read_parquet(resolve_path(FISH_ACCOUNTS_PATH))
+    results = []
+    
+    for stock_id in STOCKS_CONFIG.keys():
+        df_stock = df_accounts[df_accounts['Stock'] == stock_id]
+        if df_stock.empty:
+            continue
+            
+        # --- PERIODO 1: 2000-2009 ---
+        ext_00_09 = _get_affected_extent_km2(geom, stock_id, "2000_2010")
+        if ext_00_09 == 0:
+            results.append({
+                "Stock": stock_id,
+                "Year": "2000-2009",
+                "Extent affected (km²)": "-",
+                "Condition (0-1)": "-",
+                "FP Supply affected (tons)": "-"
+            })
+        else:
+            for year in range(2000, 2010):
+                row = df_stock[df_stock['Year'] == year]
+                if not row.empty:
+                    r = row.iloc[0]
+                    total_extent_year = r['Extent']
+                    proportion = ext_00_09 / total_extent_year if total_extent_year > 0 else 0
+                    results.append({
+                        "Stock": stock_id,
+                        "Year": str(year),
+                        "Extent affected (km²)": round(ext_00_09, 2),
+                        "Condition (0-1)": round(r['Condition'], 3) if pd.notnull(r['Condition']) else "-",
+                        "FP Supply affected (tons)": round(r['FP_supply'] * proportion, 2)
+                    })
+                    
+        # --- PERIODO 2: 2010-2019 ---
+        ext_10_19 = _get_affected_extent_km2(geom, stock_id, "2010_2020")
+        if ext_10_19 == 0:
+            results.append({
+                "Stock": stock_id,
+                "Year": "2010-2019",
+                "Extent affected (km²)": "-",
+                "Condition (0-1)": "-",
+                "FP Supply affected (tons)": "-"
+            })
+        else:
+            for year in range(2010, 2020):
+                row = df_stock[df_stock['Year'] == year]
+                if not row.empty:
+                    r = row.iloc[0]
+                    total_extent_year = r['Extent']
+                    proportion = ext_10_19 / total_extent_year if total_extent_year > 0 else 0
+                    results.append({
+                        "Stock": stock_id,
+                        "Year": str(year),
+                        "Extent affected (km²)": round(ext_10_19, 2),
+                        "Condition (0-1)": round(r['Condition'], 3) if pd.notnull(r['Condition']) else "-",
+                        "FP Supply affected (tons)": round(r['FP_supply'] * proportion, 2)
+                    })
+
+    return pd.DataFrame(results)
