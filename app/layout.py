@@ -93,13 +93,13 @@ def create_layout():  # definir función que construye el layout
                                         className='legend',
                                         hidden=True,
                                         children=[
-                                            html.Div("Activities", style={'fontWeight':'bold','marginBottom':'6px'}),
+                                            html.Div("New human activity scenarios", style={'fontWeight':'bold','marginBottom':'6px'}),
                                             html.Div(
                                                 [
                                                     html.Div(
                                                         style={'width':'14px','height':'14px','background':"#f39c12",'border':'1px solid #888'}
                                                     ),
-                                                    html.Span("Wind Farms")
+                                                    html.Span("NHA Scenario 1")
                                                 ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
                                             ),
                                             html.Div(
@@ -107,23 +107,7 @@ def create_layout():  # definir función que construye el layout
                                                     html.Div(
                                                         style={'width':'14px','height':'14px','background':"#18BC9C",'border':'1px solid #888'}
                                                     ),
-                                                    html.Span("Aquaculture")
-                                                ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
-                                            ),
-                                            html.Div(
-                                                [
-                                                    html.Div(
-                                                        style={'width':'14px','height':'14px','background':"#3498DB",'border':'1px solid #888'}
-                                                    ),
-                                                    html.Span("New Vessel Routes")
-                                                ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
-                                            ),
-                                            html.Div(
-                                                [
-                                                    html.Div(
-                                                        style={'width':'14px','height':'14px','background':"#e74c3c",'border':'1px solid #888'}
-                                                    ),
-                                                    html.Span("Defence")
+                                                    html.Span("NHA Scenario 2")
                                                 ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
                                             )
                                         ]  
