@@ -265,7 +265,7 @@ def register_fish_stock_callbacks(app: dash.Dash):
 
             border_color = stock_colors.get(area, "#000000")
             legend_children = [
-                html.Div("Fish Stock Presence/Absence", style={'fontWeight':'bold','marginBottom':'6px'}),
+                html.Div("Fish species presence-absence", style={'fontWeight':'bold','marginBottom':'6px'}),
                 html.Div(
                     [
                         html.Div(style={'width':'14px','height':'14px','background':'#8B0000','border':'1px solid #888'}),
@@ -279,7 +279,7 @@ def register_fish_stock_callbacks(app: dash.Dash):
                     ], style={'display':'flex', 'alignItems':'center', 'gap':'6px', 'marginBottom':'4px'}
                 ),
                 html.Hr(style={'margin': '8px 0', 'borderColor': '#ccc'}),
-                html.Div("Stock ICES area", style={'fontWeight':'bold','marginBottom':'6px'}),
+                html.Div("Stock", style={'fontWeight':'bold','marginBottom':'6px'}),
                 html.Div(
                     [
                         # html.Div(style={'width':'14px','height':'14px','background': border_color, 'border':'1px solid #888'}),

@@ -706,7 +706,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
                                         # 3) Texto posterior (y lo que necesites debajo)
                                         html.P(
-                                            "Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the three study areas assessed in the Ph.D according to the EUNIS habitat (version 2012) classification. It is important to highlight that for OPSA condition assessment user must include all ecosystem components for complete condition indicators. However, if you want to see OPSA assessment taking into account particular ecosystem components, you can select them in the checklist",
+                                            "Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the three study areas assessed by ",  html.A("Egidazu-de la Parte et al., (2026)", href='https://doi.org/10.1016/j.indic.2026.101163'), "according to the EUNIS habitat (version 2012) classification. It is important to highlight that for OPSA condition assessment user must include all ecosystem components for complete condition indicators. However, if you want to see OPSA assessment taking into account particular ecosystem components, you can select them in the checklist",
                                             className="mb-2", style={"textAlign": "justify"}
                                         ),
                                         html.P(
@@ -1088,7 +1088,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         html.Li([html.B("Upland Areas: "), html.I("Upland Areas"), " represent non-flooded areas where marshes can migrate during sea level rise conditions."]),  # info Upland
                                         html.Li([html.B("Channel: "), html.I("Channels"), " are key features of wetlands that control fundamental dynamics like sediment availability, nutrient circulation and hydrodynamics."]),  # info Channel
                                         html.Li([html.B("Accretion: "), html.I("Accretion"), " is the process where the elevation of a saltmarsh surface increases over time, either by the accumulation of mineral sediments (like silt and clay) or by the buildup of organic matter from decaying plant material. Through ", html.I("accretion"), ", saltmarshes sequester carbon from both accumulation of mineral sediments and organic matter from decaying plant material. "]) # info Accretion
-                                ])
+                                ]), style={"fontWeight": "normal"}
                             ),
                             dbc.ModalFooter(dbc.Button("Close", className="ml-auto", id="info-close", n_clicks=0)) 
                         ],
@@ -1562,13 +1562,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         }
         urls = {
             "tab-saltmarsh":  ("https://doi.org/10.1016/j.scitotenv.2024.178164",
-                            "https://github.com/begidazu/PhD_Web_App/tree/main/saltmarsh"),
+                            "https://github.com/begidazu/MESIT/tree/main/app/saltmarsh_evolution"),
             "tab-physical":   ("https://doi.org/10.1016/j.indic.2026.101163",
                             "https://github.com/begidazu/PhD_Web_App/blob/physical_accounts/app/models/opsa.py"),
             "tab-fishstock":  ("https://docs.google.com/document/d/1ZN8tYWCwRVDPAVdRLo3Cx7ugnGhPgeUfBRQtZ1HTKYk/edit?usp=sharing",
-                               "https://github.com/begidazu/MESIT/tree/main/app/models"),
+                               "https://github.com/begidazu/MESIT/tree/main/app/models/fish_stocks"),
             "tab-management": ("https://begidazu.github.io/MESIT/management_scenarios.html", 
-                               "https://github.com/begidazu/MESIT/tree/main/app"),
+                               "https://github.com/begidazu/MESIT/blob/main/app/callbacks/management_callbacks.py"),
             "tab-eva-overscale": ("https://begidazu.github.io/MESIT/eva_overscale.html",
                                   "https://github.com/begidazu/MESIT/blob/main/app/models/eva_mpaeu.py")
                                   
