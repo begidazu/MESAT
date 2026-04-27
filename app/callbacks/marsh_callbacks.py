@@ -706,9 +706,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
                                         # 3) Texto posterior (y lo que necesites debajo)
                                         html.P(
-                                            "Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the three study areas assessed by ",  html.A("Egidazu-de la Parte et al., (2026)", href='https://doi.org/10.1016/j.indic.2026.101163'), "according to the EUNIS habitat (version 2012) classification. It is important to highlight that for OPSA condition assessment user must include all ecosystem components for complete condition indicators. However, if you want to see OPSA assessment taking into account particular ecosystem components, you can select them in the checklist",
+                                            ("Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the three study areas assessed by ",  html.A("Egidazu-de la Parte et al., (2026)", href='https://doi.org/10.1016/j.indic.2026.101163'), "according to the EUNIS habitat (version 2012) classification. It is important to highlight that for OPSA condition assessment user must include all ecosystem components for complete condition indicators. However, if you want to see OPSA assessment taking into account particular ecosystem components, you can select them in the checklist"),
                                             className="mb-2", style={"textAlign": "justify"}
-                                        ),
+                                        ), 
                                         html.P(
                                             html.I("*Notice that you can assess ecosystem condition by EUNIS habitat type selecting the target ecosystem component in the checklist."),
                                             className="mb-2", style={"textAlign": "justify"}
