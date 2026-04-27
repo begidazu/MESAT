@@ -748,100 +748,100 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 searchable=False
                         )
                     ),
-                    html.Legend("What economic activity you want to establish?", style={'display':'flex', 'marginTop':'25px'}),
+                    html.Legend("Define the new human activity (NHA) scenarios you want to compare:", style={'display':'flex', 'marginTop':'25px'}),
                     html.Div(
                         id='activity-checklist',
                         style={'display': 'flex', 'flexDirection': 'column', 'gap': '15px', 'width': '100%'},
                         children=[
 
                             html.Div(
-                                id="wind-farm-div",
+                                id="scenario1-div",
                                 style=row_style,
                                 children=[
                                     dbc.Checklist(
-                                        id='wind-farm',
-                                        options=[{"label": "Wind Farm", "value": "wind_farm", "disabled" : True}],
+                                        id='scenario1',
+                                        options=[{"label": "NHA scenario 1", "value": "scenario1", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0'}
                                     ),
-                                    html.Button("Draw", id='wind-farm-draw', n_clicks=0, disabled=True,
+                                    html.Button("Draw", id='scenario1-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-warning', style={'width': '100%'}),
                                     dcc.Upload(                                                      # componente para subir ficheros
-                                        id="wind-farm-file",                                         # id del upload
+                                        id="scenario1-file",                                         # id del upload
                                         multiple=False,                                              # un único fichero
                                         accept="",                                                   # permitir cualquier tipo (validamos en callback)
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",    # clases base (borde, etc.)
-                                        children=html.Div(id="wind-farm-file-label")                 # etiqueta visible                                                                                                                 
+                                        children=html.Div(id="scenario1-file-label")                 # etiqueta visible                                                                                                                 
                                     )
 
                                 ]
                             ),
 
                             html.Div(
-                                id="aquaculture-div",
+                                id="scenario2-div",
                                 style=row_style,
                                 children=[
                                     dbc.Checklist(
-                                        id='aquaculture',
-                                        options=[{"label": "Aquaculture", "value": "aquaculture", "disabled" : True}],
+                                        id='scenario2',
+                                        options=[{"label": "NHA scenario 2", "value": "scenario2", "disabled" : True}],
                                         value=[], inline=True, style={'margin': '0', 'width': '100%'}
                                     ),
-                                    html.Button("Draw", id='aquaculture-draw', n_clicks=0, disabled=True,
+                                    html.Button("Draw", id='scenario2-draw', n_clicks=0, disabled=True,
                                                 className='btn btn-outline-success', style={'width': '100%'}),
                                     dcc.Upload(
-                                        id='aquaculture-file', 
+                                        id='scenario2-file', 
                                         multiple=False,
                                         accept="",
                                         style={'width': '100%', 'marginLeft': '25px'},
                                         className="upload-as-input form-control form-control-lg",
-                                        children=html.Div(id="aquaculture-file-label")                                       
+                                        children=html.Div(id="scenario2-file-label")                                       
                                         )
                                 ]
                             ),
 
-                            html.Div(
-                                id="vessel-div",
-                                style=row_style,
-                                children=[
-                                    dbc.Checklist(
-                                        id='vessel',
-                                        options=[{"label": "New Vessel Route", "value": "new_vessel_route", "disabled" : True}],
-                                        value=[], style={'margin': '0'}
-                                    ),
-                                    html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
-                                                className='btn btn-outline-info', style={'width': '100%'}),
-                                    dcc.Upload(
-                                        id='vessel-file',
-                                        multiple=False,
-                                        accept="",
-                                        style={'width': '100%', 'marginLeft': '25px'},
-                                        className="upload-as-input form-control form-control-lg",
-                                        children=html.Div(id="vessel-file-label")                                        
-                                    )
-                                ]
-                            ),
+                            # html.Div(
+                            #     id="vessel-div",
+                            #     style=row_style,
+                            #     children=[
+                            #         dbc.Checklist(
+                            #             id='vessel',
+                            #             options=[{"label": "New Vessel Route", "value": "new_vessel_route", "disabled" : True}],
+                            #             value=[], style={'margin': '0'}
+                            #         ),
+                            #         html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
+                            #                     className='btn btn-outline-info', style={'width': '100%'}),
+                            #         dcc.Upload(
+                            #             id='vessel-file',
+                            #             multiple=False,
+                            #             accept="",
+                            #             style={'width': '100%', 'marginLeft': '25px'},
+                            #             className="upload-as-input form-control form-control-lg",
+                            #             children=html.Div(id="vessel-file-label")                                        
+                            #         )
+                            #     ]
+                            # ),
 
-                            html.Div(
-                                id="defence-div",
-                                style=row_style,
-                                children=[
-                                    dbc.Checklist(
-                                        id='defence',
-                                        options=[{"label": "Defence", "value": "defence", "disabled" : True}],
-                                        value=[], inline=True, style={'margin': '0'}
-                                    ),
-                                    html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
-                                                className='btn btn-outline-danger', style={'width': '100%'}),
-                                    dcc.Upload(
-                                        id='defence-file',
-                                        multiple=False,
-                                        accept="",
-                                        style={'width': '100%', 'marginLeft': '25px'},
-                                        className="upload-as-input form-control form-control-lg",
-                                        children=html.Div(id="defence-file-label")                                        
-                                        )
-                                ]
-                            ),
+                            # html.Div(
+                            #     id="defence-div",
+                            #     style=row_style,
+                            #     children=[
+                            #         dbc.Checklist(
+                            #             id='defence',
+                            #             options=[{"label": "Defence", "value": "defence", "disabled" : True}],
+                            #             value=[], inline=True, style={'margin': '0'}
+                            #         ),
+                            #         html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
+                            #                     className='btn btn-outline-danger', style={'width': '100%'}),
+                            #         dcc.Upload(
+                            #             id='defence-file',
+                            #             multiple=False,
+                            #             accept="",
+                            #             style={'width': '100%', 'marginLeft': '25px'},
+                            #             className="upload-as-input form-control form-control-lg",
+                            #             children=html.Div(id="defence-file-label")                                        
+                            #             )
+                            #     ]
+                            # ),
                         ]
                     ),
                     html.Div(  # fila de botones

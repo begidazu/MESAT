@@ -1615,10 +1615,10 @@ from app.models.management_scenarios import (
 
 # mapping de botones -> (layer_key, color)
 COLOR = {
-    "wind-farm-draw": ("wind",   "#f39c12"),
-    "aquaculture-draw": ("aqua", "#18BC9C"),
-    "vessel-draw": ("vessel",    "#3498DB"),
-    "defence-draw": ("defence",  "#e74c3c"),
+    "scenario1-draw": ("scenario1",   "#f39c12"),
+    "scenario2-draw": ("scenario2", "#18BC9C"),
+    # "vessel-draw": ("vessel",    "#3498DB"),
+    # "defence-draw": ("defence",  "#e74c3c"),
 }
 
 # Clase base FORMS:
@@ -1672,9 +1672,7 @@ def _table_store_entry(df, name, activity=None, layer=None, scenario=None, year=
 
 def _build_saltmarsh_scenarios_layout(area: str,
                                       mgmt_w, mgmt_wu,
-                                      mgmt_a, mgmt_au,
-                                      mgmt_v, mgmt_vu,
-                                      mgmt_d, mgmt_du):
+                                      mgmt_a, mgmt_au):
 
     all_tables = []  # Lista para recolectar todas las tablas generadas
 
@@ -1754,18 +1752,15 @@ def _build_saltmarsh_scenarios_layout(area: str,
             return x
         return [x]
 
-    total_children = (_as_list(mgmt_w)  + _as_list(mgmt_a)  + _as_list(mgmt_v)  + _as_list(mgmt_d))
-    total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))
+    total_children = (_as_list(mgmt_w)  + _as_list(mgmt_a))
+    total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au))
 
 
     tabs = dcc.Tabs(
-        id="mgmt-scenarios-tabs-main", value="wind",
+        id="mgmt-scenarios-tabs-main", value="scenario1",
         children=[
-            activity_panel("Wind Farms",   "wind",       mgmt_w,  mgmt_wu),
-            activity_panel("Aquaculture",  "aquaculture",mgmt_a,  mgmt_au),
-            activity_panel("Vessel Routes","vessel",     mgmt_v,  mgmt_vu),
-            activity_panel("Defence",      "defence",    mgmt_d,  mgmt_du),
-            activity_panel("TOTAL",        "total",      total_children, total_upload_children)
+            activity_panel("NHA scenario 1",   "scenario1",       mgmt_w,  mgmt_wu),
+            activity_panel("NHA scenario 2",  "scenario2",mgmt_a,  mgmt_au),
         ]
     )
 
@@ -1926,7 +1921,7 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
                     children=[html.Div(id=f"mgmt-{slug}-saltmarshes", children="(tabla Saltmarshes)")]
                 ),
                 dcc.Tab(
-                    label="Fish", value="fish",
+                    label="Fish stocks", value="fish",
                     style={"fontSize": "var(--font-md)", "padding": "0.55rem 1rem"},
                     selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     children=[html.Div(id=f"mgmt-{slug}-fish", children="(pendiente)")]
@@ -1935,28 +1930,28 @@ def _build_mgmt_tabs(eunis_enabled: bool, saltmarsh_enabled: bool):
         )
 
     return dcc.Tabs(
-        id="mgmt-main-tabs", value="wind",
+        id="mgmt-main-tabs", value="scenario1",
         children=[
-            dcc.Tab(label="Wind Farms", value="wind",
+            dcc.Tab(label="NHA scenario 1", value="scenario1",
                     style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     children=[_subtabs("wind")]),
-            dcc.Tab(label="Aquaculture", value="aquaculture",
+            dcc.Tab(label="NHA scenario 2", value="scenario2",
                     style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
                     children=[_subtabs("aquaculture")]),
-            dcc.Tab(label="Vessel Routes", value="vessel",
-                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    children=[_subtabs("vessel")]),
-            dcc.Tab(label="Defence", value="defence",
-                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    children=[_subtabs("defence")]),
-            dcc.Tab(label="TOTAL", value="total",
-                    style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
-                    children=[_subtabs("total")])                 
+            # dcc.Tab(label="Vessel Routes", value="vessel",
+            #         style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+            #         selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+            #         children=[_subtabs("vessel")]),
+            # dcc.Tab(label="Defence", value="defence",
+            #         style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+            #         selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+            #         children=[_subtabs("defence")]),
+            # dcc.Tab(label="TOTAL", value="total",
+            #         style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+            #         selected_style={"fontSize": "var(--font-lg)", "padding": "0.55rem 1rem"},
+            #         children=[_subtabs("total")])                 
         ]
     )
 
@@ -1965,26 +1960,24 @@ def register_management_callbacks(app: dash.Dash):
 
     # (1) Enable/disable por checklist (tu versión correcta)
     @app.callback(
-        Output('wind-farm-draw', 'disabled'),
-        Output('wind-farm-file', 'disabled'),
-        Output('aquaculture-draw', 'disabled'),
-        Output('aquaculture-file', 'disabled'),
-        Output('vessel-draw', 'disabled'),
-        Output('vessel-file', 'disabled'),
-        Output('defence-draw', 'disabled'),
-        Output('defence-file', 'disabled'),
-        Input('wind-farm', 'value'),
-        Input('aquaculture', 'value'),
-        Input('vessel', 'value'),
-        Input('defence', 'value'),
+        Output('scenario1-draw', 'disabled'),
+        Output('scenario1-file', 'disabled'),
+        Output('scenario2-draw', 'disabled'),
+        Output('scenario2-file', 'disabled'),
+        # Output('vessel-draw', 'disabled'),
+        # Output('vessel-file', 'disabled'),
+        # Output('defence-draw', 'disabled'),
+        # Output('defence-file', 'disabled'),
+        Input('scenario1', 'value'),
+        Input('scenario2', 'value'),
+        # Input('vessel', 'value'),
+        # Input('defence', 'value'),
     )
-    def toggle_controls(v_wind, v_aqua, v_vessel, v_defence):
+    def toggle_controls(v_wind, v_aqua):
         off = lambda v: not bool(v)
         return (
             off(v_wind), off(v_wind),
             off(v_aqua), off(v_aqua),
-            off(v_vessel), off(v_vessel),
-            off(v_defence), off(v_defence),
         )
 
     # 2) Pulsar DRAW -> fija capa de destino + color, activa el modo polígono, y establece draw-mode a "management"
@@ -1992,14 +1985,14 @@ def register_management_callbacks(app: dash.Dash):
         Output("draw-meta", "data"),
         Output("edit-control", "drawToolbar"),
         Output("draw-mode", "data"),
-        Input("wind-farm-draw", "n_clicks"),
-        Input("aquaculture-draw", "n_clicks"),
-        Input("vessel-draw", "n_clicks"),
-        Input("defence-draw", "n_clicks"),
+        Input("scenario1-draw", "n_clicks"),
+        Input("scenario2-draw", "n_clicks"),
+        # Input("vessel-draw", "n_clicks"),
+        # Input("defence-draw", "n_clicks"),
         prevent_initial_call=True
     )
-    def pick_target_and_activate(wf, aq, vs, df):
-        if not (wf or aq or vs or df):
+    def pick_target_and_activate(wf, aq):
+        if not (wf or aq):
             raise PreventUpdate
         ctx = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
         layer_key, color = COLOR[ctx]
@@ -2009,26 +2002,26 @@ def register_management_callbacks(app: dash.Dash):
     @app.callback(
         Output("mgmt-wind", "children"),
         Output("mgmt-aquaculture", "children"),
-        Output("mgmt-vessel", "children"),
-        Output("mgmt-defence", "children"),
+        # Output("mgmt-vessel", "children"),
+        # Output("mgmt-defence", "children"),
         Output("draw-len", "data"),
         Output("edit-control", "editToolbar"),
         Input("edit-control", "geojson"),
-        Input("wind-farm", "value"),
-        Input("aquaculture", "value"),
-        Input("vessel", "value"),
-        Input("defence", "value"),
+        Input("scenario1", "value"),
+        Input("scenario2", "value"),
+        # Input("vessel", "value"),
+        # Input("defence", "value"),
         State("draw-len", "data"),
         State("draw-meta", "data"),
         State("draw-mode", "data"),
         State("mgmt-wind", "children"),
         State("mgmt-aquaculture", "children"),
-        State("mgmt-vessel", "children"),
-        State("mgmt-defence", "children"),
+        # State("mgmt-vessel", "children"),
+        # State("mgmt-defence", "children"),
         prevent_initial_call=True
     )
-    def manage_layers(gj, v_wind, v_aqua, v_vessel, v_defence,
-                    prev_len, meta, draw_mode, ch_wind, ch_aqua, ch_vessel, ch_defence):
+    def manage_layers(gj, v_wind, v_aqua,
+                    prev_len, meta, draw_mode, ch_wind, ch_aqua):
         # Guard: solo procesar si estamos en modo "management"
         if draw_mode != "management":
             raise PreventUpdate
@@ -2039,22 +2032,18 @@ def register_management_callbacks(app: dash.Dash):
         # Normaliza children actuales
         ch_wind    = list(ch_wind or [])
         ch_aqua    = list(ch_aqua or [])
-        ch_vessel  = list(ch_vessel or [])
-        ch_defence = list(ch_defence or [])
+        # ch_vessel  = list(ch_vessel or [])
+        # ch_defence = list(ch_defence or [])
 
         # --- 1) Si el trigger fue un checklist -> limpiar capas deseleccionadas ---
-        if trig in ("wind-farm", "aquaculture", "vessel", "defence"):
+        if trig in ("scenario1", "scenario2"):
             if not bool(v_wind):
                 ch_wind = []
             if not bool(v_aqua):
                 ch_aqua = []
-            if not bool(v_vessel):
-                ch_vessel = []
-            if not bool(v_defence):
-                ch_defence = []
 
             # No tocar ni contador ni toolbar del control
-            return ch_wind, ch_aqua, ch_vessel, ch_defence, no_update, no_update
+            return ch_wind, ch_aqua, no_update, no_update
 
         # --- 2) Si el trigger fue el geojson -> copiar último dibujo y limpiar el control ---
         feats = (gj or {}).get("features", [])
@@ -2080,7 +2069,7 @@ def register_management_callbacks(app: dash.Dash):
         else:
             # Tipo no soportado: solo resetea contador y limpia el control
             clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
-            return ch_wind, ch_aqua, ch_vessel, ch_defence, 0, clear
+            return ch_wind, ch_aqua, no_update, no_update
 
         if not meta or not isinstance(meta, dict) or "layer" not in meta:
             raise PreventUpdate
@@ -2089,18 +2078,15 @@ def register_management_callbacks(app: dash.Dash):
         comps = [dl.Polygon(positions=p, color=color, fillColor=color, fillOpacity=0.6, weight=4)
                 for p in new_polys]
 
-        if layer == "wind":
+        if layer == "scenario1":
             ch_wind.extend(comps)
-        elif layer == "aqua":
+        elif layer == "scenario2":
             ch_aqua.extend(comps)
-        elif layer == "vessel":
-            ch_vessel.extend(comps)
-        elif layer == "defence":
-            ch_defence.extend(comps)
+
 
         # Limpia el EditControl y resetea contador para evitar "azules intermedios"
         clear = {"mode": "remove", "action": "clear all", "n_clicks": int(time.time())}
-        return ch_wind, ch_aqua, ch_vessel, ch_defence, 0, clear
+        return ch_wind, ch_aqua, 0, clear
 
     # Creamos una sesion si no existe para tenerlo en cuenta para eliminar los Upload viejos de los usuarios y manejar mejor la memoria:
     @app.callback(                                                                     
@@ -2119,11 +2105,11 @@ def register_management_callbacks(app: dash.Dash):
 
     # Si el fichero no tiene la extension que queremos escribimos que no es valido, si es valido se guarda y se convierte a GeoJSON para ponerlo en el mapa (WIND):
     @app.callback(
-        Output("wind-farm-file-label", "children", allow_duplicate=True),
-        Output("wind-farm-file", "className", allow_duplicate=True),
+        Output("scenario1-file-label", "children", allow_duplicate=True),
+        Output("scenario1-file", "className", allow_duplicate=True),
         Output("wind-file-store", "data", allow_duplicate=True),
-        Input("wind-farm-file", "filename"),
-        Input("wind-farm-file", "contents"),
+        Input("scenario1-file", "filename"),
+        Input("scenario1-file", "contents"),
         State("wind-file-store", "data"),
         State("session-id", "data"),
         prevent_initial_call=True
@@ -2138,7 +2124,7 @@ def register_management_callbacks(app: dash.Dash):
             return label_text, BASE_UPLOAD_CLASS, no_update
         try:
             sid = sid if isinstance(sid, str) and sid else None
-            out_path = _save_upload_to_disk(contents, filename, "wind", sid)
+            out_path = _save_upload_to_disk(contents, filename, "scenario1", sid)
             # eliminar fichero previo de ESTA sesión si existía
             try:
                 if isinstance(prev_store, dict) and prev_store.get("valid"):
@@ -2149,7 +2135,7 @@ def register_management_callbacks(app: dash.Dash):
                 pass
             payload = {
                 "valid": True,
-                "kind": "wind",
+                "kind": "scenario1",
                 "filename": filename,
                 "ext": os.path.splitext(filename)[1].lower(),
                 "path": out_path,
@@ -2163,18 +2149,18 @@ def register_management_callbacks(app: dash.Dash):
 
     # Sincronizos la UI para que si hay un fichero subido por el usuario se deshabiliten el boton DRAW y el Upload, limpiar GeoJSON al deseleccionar checklist, restaurar texto del Upload, etc. (WIND)
     @app.callback(                                                                                                       
-        Output("wind-farm-draw", "disabled", allow_duplicate=True),                                            
-        Output("wind-farm-file", "disabled", allow_duplicate=True),                                              
+        Output("scenario1-draw", "disabled", allow_duplicate=True),                                            
+        Output("scenario1-file", "disabled", allow_duplicate=True),                                              
         Output("mgmt-wind", "children", allow_duplicate=True),                                                   
         Output("wind-file-store", "data", allow_duplicate=True),                                                 
         Output("mgmt-wind-upload", "children", allow_duplicate=True),                                            
-        Output("wind-farm-file-label", "children", allow_duplicate=True),
-        Output("wind-farm-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("wind-farm-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("wind-farm-file", "className"),                                     
+        Output("scenario1-file-label", "children", allow_duplicate=True),
+        Output("scenario1-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("scenario1-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("scenario1-file", "className"),                                     
         Input("wind-file-store", "data"),                                                                        
         Input("mgmt-wind", "children"),                                                                          
-        Input("wind-farm", "value"),                                                                             
+        Input("scenario1", "value"),                                                                             
         State("session-id", "data"),
         prevent_initial_call=True                                                                                
     )
@@ -2186,7 +2172,7 @@ def register_management_callbacks(app: dash.Dash):
         if not selected:
             # borrar toda la carpeta de la sesión para wind
             try:
-                _rm_tree(_session_dir("wind", sid))
+                _rm_tree(_session_dir("scenario1", sid))
             except Exception:
                 pass                                                                                             
             return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
@@ -2242,11 +2228,11 @@ def register_management_callbacks(app: dash.Dash):
 
     # Si el fichero no tiene la extension que queremos escribimos que no es valido, si es valido se guarda y se convierte a GeoJSON para ponerlo en el mapa (AQUACULTURE):
     @app.callback(
-        Output("aquaculture-file-label", "children", allow_duplicate=True),
-        Output("aquaculture-file", "className", allow_duplicate=True),
+        Output("scenario2-file-label", "children", allow_duplicate=True),
+        Output("scenario2-file", "className", allow_duplicate=True),
         Output("aquaculture-file-store", "data", allow_duplicate=True),
-        Input("aquaculture-file", "filename"),
-        Input("aquaculture-file", "contents"),
+        Input("scenario2-file", "filename"),
+        Input("scenario2-file", "contents"),
         State("aquaculture-file-store", "data"),
         State("session-id", "data"),
         prevent_initial_call=True
@@ -2261,7 +2247,7 @@ def register_management_callbacks(app: dash.Dash):
             return label_text, BASE_UPLOAD_CLASS, no_update
         try:
             sid = sid if isinstance(sid, str) and sid else None
-            out_path = _save_upload_to_disk(contents, filename, "aquaculture", sid)
+            out_path = _save_upload_to_disk(contents, filename, "scenario2", sid)
             # eliminar fichero previo de ESTA sesión si existía
             try:
                 if isinstance(prev_store, dict) and prev_store.get("valid"):
@@ -2272,7 +2258,7 @@ def register_management_callbacks(app: dash.Dash):
                 pass
             payload = {
                 "valid": True,
-                "kind": "aquaculture",
+                "kind": "scenario2",
                 "filename": filename,
                 "ext": os.path.splitext(filename)[1].lower(),
                 "path": out_path,
@@ -2287,18 +2273,18 @@ def register_management_callbacks(app: dash.Dash):
 
     # Sincronizos la UI para que si hay un fichero subido por el usuario se deshabiliten el boton DRAW y el Upload, limpiar GeoJSON al deseleccionar checklist, restaurar texto del Upload, etc. (AQUACULTURE)
     @app.callback(                                                                                                       
-        Output("aquaculture-draw", "disabled", allow_duplicate=True),                                            
-        Output("aquaculture-file", "disabled", allow_duplicate=True),                                              
+        Output("scenario2-draw", "disabled", allow_duplicate=True),                                            
+        Output("scenario2-file", "disabled", allow_duplicate=True),                                              
         Output("mgmt-aquaculture", "children", allow_duplicate=True),                                                   
         Output("aquaculture-file-store", "data", allow_duplicate=True),                                                 
         Output("mgmt-aquaculture-upload", "children", allow_duplicate=True),                                            
-        Output("aquaculture-file-label", "children", allow_duplicate=True),
-        Output("aquaculture-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("aquaculture-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("aquaculture-file", "className"),                                     
+        Output("scenario2-file-label", "children", allow_duplicate=True),
+        Output("scenario2-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("scenario2-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+        Output("scenario2-file", "className"),                                     
         Input("aquaculture-file-store", "data"),                                                                        
         Input("mgmt-aquaculture", "children"),                                                                          
-        Input("aquaculture", "value"),                                                                             
+        Input("scenario2", "value"),                                                                             
         State("session-id", "data"),
         prevent_initial_call=True                                                                                
     )
@@ -2310,7 +2296,7 @@ def register_management_callbacks(app: dash.Dash):
         if not selected:
             # borrar toda la carpeta de la sesión para wind
             try:
-                _rm_tree(_session_dir("aquaculture", sid))
+                _rm_tree(_session_dir("scenario2", sid))
             except Exception:
                 pass                                                                                             
             return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
@@ -2368,256 +2354,256 @@ def register_management_callbacks(app: dash.Dash):
 
 
     # Si el fichero no tiene la extension que queremos escribimos que no es valido, si es valido se guarda y se convierte a GeoJSON para ponerlo en el mapa (VESSEL ROUTES):
-    @app.callback(
-        Output("vessel-file-label", "children", allow_duplicate=True),
-        Output("vessel-file", "className", allow_duplicate=True),
-        Output("vessel-file-store", "data", allow_duplicate=True),
-        Input("vessel-file", "filename"),
-        Input("vessel-file", "contents"),
-        State("vessel-file-store", "data"),
-        State("session-id", "data"),
-        prevent_initial_call=True
-    )
-    def on_upload_vessel(filename, contents, prev_store, sid):
-        if not filename:
-            raise PreventUpdate
-        label_text = filename
-        if not _valid_ext(filename):
-            return label_text, INVALID_UPLOAD_CLASS, {"valid": False, "reason": "bad_extension"}
-        if not contents:
-            return label_text, BASE_UPLOAD_CLASS, no_update
-        try:
-            sid = sid if isinstance(sid, str) and sid else None
-            out_path = _save_upload_to_disk(contents, filename, "vessel", sid)
-            # eliminar fichero previo de ESTA sesión si existía
-            try:
-                if isinstance(prev_store, dict) and prev_store.get("valid"):
-                    old_path = prev_store.get("path")
-                    if old_path and Path(old_path).exists() and sid in Path(old_path).parts:
-                        Path(old_path).unlink(missing_ok=True)
-            except Exception:
-                pass
-            payload = {
-                "valid": True,
-                "kind": "vessel",
-                "filename": filename,
-                "ext": os.path.splitext(filename)[1].lower(),
-                "path": out_path,
-                "ts": int(time.time()),
-                "sid": sid
-            }
-            return label_text, BASE_UPLOAD_CLASS, payload
-        except Exception as e:
-            return f"{filename} — error: {e}", INVALID_UPLOAD_CLASS, {"valid": False, "error": str(e)}
+    # @app.callback(
+    #     Output("vessel-file-label", "children", allow_duplicate=True),
+    #     Output("vessel-file", "className", allow_duplicate=True),
+    #     Output("vessel-file-store", "data", allow_duplicate=True),
+    #     Input("vessel-file", "filename"),
+    #     Input("vessel-file", "contents"),
+    #     State("vessel-file-store", "data"),
+    #     State("session-id", "data"),
+    #     prevent_initial_call=True
+    # )
+    # def on_upload_vessel(filename, contents, prev_store, sid):
+    #     if not filename:
+    #         raise PreventUpdate
+    #     label_text = filename
+    #     if not _valid_ext(filename):
+    #         return label_text, INVALID_UPLOAD_CLASS, {"valid": False, "reason": "bad_extension"}
+    #     if not contents:
+    #         return label_text, BASE_UPLOAD_CLASS, no_update
+    #     try:
+    #         sid = sid if isinstance(sid, str) and sid else None
+    #         out_path = _save_upload_to_disk(contents, filename, "vessel", sid)
+    #         # eliminar fichero previo de ESTA sesión si existía
+    #         try:
+    #             if isinstance(prev_store, dict) and prev_store.get("valid"):
+    #                 old_path = prev_store.get("path")
+    #                 if old_path and Path(old_path).exists() and sid in Path(old_path).parts:
+    #                     Path(old_path).unlink(missing_ok=True)
+    #         except Exception:
+    #             pass
+    #         payload = {
+    #             "valid": True,
+    #             "kind": "vessel",
+    #             "filename": filename,
+    #             "ext": os.path.splitext(filename)[1].lower(),
+    #             "path": out_path,
+    #             "ts": int(time.time()),
+    #             "sid": sid
+    #         }
+    #         return label_text, BASE_UPLOAD_CLASS, payload
+    #     except Exception as e:
+    #         return f"{filename} — error: {e}", INVALID_UPLOAD_CLASS, {"valid": False, "error": str(e)}
         
     
 
     # Sincronizos la UI para que si hay un fichero subido por el usuario se deshabiliten el boton DRAW y el Upload, limpiar GeoJSON al deseleccionar checklist, restaurar texto del Upload, etc. (VESSEL ROUTES)
-    @app.callback(                                                                                                       
-        Output("vessel-draw", "disabled", allow_duplicate=True),                                            
-        Output("vessel-file", "disabled", allow_duplicate=True),                                              
-        Output("mgmt-vessel", "children", allow_duplicate=True),                                                   
-        Output("vessel-file-store", "data", allow_duplicate=True),                                                 
-        Output("mgmt-vessel-upload", "children", allow_duplicate=True),                                            
-        Output("vessel-file-label", "children", allow_duplicate=True),
-        Output("vessel-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("vessel-file", "contents", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("vessel-file", "className"),                                     
-        Input("vessel-file-store", "data"),                                                                        
-        Input("mgmt-vessel", "children"),                                                                          
-        Input("vessel", "value"),                                                                             
-        State("session-id", "data"),
-        prevent_initial_call=True                                                                                
-    )
-    def sync_vessel_ui(store, drawn_children, aqua_checked, sid):                                                
-        selected = bool(aqua_checked)                                                                            
-        file_present = isinstance(store, dict) and store.get("valid") is True                                    
+    # @app.callback(                                                                                                       
+    #     Output("vessel-draw", "disabled", allow_duplicate=True),                                            
+    #     Output("vessel-file", "disabled", allow_duplicate=True),                                              
+    #     Output("mgmt-vessel", "children", allow_duplicate=True),                                                   
+    #     Output("vessel-file-store", "data", allow_duplicate=True),                                                 
+    #     Output("mgmt-vessel-upload", "children", allow_duplicate=True),                                            
+    #     Output("vessel-file-label", "children", allow_duplicate=True),
+    #     Output("vessel-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+    #     Output("vessel-file", "contents", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+    #     Output("vessel-file", "className"),                                     
+    #     Input("vessel-file-store", "data"),                                                                        
+    #     Input("mgmt-vessel", "children"),                                                                          
+    #     Input("vessel", "value"),                                                                             
+    #     State("session-id", "data"),
+    #     prevent_initial_call=True                                                                                
+    # )
+    # def sync_vessel_ui(store, drawn_children, aqua_checked, sid):                                                
+    #     selected = bool(aqua_checked)                                                                            
+    #     file_present = isinstance(store, dict) and store.get("valid") is True                                    
 
-        # Caso 1: checklist desmarcado -> limpiar Store y polígonos, y dejar controles deshabilitados            
-        if not selected:
-            # borrar toda la carpeta de la sesión para wind
-            try:
-                _rm_tree(_session_dir("vessel", sid))
-            except Exception:
-                pass                                                                                             
-            return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
+    #     # Caso 1: checklist desmarcado -> limpiar Store y polígonos, y dejar controles deshabilitados            
+    #     if not selected:
+    #         # borrar toda la carpeta de la sesión para wind
+    #         try:
+    #             _rm_tree(_session_dir("vessel", sid))
+    #         except Exception:
+    #             pass                                                                                             
+    #         return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
 
-        # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                               
-        if file_present:                                                                                         
-            return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
+    #     # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                               
+    #     if file_present:                                                                                         
+    #         return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
 
-        # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
-        has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
-        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+    #     # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
+    #     has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
+    #     return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
     
 
 
     # Callback que pinta el fichero en GeoJSON para los wind-farms (hacer lo mismo para las otras actividades y cambiar el color de los poligonos): (VESSEL ROUTES)
-    @app.callback(                                                                                               
-        Output("mgmt-vessel-upload", "children"),                                                              # salida: capa pintada en el mapa
-        Input("vessel-file-store", "data"),                                                                    # entrada: cambios en el Store de wind
-        prevent_initial_call=True                                                                            
-    )
-    def paint_vessel_uploaded(data):                                                                           
-        if not data or not isinstance(data, dict):                                                           
-            raise PreventUpdate                                                                              # no actualizar si no hay nada
-        if not data.get("valid"):                                                                            
-            return []                                                                                        # limpiar capa si hubo intento inválido
+    # @app.callback(                                                                                               
+    #     Output("mgmt-vessel-upload", "children"),                                                              # salida: capa pintada en el mapa
+    #     Input("vessel-file-store", "data"),                                                                    # entrada: cambios en el Store de wind
+    #     prevent_initial_call=True                                                                            
+    # )
+    # def paint_vessel_uploaded(data):                                                                           
+    #     if not data or not isinstance(data, dict):                                                           
+    #         raise PreventUpdate                                                                              # no actualizar si no hay nada
+    #     if not data.get("valid"):                                                                            
+    #         return []                                                                                        # limpiar capa si hubo intento inválido
 
-        path = data.get("path")                                                                              # ruta del archivo guardado en la carpeta de la sesion
-        ext  = (data.get("ext") or "").lower()                                                               
+    #     path = data.get("path")                                                                              # ruta del archivo guardado en la carpeta de la sesion
+    #     ext  = (data.get("ext") or "").lower()                                                               
 
-        # estilo común para polígonos/líneas (Leaflet aplicará estilo a features no puntuales)        
-        style = dict(color="#3498DB", weight=3, fillColor="#3498DB", fillOpacity=0.4)                # estilo Wind
+    #     # estilo común para polígonos/líneas (Leaflet aplicará estilo a features no puntuales)        
+    #     style = dict(color="#3498DB", weight=3, fillColor="#3498DB", fillOpacity=0.4)                # estilo Wind
 
-        try:                                                                                                 # intentar construir GeoJSON en memoria
-            if ext == ".json":                                                                               # caso GeoJSON directo
-                with open(path, "r", encoding="utf-8") as f:                                         # abrir fichero json
-                    geo = json.load(f)                                                               # cargar a dict
-            elif ext == ".parquet":                                                                          # caso Parquet -> GeoJSON
-                geo = _to_geojson_from_parquet(path)                                                 # convertir parquet a GeoJSON dict
-            else:                                                                                            # extensión no soportada
-                return []                                                                                    # no pintamos nada
+    #     try:                                                                                                 # intentar construir GeoJSON en memoria
+    #         if ext == ".json":                                                                               # caso GeoJSON directo
+    #             with open(path, "r", encoding="utf-8") as f:                                         # abrir fichero json
+    #                 geo = json.load(f)                                                               # cargar a dict
+    #         elif ext == ".parquet":                                                                          # caso Parquet -> GeoJSON
+    #             geo = _to_geojson_from_parquet(path)                                                 # convertir parquet a GeoJSON dict
+    #         else:                                                                                            # extensión no soportada
+    #             return []                                                                                    # no pintamos nada
 
-            # proteger contra colecciones vacías para evitar zoom no deseado                        
-            if not isinstance(geo, dict) or not geo.get("features"):                                 
-                return []                                                                                    
+    #         # proteger contra colecciones vacías para evitar zoom no deseado                        
+    #         if not isinstance(geo, dict) or not geo.get("features"):                                 
+    #             return []                                                                                    
 
-            layer = dl.GeoJSON(                                                                              # crear capa GeoJSON
-                data=geo,                                                                                    # pasar dict geojson
-                zoomToBounds=True,                                                                           # ajustar mapa al contenido
-                options=dict(style=style),                                                           # estilo para polígonos/líneas
-                id=f"vessel-upload-{data.get('ts', 0)}"                                                # id único por timestamp
-            )
-            return [layer]                                                                                   # devolver lista con la capa
-        except Exception:                                                                                    
-            return []
+    #         layer = dl.GeoJSON(                                                                              # crear capa GeoJSON
+    #             data=geo,                                                                                    # pasar dict geojson
+    #             zoomToBounds=True,                                                                           # ajustar mapa al contenido
+    #             options=dict(style=style),                                                           # estilo para polígonos/líneas
+    #             id=f"vessel-upload-{data.get('ts', 0)}"                                                # id único por timestamp
+    #         )
+    #         return [layer]                                                                                   # devolver lista con la capa
+    #     except Exception:                                                                                    
+    #         return []
 
     # Si el fichero no tiene la extension que queremos escribimos que no es valido, si es valido se guarda y se convierte a GeoJSON para ponerlo en el mapa (DEFENCE):
-    @app.callback(
-        Output("defence-file-label", "children", allow_duplicate=True),
-        Output("defence-file", "className", allow_duplicate=True),
-        Output("defence-file-store", "data", allow_duplicate=True),
-        Input("defence-file", "filename"),
-        Input("defence-file", "contents"),
-        State("defence-file-store", "data"),
-        State("session-id", "data"),
-        prevent_initial_call=True
-    )
-    def on_upload_defence(filename, contents, prev_store, sid):
-        if not filename:
-            raise PreventUpdate
-        label_text = filename
-        if not _valid_ext(filename):
-            return label_text, INVALID_UPLOAD_CLASS, {"valid": False, "reason": "bad_extension"}
-        if not contents:
-            return label_text, BASE_UPLOAD_CLASS, no_update
-        try:
-            sid = sid if isinstance(sid, str) and sid else None
-            out_path = _save_upload_to_disk(contents, filename, "defence", sid)
-            # eliminar fichero previo de ESTA sesión si existía
-            try:
-                if isinstance(prev_store, dict) and prev_store.get("valid"):
-                    old_path = prev_store.get("path")
-                    if old_path and Path(old_path).exists() and sid in Path(old_path).parts:
-                        Path(old_path).unlink(missing_ok=True)
-            except Exception:
-                pass
-            payload = {
-                "valid": True,
-                "kind": "defence",
-                "filename": filename,
-                "ext": os.path.splitext(filename)[1].lower(),
-                "path": out_path,
-                "ts": int(time.time()),
-                "sid": sid
-            }
-            return label_text, BASE_UPLOAD_CLASS, payload
-        except Exception as e:
-            return f"{filename} — error: {e}", INVALID_UPLOAD_CLASS, {"valid": False, "error": str(e)}
+    # @app.callback(
+    #     Output("defence-file-label", "children", allow_duplicate=True),
+    #     Output("defence-file", "className", allow_duplicate=True),
+    #     Output("defence-file-store", "data", allow_duplicate=True),
+    #     Input("defence-file", "filename"),
+    #     Input("defence-file", "contents"),
+    #     State("defence-file-store", "data"),
+    #     State("session-id", "data"),
+    #     prevent_initial_call=True
+    # )
+    # def on_upload_defence(filename, contents, prev_store, sid):
+    #     if not filename:
+    #         raise PreventUpdate
+    #     label_text = filename
+    #     if not _valid_ext(filename):
+    #         return label_text, INVALID_UPLOAD_CLASS, {"valid": False, "reason": "bad_extension"}
+    #     if not contents:
+    #         return label_text, BASE_UPLOAD_CLASS, no_update
+    #     try:
+    #         sid = sid if isinstance(sid, str) and sid else None
+    #         out_path = _save_upload_to_disk(contents, filename, "defence", sid)
+    #         # eliminar fichero previo de ESTA sesión si existía
+    #         try:
+    #             if isinstance(prev_store, dict) and prev_store.get("valid"):
+    #                 old_path = prev_store.get("path")
+    #                 if old_path and Path(old_path).exists() and sid in Path(old_path).parts:
+    #                     Path(old_path).unlink(missing_ok=True)
+    #         except Exception:
+    #             pass
+    #         payload = {
+    #             "valid": True,
+    #             "kind": "defence",
+    #             "filename": filename,
+    #             "ext": os.path.splitext(filename)[1].lower(),
+    #             "path": out_path,
+    #             "ts": int(time.time()),
+    #             "sid": sid
+    #         }
+    #         return label_text, BASE_UPLOAD_CLASS, payload
+    #     except Exception as e:
+    #         return f"{filename} — error: {e}", INVALID_UPLOAD_CLASS, {"valid": False, "error": str(e)}
         
     
 
     # Sincronizos la UI para que si hay un fichero subido por el usuario se deshabiliten el boton DRAW y el Upload, limpiar GeoJSON al deseleccionar checklist, restaurar texto del Upload, etc. (DEFENCE)
-    @app.callback(                                                                                                       
-        Output("defence-draw", "disabled", allow_duplicate=True),                                            
-        Output("defence-file", "disabled", allow_duplicate=True),                                              
-        Output("mgmt-defence", "children", allow_duplicate=True),                                                   
-        Output("defence-file-store", "data", allow_duplicate=True),                                                 
-        Output("mgmt-defence-upload", "children", allow_duplicate=True),                                            
-        Output("defence-file-label", "children", allow_duplicate=True),
-        Output("defence-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("defence-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
-        Output("defence-file", "className"),                                     
-        Input("defence-file-store", "data"),                                                                        
-        Input("mgmt-defence", "children"),                                                                          
-        Input("defence", "value"),                                                                             
-        State("session-id", "data"),
-        prevent_initial_call=True                                                                                
-    )
-    def sync_defence_ui(store, drawn_children, def_checked, sid):                                                
-        selected = bool(def_checked)                                                                            
-        file_present = isinstance(store, dict) and store.get("valid") is True                                    
+    # @app.callback(                                                                                                       
+    #     Output("defence-draw", "disabled", allow_duplicate=True),                                            
+    #     Output("defence-file", "disabled", allow_duplicate=True),                                              
+    #     Output("mgmt-defence", "children", allow_duplicate=True),                                                   
+    #     Output("defence-file-store", "data", allow_duplicate=True),                                                 
+    #     Output("mgmt-defence-upload", "children", allow_duplicate=True),                                            
+    #     Output("defence-file-label", "children", allow_duplicate=True),
+    #     Output("defence-file", "filename", allow_duplicate=True),         # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+    #     Output("defence-file", "contents", allow_duplicate=True),                               # Anadido para que el usuario pueda seleccionar dos veces seguidas el mismo fichero
+    #     Output("defence-file", "className"),                                     
+    #     Input("defence-file-store", "data"),                                                                        
+    #     Input("mgmt-defence", "children"),                                                                          
+    #     Input("defence", "value"),                                                                             
+    #     State("session-id", "data"),
+    #     prevent_initial_call=True                                                                                
+    # )
+    # def sync_defence_ui(store, drawn_children, def_checked, sid):                                                
+    #     selected = bool(def_checked)                                                                            
+    #     file_present = isinstance(store, dict) and store.get("valid") is True                                    
 
-        # Caso 1: checklist desmarcado -> limpiar Store y polígonos, y dejar controles deshabilitados            
-        if not selected:
-            # borrar toda la carpeta de la sesión para wind
-            try:
-                _rm_tree(_session_dir("defence", sid))
-            except Exception:
-                pass                                                                                             
-            return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
+    #     # Caso 1: checklist desmarcado -> limpiar Store y polígonos, y dejar controles deshabilitados            
+    #     if not selected:
+    #         # borrar toda la carpeta de la sesión para wind
+    #         try:
+    #             _rm_tree(_session_dir("defence", sid))
+    #         except Exception:
+    #             pass                                                                                             
+    #         return True, True, [], None, [], "Choose json or parquet file", None, None, UPLOAD_CLASS                               
 
-        # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                               
-        if file_present:                                                                                         
-            return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
+    #     # Caso 2: checklist marcado y hay fichero válido -> bloquear Draw y Upload                               
+    #     if file_present:                                                                                         
+    #         return True, True, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update                
 
-        # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
-        has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
-        return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+    #     # Caso 3: checklist marcado -> habilitar Draw y Upload; si hay algo pintado se deshabilita el upload                                 
+    #     has_drawn = (isinstance(drawn_children, list) and len(drawn_children) > 0) or bool(drawn_children) # Condicion para evaluar si hay un poligono pintado
+    #     return False, has_drawn, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
     
 
 
     # Callback que pinta el fichero en GeoJSON para los wind-farms (hacer lo mismo para las otras actividades y cambiar el color de los poligonos): (DEFENCE)
-    @app.callback(                                                                                               
-        Output("mgmt-defence-upload", "children"),                                                              # salida: capa pintada en el mapa
-        Input("defence-file-store", "data"),                                                                    # entrada: cambios en el Store de wind
-        prevent_initial_call=True                                                                            
-    )
-    def paint_defence_uploaded(data):                                                                           
-        if not data or not isinstance(data, dict):                                                           
-            raise PreventUpdate                                                                              # no actualizar si no hay nada
-        if not data.get("valid"):                                                                            
-            return []                                                                                        # limpiar capa si hubo intento inválido
+    # @app.callback(                                                                                               
+    #     Output("mgmt-defence-upload", "children"),                                                              # salida: capa pintada en el mapa
+    #     Input("defence-file-store", "data"),                                                                    # entrada: cambios en el Store de wind
+    #     prevent_initial_call=True                                                                            
+    # )
+    # def paint_defence_uploaded(data):                                                                           
+    #     if not data or not isinstance(data, dict):                                                           
+    #         raise PreventUpdate                                                                              # no actualizar si no hay nada
+    #     if not data.get("valid"):                                                                            
+    #         return []                                                                                        # limpiar capa si hubo intento inválido
 
-        path = data.get("path")                                                                              # ruta del archivo guardado en la carpeta de la sesion
-        ext  = (data.get("ext") or "").lower()                                                               
+    #     path = data.get("path")                                                                              # ruta del archivo guardado en la carpeta de la sesion
+    #     ext  = (data.get("ext") or "").lower()                                                               
 
-        # estilo común para polígonos/líneas (Leaflet aplicará estilo a features no puntuales)        
-        style = dict(color="#e74c3c", weight=3, fillColor="#e74c3c", fillOpacity=0.4)                # estilo Wind
+    #     # estilo común para polígonos/líneas (Leaflet aplicará estilo a features no puntuales)        
+    #     style = dict(color="#e74c3c", weight=3, fillColor="#e74c3c", fillOpacity=0.4)                # estilo Wind
 
-        try:                                                                                                 # intentar construir GeoJSON en memoria
-            if ext == ".json":                                                                               # caso GeoJSON directo
-                with open(path, "r", encoding="utf-8") as f:                                         # abrir fichero json
-                    geo = json.load(f)                                                               # cargar a dict
-            elif ext == ".parquet":                                                                          # caso Parquet -> GeoJSON
-                geo = _to_geojson_from_parquet(path)                                                 # convertir parquet a GeoJSON dict
-            else:                                                                                            # extensión no soportada
-                return []                                                                                    # no pintamos nada
+    #     try:                                                                                                 # intentar construir GeoJSON en memoria
+    #         if ext == ".json":                                                                               # caso GeoJSON directo
+    #             with open(path, "r", encoding="utf-8") as f:                                         # abrir fichero json
+    #                 geo = json.load(f)                                                               # cargar a dict
+    #         elif ext == ".parquet":                                                                          # caso Parquet -> GeoJSON
+    #             geo = _to_geojson_from_parquet(path)                                                 # convertir parquet a GeoJSON dict
+    #         else:                                                                                            # extensión no soportada
+    #             return []                                                                                    # no pintamos nada
 
-            # proteger contra colecciones vacías para evitar zoom no deseado                        
-            if not isinstance(geo, dict) or not geo.get("features"):                                 
-                return []                                                                                    
+    #         # proteger contra colecciones vacías para evitar zoom no deseado                        
+    #         if not isinstance(geo, dict) or not geo.get("features"):                                 
+    #             return []                                                                                    
 
-            layer = dl.GeoJSON(                                                                              # crear capa GeoJSON
-                data=geo,                                                                                    # pasar dict geojson
-                zoomToBounds=True,                                                                           # ajustar mapa al contenido
-                options=dict(style=style),                                                           # estilo para polígonos/líneas
-                id=f"defence-upload-{data.get('ts', 0)}"                                                # id único por timestamp
-            )
-            return [layer]                                                                                   # devolver lista con la capa
-        except Exception:                                                                                    
-            return []        
+    #         layer = dl.GeoJSON(                                                                              # crear capa GeoJSON
+    #             data=geo,                                                                                    # pasar dict geojson
+    #             zoomToBounds=True,                                                                           # ajustar mapa al contenido
+    #             options=dict(style=style),                                                           # estilo para polígonos/líneas
+    #             id=f"defence-upload-{data.get('ts', 0)}"                                                # id único por timestamp
+    #         )
+    #         return [layer]                                                                                   # devolver lista con la capa
+    #     except Exception:                                                                                    
+    #         return []        
 
 # -------------------------------------------- END LOGIC MANAGEMENT SCENARIOS DRAW AND UPLOAD ----------------------------------------------------------------------------------
 
@@ -2625,18 +2611,18 @@ def register_management_callbacks(app: dash.Dash):
     @app.callback(  # centrar/zoom por área
         Output("map", "viewport", allow_duplicate=True),
         Output("mgmt-reset-button", "disabled"),
-        Output("wind-farm", "options", allow_duplicate=True),
-        Output("aquaculture", "options", allow_duplicate=True),
-        Output("vessel", "options", allow_duplicate=True),
-        Output("defence", "options", allow_duplicate=True),
+        Output("scenario1", "options", allow_duplicate=True),
+        Output("scenario2", "options", allow_duplicate=True),
+        # Output("vessel", "options", allow_duplicate=True),
+        # Output("defence", "options", allow_duplicate=True),
         Input("mgmt-study-area-dropdown", "value"),
-        State("wind-farm", "options"),
-        State("aquaculture", "options"),
-        State("vessel", "options"),
-        State("defence", "options"),
+        State("scenario1", "options"),
+        State("scenario2", "options"),
+        # State("vessel", "options"),
+        # State("defence", "options"),
         prevent_initial_call=True
     )
-    def management_zoom(area, opts_w, opts_a, opts_v, opts_d):  # cambiar viewport
+    def management_zoom(area, opts_w, opts_a):  # cambiar viewport
         if not area:
             raise PreventUpdate
         mapping = {
@@ -2648,37 +2634,29 @@ def register_management_callbacks(app: dash.Dash):
         }
         center, zoom = mapping[area]
         new_opts_wind = [
-            {**w, "disabled": False} if w.get("value") == "wind_farm" else w
-            for w in (opts_w or [{"label":"Wind Farm","value":"wind_farm","disabled":True}])
+            {**w, "disabled": False} if w.get("value") == "scenario1" else w
+            for w in (opts_w or [{"label":"Scenario 1","value":"scenario1","disabled":True}])
         ]
         new_opts_aqua = [
-            {**a, "disabled": False} if a.get("value") == "aquaculture" else a
-            for a in (opts_a or [{"label":"Aquaculture","value":"aquaculture","disabled":True}])
-        ]
-        new_opts_vessel = [
-            {**v, "disabled": False} if v.get("value") == "new_vessel_route" else v
-            for v in (opts_v or [{"label":"New Vessel Route","value":"new_vessel_route","disabled":True}])
-        ]
-        new_opts_defence = [
-            {**d, "disabled": False} if d.get("value") == "defence" else d
-            for d in (opts_d or [{"label":"Defence","value":"defence","disabled":True}])
+            {**a, "disabled": False} if a.get("value") == "scenario2" else a
+            for a in (opts_a or [{"label":"Scenario 2","value":"scenario2","disabled":True}])
         ]
 
-        return {"center": center, "zoom": zoom}, False, new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence
+        return {"center": center, "zoom": zoom}, False, new_opts_wind, new_opts_aqua
     
 # Reset callback:
     @app.callback(
         Output("mgmt-study-area-dropdown", "value", allow_duplicate=True),
-        Output("wind-farm", "value", allow_duplicate=True),
-        Output("aquaculture", "value", allow_duplicate=True),
-        Output("vessel", "value", allow_duplicate=True),
-        Output("defence", "value", allow_duplicate=True),
+        Output("scenario1", "value", allow_duplicate=True),
+        Output("scenario2", "value", allow_duplicate=True),
+        # Output("vessel", "value", allow_duplicate=True),
+        # Output("defence", "value", allow_duplicate=True),
         Output("map", "viewport", allow_duplicate=True),
         Output("mgmt-reset-button", "disabled", allow_duplicate=True),
-        Output("wind-farm", "options", allow_duplicate=True),
-        Output("aquaculture", "options", allow_duplicate=True),
-        Output("vessel", "options", allow_duplicate=True),
-        Output("defence", "options", allow_duplicate=True),
+        Output("scenario1", "options", allow_duplicate=True),
+        Output("scenario2", "options", allow_duplicate=True),
+        # Output("vessel", "options", allow_duplicate=True),
+        # Output("defence", "options", allow_duplicate=True),
         Output("mgmt-table", "children", allow_duplicate=True),
         Output("mgmt-legend-affection", "hidden", allow_duplicate=True),
         Output("mgmt-info-button", "hidden", allow_duplicate=True),
@@ -2687,31 +2665,30 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-current-button", "hidden", allow_duplicate=True),
         Output("mgmt-tables-store", "data", allow_duplicate=True),
         Input("mgmt-reset-button", "n_clicks"),
-        State("wind-farm", "options"),
-        State("aquaculture", "options"),
-        State("vessel", "options"),
-        State("defence", "options"),
+        State("scenario1", "options"),
+        State("scenario2", "options"),
+        # State("vessel", "options"),
+        # State("defence", "options"),
         prevent_initial_call=True
     )
-    def reset_mgmt(n, opts_w, opts_a, opts_v, opts_d):
+    def reset_mgmt(n, opts_w, opts_a):
         if not n:
             raise PreventUpdate
 
         default_view = {"center": [48.912724, -1.141208], "zoom": 6}
 
         # deshabilitar cada opción de nuevo
-        new_opts_wind = [{**o, "disabled": True} if o.get("value") == "wind_farm" else o for o in (opts_w or [])]
-        new_opts_aqua = [{**o, "disabled": True} if o.get("value") == "aquaculture" else o for o in (opts_a or [])]
-        new_opts_vessel = [{**o, "disabled": True} if o.get("value") == "new_vessel_route" else o for o in (opts_v or [])]
-        new_opts_defence = [{**o, "disabled": True} if o.get("value") == "defence" else o for o in (opts_d or [])]
+        new_opts_wind = [{**o, "disabled": True} if o.get("value") == "scenario1" else o for o in (opts_w or [])]
+        new_opts_aqua = [{**o, "disabled": True} if o.get("value") == "scenario2" else o for o in (opts_a or [])]
 
         # limpiar selección, stores, etc. y volver a la configuracion inicial
         return (
             None,           # dropdown
-            [], [], [], [], # values de los 4 checklists
+            [], [], # values de los 4 checklists
             default_view,   # viewport
             True,           # deshabilitar botón reset
-            new_opts_wind, new_opts_aqua, new_opts_vessel, new_opts_defence, [], True, True, True, True, True,
+            new_opts_wind, new_opts_aqua,
+            [], True, True, True, True, True,
             []
         )
     
@@ -2720,12 +2697,12 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-run-button", "disabled"),  # por si otro callback también lo toca
         Input("mgmt-wind", "children"),
         Input("mgmt-aquaculture", "children"),
-        Input("mgmt-vessel", "children"),
-        Input("mgmt-defence", "children"),
+        # Input("mgmt-vessel", "children"),
+        # Input("mgmt-defence", "children"),
         Input("mgmt-wind-upload", "children"),
         Input("mgmt-aquaculture-upload", "children"),
-        Input("mgmt-vessel-upload", "children"),
-        Input("mgmt-defence-upload", "children"),
+        # Input("mgmt-vessel-upload", "children"),
+        # Input("mgmt-defence-upload", "children"),
         prevent_initial_call=False  # evalúa también al cargar para dejarlo deshabilitado si está vacío
     )
     def toggle_mgmt_run(*children_groups):
@@ -2758,17 +2735,15 @@ def register_management_callbacks(app: dash.Dash):
         State("mgmt-wind-upload", "children"),
         State("mgmt-aquaculture", "children"),
         State("mgmt-aquaculture-upload", "children"),
-        State("mgmt-vessel", "children"),
-        State("mgmt-vessel-upload", "children"),
-        State("mgmt-defence", "children"),
-        State("mgmt-defence-upload", "children"),
+        # State("mgmt-vessel", "children"),
+        # State("mgmt-vessel-upload", "children"),
+        # State("mgmt-defence", "children"),
+        # State("mgmt-defence-upload", "children"),
         prevent_initial_call=True
     )
     def render_mgmt_tabs(n, area, current_store,
                          mgmt_w, mgmt_wu,
-                         mgmt_a, mgmt_au,
-                         mgmt_v, mgmt_vu,
-                         mgmt_d, mgmt_du):
+                         mgmt_a, mgmt_au):
         if not (n and area):
             raise PreventUpdate
         eunis_enabled = eunis_available(area)
@@ -2793,26 +2768,16 @@ def register_management_callbacks(app: dash.Dash):
         if eunis_enabled:
             try:
                 df_wind = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
-                add_current_table(df_wind, "wind", "eunis", "wind_eunis")
+                add_current_table(df_wind, "scenario1", "eunis", "scenario1_eunis")
             except Exception:
                 pass
             try:
                 df_aqua = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
-                add_current_table(df_aqua, "aquaculture", "eunis", "aquaculture_eunis")
+                add_current_table(df_aqua, "scenario2", "eunis", "scenario2_eunis")
             except Exception:
                 pass
             try:
-                df_vessel = activity_eunis_table(area, mgmt_v, mgmt_vu, label_col="AllcombD")
-                add_current_table(df_vessel, "vessel", "eunis", "vessel_eunis")
-            except Exception:
-                pass
-            try:
-                df_defence = activity_eunis_table(area, mgmt_d, mgmt_du, label_col="AllcombD")
-                add_current_table(df_defence, "defence", "eunis", "defence_eunis")
-            except Exception:
-                pass
-            try:
-                df_total_eu = activity_eunis_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a) + _as_list(mgmt_v) + _as_list(mgmt_d))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))], label_col="AllcombD")
+                df_total_eu = activity_eunis_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au))], label_col="AllcombD")
                 add_current_table(df_total_eu, "total", "eunis", "total_eunis")
             except Exception:
                 pass
@@ -2820,26 +2785,16 @@ def register_management_callbacks(app: dash.Dash):
         if saltmarsh_enabled:
             try:
                 df_wind_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
-                add_current_table(df_wind_sm, "wind", "saltmarsh", "wind_saltmarsh")
+                add_current_table(df_wind_sm, "scenario1", "saltmarsh", "scenario1_saltmarsh")
             except Exception:
                 pass
             try:
                 df_aqua_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
-                add_current_table(df_aqua_sm, "aquaculture", "saltmarsh", "aquaculture_saltmarsh")
+                add_current_table(df_aqua_sm, "scenario2", "saltmarsh", "scnenario2_saltmarsh")
             except Exception:
                 pass
             try:
-                df_vessel_sm = activity_saltmarsh_table(area, mgmt_v, mgmt_vu)
-                add_current_table(df_vessel_sm, "vessel", "saltmarsh", "vessel_saltmarsh")
-            except Exception:
-                pass
-            try:
-                df_defence_sm = activity_saltmarsh_table(area, mgmt_d, mgmt_du)
-                add_current_table(df_defence_sm, "defence", "saltmarsh", "defence_saltmarsh")
-            except Exception:
-                pass
-            try:
-                df_total_sm = activity_saltmarsh_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a) + _as_list(mgmt_v) + _as_list(mgmt_d))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))])
+                df_total_sm = activity_saltmarsh_table(area, [*(_as_list(mgmt_w) + _as_list(mgmt_a))], [*(_as_list(mgmt_wu) + _as_list(mgmt_au))])
                 add_current_table(df_total_sm, "total", "saltmarsh", "total_saltmarsh")
             except Exception:
                 pass
@@ -2878,7 +2833,7 @@ def register_management_callbacks(app: dash.Dash):
         if eunis_available(area):
             try:
                 df_eu = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Wind Farms.")
+                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario1.")
             except Exception:
                 import traceback; traceback.print_exc()
                 eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -2889,7 +2844,7 @@ def register_management_callbacks(app: dash.Dash):
         if saltmarsh_available(area):
             try:
                 df_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Wind Farms.")
+                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario1.")
             except Exception:
                 import traceback; traceback.print_exc()
                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -2932,7 +2887,7 @@ def register_management_callbacks(app: dash.Dash):
         if eunis_available(area):
             try:
                 df_eu = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Aquaculture.")
+                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario2.")
             except Exception:
                 import traceback; traceback.print_exc()
                 eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -2943,7 +2898,7 @@ def register_management_callbacks(app: dash.Dash):
         if saltmarsh_available(area):
             try:
                 df_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Aquaculture.")
+                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario2.")
             except Exception:
                 import traceback; traceback.print_exc()
                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -2955,180 +2910,180 @@ def register_management_callbacks(app: dash.Dash):
 
     
 # Callback to compute the vessel route impact to eunis and saltmarshes:   
-    @app.callback(
-        Output("mgmt-vessel-eunis", "children"),
-        Output("mgmt-vessel-saltmarshes", "children"),
-        Input("mgmt-table", "children"),
-        State("mgmt-study-area-dropdown", "value"),
-        State("mgmt-vessel", "children"),
-        State("mgmt-vessel-upload", "children"),
-        prevent_initial_call=True
-    )
-    def fill_vessel_tabs(_tabs_ready, area, mgmt_v, mgmt_vu):
-        if not _tabs_ready:
-            raise PreventUpdate
+#     @app.callback(
+#         Output("mgmt-vessel-eunis", "children"),
+#         Output("mgmt-vessel-saltmarshes", "children"),
+#         Input("mgmt-table", "children"),
+#         State("mgmt-study-area-dropdown", "value"),
+#         State("mgmt-vessel", "children"),
+#         State("mgmt-vessel-upload", "children"),
+#         prevent_initial_call=True
+#     )
+#     def fill_vessel_tabs(_tabs_ready, area, mgmt_v, mgmt_vu):
+#         if not _tabs_ready:
+#             raise PreventUpdate
 
-        def render_table(df, empty_text):
-            if df is None or df.empty:
-                return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
-            table = dash_table.DataTable(
-                columns=[{"name": c, "id": c} for c in df.columns],
-                data=df.to_dict("records"),
-                sort_action="native", filter_action="native", page_action="none",
-                style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
-                style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
-                style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
-                style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
-            )
-            return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+#         def render_table(df, empty_text):
+#             if df is None or df.empty:
+#                 return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
+#             table = dash_table.DataTable(
+#                 columns=[{"name": c, "id": c} for c in df.columns],
+#                 data=df.to_dict("records"),
+#                 sort_action="native", filter_action="native", page_action="none",
+#                 style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+#                 style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+#                 style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+#                 style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+#             )
+#             return html.Div([html.Hr(), table], style={"marginTop":"8px"})
 
-        # --- EUNIS (solo si está disponible para el área) ---
-        if eunis_available(area):
-            try:
-                df_eu = activity_eunis_table(area, mgmt_v, mgmt_vu, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by New Vessel Routes.")
-            except Exception:
-                import traceback; traceback.print_exc()
-                eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
-        else:
-            eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
+#         # --- EUNIS (solo si está disponible para el área) ---
+#         if eunis_available(area):
+#             try:
+#                 df_eu = activity_eunis_table(area, mgmt_v, mgmt_vu, label_col="AllcombD")
+#                 eunis_div = render_table(df_eu, "No EUNIS habitats affected by New Vessel Routes.")
+#             except Exception:
+#                 import traceback; traceback.print_exc()
+#                 eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+#         else:
+#             eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        # --- SALTMARSH (solo si está disponible para el área) ---
-        if saltmarsh_available(area):
-            try:
-                df_sm = activity_saltmarsh_table(area, mgmt_v, mgmt_vu)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by New Vessel Routes.")
-            except Exception:
-                import traceback; traceback.print_exc()
-                saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
-        else:
-            # El subtab estará disabled; aún así devolvemos un placeholder inocuo
-            saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
+#         # --- SALTMARSH (solo si está disponible para el área) ---
+#         if saltmarsh_available(area):
+#             try:
+#                 df_sm = activity_saltmarsh_table(area, mgmt_v, mgmt_vu)
+#                 saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by New Vessel Routes.")
+#             except Exception:
+#                 import traceback; traceback.print_exc()
+#                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+#         else:
+#             # El subtab estará disabled; aún así devolvemos un placeholder inocuo
+#             saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        return eunis_div, saltmarsh_div
+#         return eunis_div, saltmarsh_div
     
-# Callback to compute the defence impact to eunis and saltmarshes:   
-    @app.callback(
-        Output("mgmt-defence-eunis", "children"),
-        Output("mgmt-defence-saltmarshes", "children"),
-        Input("mgmt-table", "children"),
-        State("mgmt-study-area-dropdown", "value"),
-        State("mgmt-defence", "children"),
-        State("mgmt-defence-upload", "children"),
-        prevent_initial_call=True
-    )
-    def fill_defence_tabs(_tabs_ready, area, mgmt_d, mgmt_du):
-        if not _tabs_ready:
-            raise PreventUpdate
+# # Callback to compute the defence impact to eunis and saltmarshes:   
+#     @app.callback(
+#         Output("mgmt-defence-eunis", "children"),
+#         Output("mgmt-defence-saltmarshes", "children"),
+#         Input("mgmt-table", "children"),
+#         State("mgmt-study-area-dropdown", "value"),
+#         State("mgmt-defence", "children"),
+#         State("mgmt-defence-upload", "children"),
+#         prevent_initial_call=True
+#     )
+#     def fill_defence_tabs(_tabs_ready, area, mgmt_d, mgmt_du):
+#         if not _tabs_ready:
+#             raise PreventUpdate
 
-        def render_table(df, empty_text):
-            if df is None or df.empty:
-                return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
-            table = dash_table.DataTable(
-                columns=[{"name": c, "id": c} for c in df.columns],
-                data=df.to_dict("records"),
-                sort_action="native", filter_action="native", page_action="none",
-                style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
-                style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
-                style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
-                style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
-            )
-            return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+#         def render_table(df, empty_text):
+#             if df is None or df.empty:
+#                 return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
+#             table = dash_table.DataTable(
+#                 columns=[{"name": c, "id": c} for c in df.columns],
+#                 data=df.to_dict("records"),
+#                 sort_action="native", filter_action="native", page_action="none",
+#                 style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+#                 style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+#                 style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+#                 style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+#             )
+#             return html.Div([html.Hr(), table], style={"marginTop":"8px"})
 
-        # --- EUNIS (solo si está disponible para el área) ---
-        if eunis_available(area):
-            try:
-                df_eu = activity_eunis_table(area, mgmt_d, mgmt_du, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Defence.")
-            except Exception:
-                import traceback; traceback.print_exc()
-                eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
-        else:
-            eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
+#         # --- EUNIS (solo si está disponible para el área) ---
+#         if eunis_available(area):
+#             try:
+#                 df_eu = activity_eunis_table(area, mgmt_d, mgmt_du, label_col="AllcombD")
+#                 eunis_div = render_table(df_eu, "No EUNIS habitats affected by Defence.")
+#             except Exception:
+#                 import traceback; traceback.print_exc()
+#                 eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+#         else:
+#             eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        # --- SALTMARSH (solo si está disponible para el área) ---
-        if saltmarsh_available(area):
-            try:
-                df_sm = activity_saltmarsh_table(area, mgmt_d, mgmt_du)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Defence.")
-            except Exception:
-                import traceback; traceback.print_exc()
-                saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
-        else:
-            # El subtab estará disabled; aún así devolvemos un placeholder inocuo
-            saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
+#         # --- SALTMARSH (solo si está disponible para el área) ---
+#         if saltmarsh_available(area):
+#             try:
+#                 df_sm = activity_saltmarsh_table(area, mgmt_d, mgmt_du)
+#                 saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Defence.")
+#             except Exception:
+#                 import traceback; traceback.print_exc()
+#                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+#         else:
+#             # El subtab estará disabled; aún así devolvemos un placeholder inocuo
+#             saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        return eunis_div, saltmarsh_div
+#         return eunis_div, saltmarsh_div
     
-    @app.callback(
-        Output("mgmt-total-eunis", "children"),
-        Output("mgmt-total-saltmarshes", "children"),
-        Input("mgmt-table", "children"),
-        State("mgmt-study-area-dropdown", "value"),
-        State("mgmt-wind", "children"),
-        State("mgmt-wind-upload", "children"),
-        State("mgmt-aquaculture", "children"),
-        State("mgmt-aquaculture-upload", "children"),
-        State("mgmt-vessel", "children"),
-        State("mgmt-vessel-upload", "children"),
-        State("mgmt-defence", "children"),
-        State("mgmt-defence-upload", "children"),
-        prevent_initial_call=True
-    )
-    def fill_total_tabs(_tabs_ready, area, mgmt_w, mgmt_wu, mgmt_a, mgmt_au, mgmt_v, mgmt_vu, mgmt_d, mgmt_du):
-        if not _tabs_ready:
-            raise PreventUpdate
+    # @app.callback(
+    #     Output("mgmt-total-eunis", "children"),
+    #     Output("mgmt-total-saltmarshes", "children"),
+    #     Input("mgmt-table", "children"),
+    #     State("mgmt-study-area-dropdown", "value"),
+    #     State("mgmt-wind", "children"),
+    #     State("mgmt-wind-upload", "children"),
+    #     State("mgmt-aquaculture", "children"),
+    #     State("mgmt-aquaculture-upload", "children"),
+    #     State("mgmt-vessel", "children"),
+    #     State("mgmt-vessel-upload", "children"),
+    #     State("mgmt-defence", "children"),
+    #     State("mgmt-defence-upload", "children"),
+    #     prevent_initial_call=True
+    # )
+    # def fill_total_tabs(_tabs_ready, area, mgmt_w, mgmt_wu, mgmt_a, mgmt_au, mgmt_v, mgmt_vu, mgmt_d, mgmt_du):
+    #     if not _tabs_ready:
+    #         raise PreventUpdate
         
-        # Sum all activities geometries for Total impact:
-        def _as_list(x):
-            if x is None:
-                return []
-            if isinstance(x, list):
-                return x
-            return [x]
+    #     # Sum all activities geometries for Total impact:
+    #     def _as_list(x):
+    #         if x is None:
+    #             return []
+    #         if isinstance(x, list):
+    #             return x
+    #         return [x]
 
-        total_children = (_as_list(mgmt_w)  + _as_list(mgmt_a)  + _as_list(mgmt_v)  + _as_list(mgmt_d))
-        total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))
+    #     total_children = (_as_list(mgmt_w)  + _as_list(mgmt_a)  + _as_list(mgmt_v)  + _as_list(mgmt_d))
+    #     total_upload_children = (_as_list(mgmt_wu) + _as_list(mgmt_au) + _as_list(mgmt_vu) + _as_list(mgmt_du))
 
-        def render_table(df, empty_text):
-            if df is None or df.empty:
-                return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
-            table = dash_table.DataTable(
-                columns=[{"name": c, "id": c} for c in df.columns],
-                data=df.to_dict("records"),
-                sort_action="native", filter_action="native", page_action="none",
-                style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
-                style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
-                style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
-                style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
-            )
-            return html.Div([html.Hr(), table], style={"marginTop":"8px"})
+    #     def render_table(df, empty_text):
+    #         if df is None or df.empty:
+    #             return html.Div(empty_text, className="text-muted", style={"padding":"8px"})
+    #         table = dash_table.DataTable(
+    #             columns=[{"name": c, "id": c} for c in df.columns],
+    #             data=df.to_dict("records"),
+    #             sort_action="native", filter_action="native", page_action="none",
+    #             style_table={"maxHeight":"720px","overflowY":"auto","border":"1px solid #ddd","borderRadius":"8px"},
+    #             style_cell={"padding":"8px","fontSize":"1.0rem","textAlign":"center"},
+    #             style_header={"fontWeight":"bold","backgroundColor":"#f7f7f7","borderBottom":"1px solid #ccc"},
+    #             style_data_conditional=[{"if":{"row_index":"odd"},"backgroundColor":"#fafafa"}]
+    #         )
+    #         return html.Div([html.Hr(), table], style={"marginTop":"8px"})
 
-        # --- EUNIS (solo si está disponible para el área) ---
-        if eunis_available(area):
-            try:
-                # Compute statistics on the total geometries:
-                df_eu = activity_eunis_table(area, total_children, total_upload_children, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Wind Farms.")
-            except Exception:
-                import traceback; traceback.print_exc()
-                eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
-        else:
-            eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
+    #     # --- EUNIS (solo si está disponible para el área) ---
+    #     if eunis_available(area):
+    #         try:
+    #             # Compute statistics on the total geometries:
+    #             df_eu = activity_eunis_table(area, total_children, total_upload_children, label_col="AllcombD")
+    #             eunis_div = render_table(df_eu, "No EUNIS habitats affected by Wind Farms.")
+    #         except Exception:
+    #             import traceback; traceback.print_exc()
+    #             eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+    #     else:
+    #         eunis_div = html.Div("EUNIS data not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        # --- SALTMARSH (solo si está disponible para el área) ---
-        if saltmarsh_available(area):
-            try:
-                df_sm = activity_saltmarsh_table(area, total_children, total_upload_children)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Wind Farms.")
-            except Exception:
-                import traceback; traceback.print_exc()
-                saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
-        else:
-            # El subtab estará disabled; aún así devolvemos un placeholder inocuo
-            saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
+    #     # --- SALTMARSH (solo si está disponible para el área) ---
+    #     if saltmarsh_available(area):
+    #         try:
+    #             df_sm = activity_saltmarsh_table(area, total_children, total_upload_children)
+    #             saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Wind Farms.")
+    #         except Exception:
+    #             import traceback; traceback.print_exc()
+    #             saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
+    #     else:
+    #         # El subtab estará disabled; aún así devolvemos un placeholder inocuo
+    #         saltmarsh_div = html.Div("Saltmarsh layers not available for this area.", className="text-muted", style={"padding":"8px"})
 
-        return eunis_div, saltmarsh_div
+    #     return eunis_div, saltmarsh_div
 
 # Callback to create tabs of saltmarsh scenario impact:
     @app.callback(
@@ -3143,25 +3098,21 @@ def register_management_callbacks(app: dash.Dash):
         State("mgmt-wind-upload", "children"),
         State("mgmt-aquaculture", "children"),
         State("mgmt-aquaculture-upload", "children"),
-        State("mgmt-vessel", "children"),
-        State("mgmt-vessel-upload", "children"),
-        State("mgmt-defence", "children"),
-        State("mgmt-defence-upload", "children"),
+        # State("mgmt-vessel", "children"),
+        # State("mgmt-vessel-upload", "children"),
+        # State("mgmt-defence", "children"),
+        # State("mgmt-defence-upload", "children"),
         prevent_initial_call=True
     )
     def satlmarsh_scenarios_activities(clicks, area, current_store,
                                     mgmt_w, mgmt_wu,
-                                    mgmt_a, mgmt_au,
-                                    mgmt_v, mgmt_vu,
-                                    mgmt_d, mgmt_du):
+                                    mgmt_a, mgmt_au):
         if not clicks or not area:
             raise PreventUpdate
         layout, tables = _build_saltmarsh_scenarios_layout(
             area,
             mgmt_w, mgmt_wu,
-            mgmt_a, mgmt_au,
-            mgmt_v, mgmt_vu,
-            mgmt_d, mgmt_du
+            mgmt_a, mgmt_au
         )
         current_store = current_store or []
         preserved_current = [entry for entry in current_store if entry.get("type") != "scenario"]
@@ -3198,12 +3149,12 @@ def register_management_callbacks(app: dash.Dash):
         Output("layer-menu", "className", allow_duplicate=True),
         Output("mgmt-wind", "children", allow_duplicate=True),
         Output("mgmt-aquaculture", "children", allow_duplicate=True),
-        Output("mgmt-vessel", "children", allow_duplicate=True),
-        Output("mgmt-defence", "children", allow_duplicate=True),
+        # Output("mgmt-vessel", "children", allow_duplicate=True),
+        # Output("mgmt-defence", "children", allow_duplicate=True),
         Output("mgmt-wind-upload", "children", allow_duplicate=True),
         Output("mgmt-aquaculture-upload", "children", allow_duplicate=True),
-        Output("mgmt-vessel-upload", "children", allow_duplicate=True),
-        Output("mgmt-defence-upload", "children", allow_duplicate=True),
+        # Output("mgmt-vessel-upload", "children", allow_duplicate=True),
+        # Output("mgmt-defence-upload", "children", allow_duplicate=True),
         Input("tabs", "value"),
         prevent_initial_call='initial_duplicate'
     )
@@ -3217,10 +3168,10 @@ def register_management_callbacks(app: dash.Dash):
         if tab_value == "tab-management":
             layer_menu_class = f"{base} show"
             # show legend (hidden=False), enable button (disabled=False), open panel, clear layer children placeholders
-            return False, False, layer_menu_class, [], [], [], [], [], [], [], []
+            return False, False, layer_menu_class, [], [], [], []
 
         # Otherwise hide legend, disable layers button and collapse the panel
-        return True, True, layer_menu_class, [], [], [], [], [], [], [], []
+        return True, True, layer_menu_class, [], [], [], []
 
 # Add LayerGroup with the additional information for management activities location selection.
     # @app.callback(
