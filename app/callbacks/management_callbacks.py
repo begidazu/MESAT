@@ -27,8 +27,6 @@ from app.models.management_scenarios import (
 COLOR = {
     "scenario1-draw": ("scenario1",   "#f39c12"),
     "scenario2-draw": ("scenario2", "#18BC9C"),
-    # "vessel-draw": ("vessel",    "#3498DB"),
-    # "defence-draw": ("defence",  "#e74c3c"),
 }
 
 # Clase base FORMS:
@@ -45,6 +43,118 @@ SCEN_LABEL = {
     "global_rcp45":   "Global RCP4.5",
 }
 SCEN_KEYS = ["regional_rcp45", "regional_rcp85", "global_rcp45"]
+
+# Functions to construct the URLs to add EMODnet layers:
+def get_wfs_url(base_url, layer_name):
+    """
+    Genera la URL completa combinando la base y los parámetros del WFS
+    para descargar los datos vectoriales en formato GeoJSON.
+    """
+    params = [
+        "SERVICE=WFS",
+        "VERSION=1.1.0",
+        "REQUEST=GetFeature",
+        f"TYPENAME={layer_name}",
+        "OUTPUTFORMAT=application/json",
+        "SRSNAME=EPSG:4326"
+    ]
+    separator = "&" if "?" in base_url else "?"
+    return f"{base_url}{separator}{'&'.join(params)}"
+
+def create_wms_layer(base_url, layer_name, layer_id):
+    """
+    Genera el componente WMSTileLayer de Dash-Leaflet para cargar 
+    imágenes dinámicas (teselas) desde un servidor WMS.
+    """
+    return dl.WMSTileLayer(
+        url=base_url,
+        layers=layer_name,
+        format="image/png",
+        transparent=True,
+        id=layer_id
+    )
+
+# Layer config to add EMODnet layers into the app:
+LAYER_CONFIG = {
+    # ------------------------------------------
+    # EJEMPLO WFS COMPLETO (Puntos)
+    # ------------------------------------------
+    "mgmt-wf-points": {
+        "type": "WFS",
+        "base_url": "https://ows.emodnet-humanactivities.eu/wfs",
+        "layer_name": "emodnet:windfarms",
+        "geom": "point"
+    },
+    
+    # ------------------------------------------
+    # EJEMPLO WMS COMPLETO (Imágenes/Densidad)
+    # ------------------------------------------
+    "mgmt-vessel-density-alltype-annualavg": {
+        "type": "WMS",
+        "base_url": "https://ows.emodnet-humanactivities.eu/wms",
+        "layer_name": "emodnet:2022_avg_all",
+        "geom": "" # El WMS no necesita geometría, nos devuelve imágenes
+    },
+
+    # ------------------------------------------
+    # RESTO DE CAPAS (Plantillas vacías para rellenar)
+    # ------------------------------------------
+    
+    # --- Human Activities: Wind Farms ---
+    "mgmt-wf-polygons": {"type": "WFS", "base_url": "https://ows.emodnet-humanactivities.eu/wfs", "layer_name": "emodnet:windfarmspoly", "geom": "polygon"},
+
+    # --- Aquaculture ---
+    "mgmt-aquaculture-finfish": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-aquaculture-shellfish": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Fishing Intensity ---
+    "mgmt-fishing-beam-trawls": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-fishing-bottom-otter": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-fishing-bottom-seines": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-fishing-dredges": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-fishing-pelagic": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-fishing-static-gears": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Military Areas ---
+    "mgmt-military-areas-polygons": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Protected Areas ---
+    "mgmt-protected-areas-natura2000": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-protected-areas-world-database": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Ports ---
+    "mgmt-main-ports": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Waste Disposal ---
+    "mgmt-waste-disposal-discharge": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-waste-disposal-waste": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-waste-disposal-dumped-munitions-points": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Extraction & Dredging ---
+    "mgmt-extraction-aggregate-extraction": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-dredging-dredging": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Oil & Gas ---
+    "mgmt-oil-gas-offshore-installations": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Cables ---
+    "mgmt-cables-power-cables": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-cables-telecomunication-cables": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Geology ---
+    "mgmt-geology-seabed-substrate": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Geography ---
+    "mgmt-geography-coastline": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-geography-bathymetry": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+
+    # --- Ecology ---
+    "mgmt-ecology-speciess-richness": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-ecology-endangered-species": {"type": "", "base_url": "", "layer_name": "", "geom": ""}
+}
+
+# Style for polygons
+POLYGON_STYLE = dict(color="blue", weight=2, opacity=0.8, fillOpacity=0.4)
 
 def _render_table(df, empty_text):
     if df is None or df.empty:
@@ -1238,4 +1348,53 @@ def register_management_callbacks(app: dash.Dash):
             return not is_open  # alternar
         return is_open  # mantener 
     
+
+
+    
+    
+    @app.callback(
+        Output("wfs-layers-container", "children"), # O wfs-layers-container, usa el ID correcto de tu layout
+        [
+            Input("mgmt-wind-farm-info", "value"),
+            # ... el resto de tus Inputs ...
+        ]
+    )
+    def update_map_layers(*args):
+        selected_values = [item for sublist in args if sublist for item in sublist]
+        new_layers = []
+        
+        for val in selected_values:
+            if val in LAYER_CONFIG:
+                conf = LAYER_CONFIG[val]
+                layer_id = f"layer-{val}"
+                
+                # --- SI ES VECTORIAL (WFS) ---
+                if conf["type"] == "WFS":
+                    full_url = get_wfs_url(conf["base_url"], conf["layer_name"])
+                    
+                    # Si es polígono o línea, usamos el estilo
+                    if conf["geom"] in ["polygon", "line"]:
+                        new_layers.append(
+                            dl.GeoJSON(
+                                url=full_url,
+                                id=layer_id,
+                                options=dict(style=POLYGON_STYLE)
+                            )
+                        )
+                    # Si es punto, capa limpia sin opciones (cero JavaScript)
+                    elif conf["geom"] == "point":
+                        new_layers.append(
+                            dl.GeoJSON(
+                                url=full_url,
+                                id=layer_id
+                            )
+                        )
+                        
+                # --- SI ES IMAGEN (WMS) ---
+                elif conf["type"] == "WMS":
+                    new_layers.append(
+                        create_wms_layer(conf["base_url"], conf["layer_name"], layer_id)
+                    )
+                    
+        return new_layers
 

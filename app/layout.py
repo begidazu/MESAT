@@ -34,6 +34,7 @@ def create_layout():  # definir función que construye el layout
                                             )
                                         ]
                                     ),
+                                    dl.LayerGroup(id="wfs-layers-container"),
                                     # Layers where we store the raster tiles for the saltmarsh model
                                     dl.FeatureGroup(id='reg-rcp45', children=[]),
                                     # Layers where we store the training points for the saltmarsh model
@@ -725,18 +726,6 @@ def create_layout():  # definir función que construye el layout
                                                             )
                                                             
                                                         ]
-                                                        # children=[  # contenido cuando el grupo está desplegado
-                                                        #     dbc.Checklist(  # switches del grupo Human
-                                                        #         id="chk-human",  # mantener id original para callbacks existentes
-                                                        #         options=[  # opciones que encienden capas
-                                                        #             {"label": html.Span("HA 1", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-1"},  # etiqueta + valor
-                                                        #             {"label": html.Span("HA 2", style={"fontSize": "0.9rem"}), "value": "mgmt-ha-2"},  # etiqueta + valor
-                                                        #         ],
-                                                        #         value=[],  # sin selección por defecto
-                                                        #         switch=True,  # estilo tipo interruptor
-                                                        #         className="mb-1",  # pequeño margen inferior
-                                                        #     )
-                                                        # ],
                                                     ),
                                                     dbc.AccordionItem(  # segundo grupo: Fishery
                                                         title="Geology",  # cabecera con flecha
