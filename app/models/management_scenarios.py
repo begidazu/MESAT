@@ -594,8 +594,6 @@ from rasterio.features import shapes, rasterize
 from pathlib import Path
 from rasterio.windows import Window, from_bounds
 
-
-# --- NUEVO: Base path dinámico para producción ---
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 def resolve_path(rel_path: str):
@@ -603,7 +601,6 @@ def resolve_path(rel_path: str):
     if not rel_path:
         return None
     return str(BASE_DIR / rel_path)
-
 
 EUNIS_PATHS = {
     "Santander":  "results/opsa/Santander/eunis_santander.parquet",     
@@ -740,6 +737,18 @@ SALTMARSH_SCENARIOS_PATHS = {
             }
         }
     },
+}
+
+FISH_PRES_ABS_BASE = "results/pelagic_fish_stocks/presence_absence"
+FISH_ACCOUNTS_PATH = "results/pelagic_fish_stocks/SPF_accounts_MESIT.parquet"
+
+STOCKS_CONFIG = {
+    'ANE8':   {'taxon': 'taxonid=126426', 'res': ''},
+    'ANE9AS': {'taxon': 'taxonid=126426', 'res': ''},
+    'PIL8C9A': {'taxon': 'taxonid=126421', 'res': ''},
+    'HOM9A':   {'taxon': 'taxonid=126822', 'res': '0_05deg'},
+    'HOMNEA':  {'taxon': 'taxonid=126822', 'res': '0_25deg'},
+    'MACNEA':  {'taxon': 'taxonid=127023', 'res': ''}
 }
 
 def _norm(p): 
@@ -1051,77 +1060,11 @@ def activity_saltmarsh_scenario_table(area: str,
 
     return pd.DataFrame(rows, columns=["Ecosystem", "Extent (ha)", "Accretion (m³/yr)"])
 
-
-# -------------------------------------------------------------------------
 # --- FISH STOCKS LOGIC ---
-# -------------------------------------------------------------------------
-
-FISH_PRES_ABS_BASE = "results/pelagic_fish_stocks/presence_absence"
-FISH_ACCOUNTS_PATH = "results/pelagic_fish_stocks/SPF_accounts_MESIT.parquet"
-
-STOCKS_CONFIG = {
-    'ANE8':   {'taxon': 'taxonid=126426', 'res': ''},
-    'ANE9AS': {'taxon': 'taxonid=126426', 'res': ''},
-    'PIL8C9A': {'taxon': 'taxonid=126421', 'res': ''},
-    'HOM9A':   {'taxon': 'taxonid=126822', 'res': '0_05deg'},
-    'HOMNEA':  {'taxon': 'taxonid=126822', 'res': '0_25deg'},
-    'MACNEA':  {'taxon': 'taxonid=127023', 'res': ''}
-}
-
-# def _get_affected_extent_km2(geom_4326, stock_id, period_key):
-#     """Calcula el extent (km2) extrayendo polígonos y proyectando a métrico (EPSG:3035)."""
-#     config = STOCKS_CONFIG.get(stock_id)
-#     if not config: return 0.0
-    
-#     res_suffix = f"_{config['res']}" if config['res'] else ""
-#     rel_path = f"{FISH_PRES_ABS_BASE}/{config['taxon']}/method=ensemble/threshold=max_spec_sens/{period_key}{res_suffix}.tif"
-#     tif_path = resolve_path(rel_path)
-    
-#     if not tif_path or not os.path.exists(tif_path):
-#         return 0.0
-
-#     with rasterio.open(tif_path) as src:
-#         if src.crs:
-#             project = Transformer.from_crs("EPSG:4326", src.crs, always_xy=True).transform
-#             geom_raster_crs = shp_transform(project, geom_4326)
-#         else:
-#             geom_raster_crs = geom_4326
-        
-#         try:
-#             out_image, out_transform = rio_mask(src, [geom_raster_crs], crop=True, filled=True)
-            
-#             # Crear una máscara binaria estricta (1 = presencia, el resto a 0)
-#             mask_presence = (out_image[0] == 1).astype('uint8')
-            
-#             if np.sum(mask_presence) == 0:
-#                 return 0.0
-            
-#             # Extraer las geometrías exactas de los píxeles
-#             polygons = []
-#             for geom, val in shapes(mask_presence, transform=out_transform):
-#                 if val == 1:
-#                     polygons.append(shape(geom))
-                    
-#             if not polygons:
-#                 return 0.0
-                
-#             # Convertir a GeoDataFrame y reproyectar a EPSG:3035 para área métrica europea
-#             gdf_presence = gpd.GeoDataFrame(geometry=polygons, crs=src.crs or "EPSG:4326")
-#             if gdf_presence.crs.is_geographic:
-#                 gdf_presence = gdf_presence.to_crs("EPSG:3035")
-                
-#             # Sumar área y convertir a km²
-#             return float(gdf_presence.area.sum() / 1e6)
-#         except Exception as e:
-#             print(f"Error calculating fish overlap for {stock_id}: {e}")
-#             return 0.0
-
-
 
 def _get_affected_extent_km2(geom_4326, stock_id, period_key):
     """
-    Calcula el área (km2) exacta mediante la vectorización de la intersección 
-    entre el área de interés, el stock y la presencia (SDM).
+    Computes the fish impacted area (km2) by extracting the user defined geometry. 
     """
     config = STOCKS_CONFIG.get(stock_id)
     if not config: 

@@ -289,20 +289,6 @@ def create_layout():  # definir función que construye el layout
                                                                                         ),
                                                                                         "value": "mgmt-wf-polygons"  # valor del switch
                                                                                     },
-                                                                                    {
-                                                                                        "label": html.Span(  # contenedor del label
-                                                                                            [  # hijos del label
-                                                                                                html.A(  # hacer el texto un enlace real
-                                                                                                    "Technical Suitability",  # texto clicable
-                                                                                                    href="",  # url destino
-                                                                                                    target="_blank",  # abrir en nueva pestaña
-                                                                                                    rel="noopener noreferrer"
-                                                                                                )
-                                                                                            ],
-                                                                                            style={"fontSize": "0.9rem"}  # tamaño del texto
-                                                                                        ),
-                                                                                        "value": "mgmt-wf-techsuit"  # valor del switch
-                                                                                    }
                                                                                 ],
                                                                                 value=[],
                                                                                 switch=True
@@ -547,7 +533,7 @@ def create_layout():  # definir función que construye el layout
                                                                                         "label": html.Span(  # contenedor del label
                                                                                             [  # hijos del label
                                                                                                 html.A(  # hacer el texto un enlace real
-                                                                                                    "Main Ports (vessel traffic by tonnage)",  # texto clicable
+                                                                                                    "Main Ports",  # texto clicable
                                                                                                     href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/379d0425-8924-4a41-a088-1a002d2ea748",  # url destino
                                                                                                     target="_blank",  # abrir en nueva pestaña
                                                                                                     rel="noopener noreferrer"
@@ -601,7 +587,7 @@ def create_layout():  # definir función que construye el layout
                                                                                         "label": html.Span(  # contenedor del label
                                                                                             [  # hijos del label
                                                                                                 html.A(  # hacer el texto un enlace real
-                                                                                                    "Dumped Munitions (points)",  # texto clicable
+                                                                                                    "Dumped Munitions",  # texto clicable
                                                                                                     href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/661aa259-8ea9-49ae-a39d-49685057b013",  # url destino
                                                                                                     target="_blank",  # abrir en nueva pestaña
                                                                                                     rel="noopener noreferrer"
@@ -627,7 +613,7 @@ def create_layout():  # definir función que construye el layout
                                                                                         "label": html.Span(  # contenedor del label
                                                                                             [  # hijos del label
                                                                                                 html.A(  # hacer el texto un enlace real
-                                                                                                    "Aggregate Extraction Areas",  # texto clicable
+                                                                                                    "Extraction Areas",  # texto clicable
                                                                                                     href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/fde45abd-7bf3-4f05-869c-d1ce77f4ac63",  # url destino
                                                                                                     target="_blank",  # abrir en nueva pestaña
                                                                                                     rel="noopener noreferrer"
@@ -653,7 +639,7 @@ def create_layout():  # definir función que construye el layout
                                                                                         "label": html.Span(  # contenedor del label
                                                                                             [  # hijos del label
                                                                                                 html.A(  # hacer el texto un enlace real
-                                                                                                    "Dredging",  # texto clicable
+                                                                                                    "Dredging points",  # texto clicable
                                                                                                     href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/d3e86612-35a7-4c0f-a995-245062fd2792",  # url destino
                                                                                                     target="_blank",  # abrir en nueva pestaña
                                                                                                     rel="noopener noreferrer"
@@ -773,48 +759,6 @@ def create_layout():  # definir función que construye el layout
                                                                         ),
                                                                         "value": "mgmt-geology-seabed-substrate"  # valor del switch
                                                                     },
-                                                                    {
-                                                                        "label": html.Span(  # contenedor del label
-                                                                            [  # hijos del label
-                                                                                html.A(  # hacer el texto un enlace real
-                                                                                    "Sedimentation Rates (cm/year)",  # texto clicable
-                                                                                    href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/cd0ae8d1ea0ed39546c9ba66b1bf5d3fefda2c7b",  # url destino
-                                                                                    target="_blank",  # abrir en nueva pestaña
-                                                                                    rel="noopener noreferrer"
-                                                                                )
-                                                                            ],
-                                                                            style={"fontSize": "0.9rem"}  # tamaño del texto
-                                                                        ),
-                                                                        "value": "mgmt-geology-sedimentation-rates"  # valor del switch
-                                                                    }
-                                                                    # {
-                                                                    #     "label": html.Span(  # contenedor del label
-                                                                    #         [  # hijos del label
-                                                                    #             html.A(  # hacer el texto un enlace real
-                                                                    #                 "Marine Critical Minerals",  # texto clicable
-                                                                    #                 href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/67862a1e-6a18-4a0f-84c8-5b480a010855",  # url destino
-                                                                    #                 target="_blank",  # abrir en nueva pestaña
-                                                                    #                 rel="noopener noreferrer"
-                                                                    #             )
-                                                                    #         ],
-                                                                    #         style={"fontSize": "0.9rem"}  # tamaño del texto
-                                                                    #     ),
-                                                                    #     "value": "mgmt-geology-critical-minerals"  # valor del switch
-                                                                    # },
-                                                                    #                                                                     {
-                                                                    #     "label": html.Span(  # contenedor del label
-                                                                    #         [  # hijos del label
-                                                                    #             html.A(  # hacer el texto un enlace real
-                                                                    #                 "Marine Hydrocarbons and Hydrates",  # texto clicable
-                                                                    #                 href="https://emodnet.ec.europa.eu/geonetwork/srv/eng/catalog.search#/metadata/67862ceb-c4a0-45df-a3c1-5b4c0a010855",  # url destino
-                                                                    #                 target="_blank",  # abrir en nueva pestaña
-                                                                    #                 rel="noopener noreferrer"
-                                                                    #             )
-                                                                    #         ],
-                                                                    #         style={"fontSize": "0.9rem"}  # tamaño del texto
-                                                                    #     ),
-                                                                    #     "value": "mgmt-geology-hydrocarbons-hydrates"  # valor del switch
-                                                                    # }
                                                                 ],
                                                                 value=[],  # sin selección por defecto
                                                                 switch=True,  # estilo interruptor
