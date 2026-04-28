@@ -74,6 +74,18 @@ def create_wms_layer(base_url, layer_name, layer_id):
         id=layer_id
     )
 
+def get_wms_legend_url(base_url, layer_name):
+    """Genera la URL para pedir la imagen de la leyenda al servidor WMS."""
+    params = [
+        "SERVICE=WMS",
+        "VERSION=1.1.1",
+        "REQUEST=GetLegendGraphic",
+        "FORMAT=image/png",
+        f"LAYER={layer_name}"
+    ]
+    separator = "&" if "?" in base_url else "?"
+    return f"{base_url}{separator}{'&'.join(params)}"
+
 # Layer config to add EMODnet layers into the app:
 LAYER_CONFIG = {
     # ------------------------------------------
@@ -927,6 +939,24 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-scenarios-button", "hidden", allow_duplicate=True),
         Output("mgmt-current-button", "hidden", allow_duplicate=True),
         Output("mgmt-tables-store", "data", allow_duplicate=True),
+
+        Output("dynamic-legend-items", "children", allow_duplicate=True),
+        Output("mgmt-wind-farm-info", "value", allow_duplicate=True),
+        Output("mgmt-vessel-density-info", "value", allow_duplicate=True),
+        Output("mgmt-aquaculture-info", "value", allow_duplicate=True),
+        Output("mgmt-fishing-info", "value", allow_duplicate=True),
+        Output("mgmt-military-areas-info", "value", allow_duplicate=True),
+        Output("mgmt-protected-areas-info", "value", allow_duplicate=True),
+        Output("mgmt-main-ports-info", "value", allow_duplicate=True),
+        Output("mgmt-waste-disposal-info", "value", allow_duplicate=True),
+        Output("mgmt-extraction-info", "value", allow_duplicate=True),
+        Output("mgmt-dredging-info", "value", allow_duplicate=True),
+        Output("mgmt-oil-gas-info", "value", allow_duplicate=True),
+        Output("mgmt-cables-info", "value", allow_duplicate=True),
+        Output("mgmt-geology-info", "value", allow_duplicate=True),
+        Output("mgmt-geography-info", "value", allow_duplicate=True),
+        Output("mgmt-ecology-info", "value", allow_duplicate=True),
+
         Input("mgmt-reset-button", "n_clicks"),
         State("scenario1", "options"),
         State("scenario2", "options"),
@@ -952,7 +982,10 @@ def register_management_callbacks(app: dash.Dash):
             True,           # deshabilitar botón reset
             new_opts_wind, new_opts_aqua,
             [], True, True, True, True, True,
-            []
+            [],
+
+            [], # dynamic-legend-items
+            [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
         )
     
 # Callback to enable run when any drawn or layer has a children:
@@ -1230,7 +1263,7 @@ def register_management_callbacks(app: dash.Dash):
         State("mgmt-study-area-dropdown", "value"),
         prevent_initial_call=True
     )
-    def current_affection(n, area):
+    def current_impact(n, area):
         if not (n and area):
             raise PreventUpdate
 
@@ -1251,29 +1284,44 @@ def register_management_callbacks(app: dash.Dash):
         Output("layer-menu", "className", allow_duplicate=True),
         Output("mgmt-wind", "children", allow_duplicate=True),
         Output("mgmt-aquaculture", "children", allow_duplicate=True),
-        # Output("mgmt-vessel", "children", allow_duplicate=True),
-        # Output("mgmt-defence", "children", allow_duplicate=True),
         Output("mgmt-wind-upload", "children", allow_duplicate=True),
         Output("mgmt-aquaculture-upload", "children", allow_duplicate=True),
-        # Output("mgmt-vessel-upload", "children", allow_duplicate=True),
-        # Output("mgmt-defence-upload", "children", allow_duplicate=True),
+
+        Output("dynamic-legend-items", "children", allow_duplicate=True),
+        Output("mgmt-wind-farm-info", "value", allow_duplicate=True),
+        Output("mgmt-vessel-density-info", "value", allow_duplicate=True),
+        Output("mgmt-aquaculture-info", "value", allow_duplicate=True),
+        Output("mgmt-fishing-info", "value", allow_duplicate=True),
+        Output("mgmt-military-areas-info", "value", allow_duplicate=True),
+        Output("mgmt-protected-areas-info", "value", allow_duplicate=True),
+        Output("mgmt-main-ports-info", "value", allow_duplicate=True),
+        Output("mgmt-waste-disposal-info", "value", allow_duplicate=True),
+        Output("mgmt-extraction-info", "value", allow_duplicate=True),
+        Output("mgmt-dredging-info", "value", allow_duplicate=True),
+        Output("mgmt-oil-gas-info", "value", allow_duplicate=True),
+        Output("mgmt-cables-info", "value", allow_duplicate=True),
+        Output("mgmt-geology-info", "value", allow_duplicate=True),
+        Output("mgmt-geography-info", "value", allow_duplicate=True),
+        Output("mgmt-ecology-info", "value", allow_duplicate=True),
+
         Input("tabs", "value"),
         prevent_initial_call='initial_duplicate'
     )
     def clear_overlay_on_tab_change(tab_value):
-        # panel base class (collapsed)
         base = "card shadow-sm position-absolute collapse"
-        # default collapsed class for layer menu
         layer_menu_class = base
 
-        # If we're on management tab, show legend, enable layers button and open the layers panel
+        # Valores por defecto de limpieza para los 15 switches + leyenda
+        switches_clear = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+
+        # Si estamos en management
         if tab_value == "tab-management":
             layer_menu_class = f"{base} show"
-            # show legend (hidden=False), enable button (disabled=False), open panel, clear layer children placeholders
-            return False, False, layer_menu_class, [], [], [], []
+            # show legend, enable button, open panel, clear placeholders, PERO NO borramos los switches
+            return False, False, layer_menu_class, [], [], [], [], dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
-        # Otherwise hide legend, disable layers button and collapse the panel
-        return True, True, layer_menu_class, [], [], [], []
+        # Si cambiamos a OTRA pestaña -> Ocultamos y mandamos [] a todos los switches
+        return True, True, layer_menu_class, [], [], [], [], *switches_clear
 
     @app.callback(
         Output("layer-menu", "className"),
@@ -1360,10 +1408,9 @@ def register_management_callbacks(app: dash.Dash):
     
 
 
-    
-    
     @app.callback(
-        Output("wfs-layers-container", "children"), # O wfs-layers-container, usa el ID correcto de tu layout
+        Output("wfs-layers-container", "children"), 
+        Output("dynamic-legend-items", "children"), # <-- NUEVO OUTPUT PARA LA LEYENDA
         [
             Input("mgmt-wind-farm-info", "value"),
             Input("mgmt-vessel-density-info", "value"),
@@ -1377,76 +1424,60 @@ def register_management_callbacks(app: dash.Dash):
             Input("mgmt-dredging-info", "value"),
             Input("mgmt-oil-gas-info", "value"),
             Input("mgmt-cables-info", "value")
-            
         ]
     )
     def update_map_layers(*args):
         selected_values = [item for sublist in args if sublist for item in sublist]
         new_layers = []
+        new_legends = [] # <-- LISTA PARA LAS LEYENDAS
 
         for val in selected_values:
             if val in LAYER_CONFIG:
                 conf_data = LAYER_CONFIG[val]
-                
-                # TRUCO: Convertimos todo a lista para tratarlo de forma uniforme
                 configs = conf_data if isinstance(conf_data, list) else [conf_data]
                 
-                # Recorremos la lista de configuraciones para este switch
+                # Creamos un título "limpio" basado en el ID del switch (ej: "Mgmt Aquaculture Finfish" -> "Aquaculture Finfish")
+                clean_title = " ".join(val.split("-")[1:]).title()
+
                 for i, conf in enumerate(configs):
-                    # Añadimos el índice 'i' para que cada sub-capa tenga un ID único
                     layer_id = f"layer-{val}-{i}" 
                     
-                    # --- SI ES VECTORIAL (WFS) ---
+                    # ==========================================
+                    # 1. PINTAR CAPAS EN EL MAPA
+                    # ==========================================
                     if conf["type"] == "WFS":
                         full_url = get_wfs_url(conf["base_url"], conf["layer_name"])
-                        
                         if conf["geom"] in ["polygon", "line"]:
-                            new_layers.append(
-                                dl.GeoJSON(url=full_url, id=layer_id, options=dict(style=POLYGON_STYLE))
-                            )
+                            new_layers.append(dl.GeoJSON(url=full_url, id=layer_id, options=dict(style=POLYGON_STYLE)))
                         elif conf["geom"] == "point":
-                            new_layers.append(
-                                dl.GeoJSON(url=full_url, id=layer_id)
-                            )
+                            new_layers.append(dl.GeoJSON(url=full_url, id=layer_id))
                             
-                    # --- SI ES IMAGEN (WMS) ---
                     elif conf["type"] == "WMS":
-                        new_layers.append(
-                            create_wms_layer(conf["base_url"], conf["layer_name"], layer_id)
-                        )
-        
-        # for val in selected_values:
-        #     if val in LAYER_CONFIG:
-        #         conf = LAYER_CONFIG[val]
-        #         layer_id = f"layer-{val}"
-                
-        #         # --- SI ES VECTORIAL (WFS) ---
-        #         if conf["type"] == "WFS":
-        #             full_url = get_wfs_url(conf["base_url"], conf["layer_name"])
+                        new_layers.append(create_wms_layer(conf["base_url"], conf["layer_name"], layer_id))
                     
-        #             # Si es polígono o línea, usamos el estilo
-        #             if conf["geom"] in ["polygon", "line"]:
-        #                 new_layers.append(
-        #                     dl.GeoJSON(
-        #                         url=full_url,
-        #                         id=layer_id,
-        #                         options=dict(style=POLYGON_STYLE)
-        #                     )
-        #                 )
-        #             # Si es punto, capa limpia sin opciones (cero JavaScript)
-        #             elif conf["geom"] == "point":
-        #                 new_layers.append(
-        #                     dl.GeoJSON(
-        #                         url=full_url,
-        #                         id=layer_id
-        #                     )
-        #                 )
+                    # ==========================================
+                    # 2. AÑADIR HTML A LA LEYENDA DINÁMICA
+                    # ==========================================
+                    if conf["type"] == "WMS":
+                        # Llamamos a EMODnet para que nos dé la imagen oficial de su leyenda
+                        legend_url = get_wms_legend_url(conf["base_url"], conf["layer_name"])
                         
-        #         # --- SI ES IMAGEN (WMS) ---
-        #         elif conf["type"] == "WMS":
-        #             new_layers.append(
-        #                 create_wms_layer(conf["base_url"], conf["layer_name"], layer_id)
-        #             )
-                    
-        return new_layers
+                        legend_html = html.Div([
+                            html.Div(f"{clean_title} (Layer {i+1})" if len(configs)>1 else clean_title, 
+                                     style={"fontSize": "0.8rem", "fontWeight": "bold", "marginBottom": "2px"}),
+                            html.Img(src=legend_url, style={"maxWidth": "100%", "marginBottom": "10px"})
+                        ])
+                        new_legends.append(legend_html)
+                        
+                    elif conf["type"] == "WFS":
+                        # Si es WFS, pintamos un cuadradito básico
+                        color = "blue" if conf["geom"] in ["polygon", "line"] else "red"
+                        legend_html = html.Div([
+                            html.Div(style={'width':'12px','height':'12px','background':color,'border':'1px solid #888', 'display': 'inline-block', 'marginRight': '6px'}),
+                            html.Span(f"{clean_title} (Layer {i+1})" if len(configs)>1 else clean_title, style={"fontSize": "0.8rem"})
+                        ], style={"marginBottom": "8px", "display": "flex", "alignItems": "center"})
+                        new_legends.append(legend_html)
+
+        return new_layers, new_legends 
+    
 

@@ -78,18 +78,48 @@ def create_layout():  # definir función que construye el layout
                                         children=[]  # vacío al inicio; se completa al ejecutar OPSA
                                     ),
                                     # Economic activities legend:
+                                    # html.Div(
+                                    #     id='mgmt-legend-div',
+                                    #     style={
+                                    #         'position': 'absolute',
+                                    #         'bottom': '10px',
+                                    #         'left': '10px',
+                                    #         'zIndex': 1000, 
+                                    #         'background': 'rgba(255,255,255,0.92)',  
+                                    #         'border': '1px solid #ccc', 
+                                    #         'borderRadius': '8px',  
+                                    #         'padding': '8px 10px',  
+                                    #         'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  
+                                    #     },
+                                    #     className='legend',
+                                    #     hidden=True,
+                                    #     children=[
+                                    #         html.Div("New human activity scenarios", style={'fontWeight':'bold','marginBottom':'6px'}),
+                                    #         html.Div(
+                                    #             [
+                                    #                 html.Div(
+                                    #                     style={'width':'14px','height':'14px','background':"#f39c12",'border':'1px solid #888'}
+                                    #                 ),
+                                    #                 html.Span("NHA Scenario 1")
+                                    #             ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
+                                    #         ),
+                                    #         html.Div(
+                                    #             [
+                                    #                 html.Div(
+                                    #                     style={'width':'14px','height':'14px','background':"#18BC9C",'border':'1px solid #888'}
+                                    #                 ),
+                                    #                 html.Span("NHA Scenario 2")
+                                    #             ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
+                                    #         )
+                                    #     ]  
+                                    # ),
                                     html.Div(
                                         id='mgmt-legend-div',
                                         style={
-                                            'position': 'absolute',
-                                            'bottom': '10px',
-                                            'left': '10px',
-                                            'zIndex': 1000, 
-                                            'background': 'rgba(255,255,255,0.92)',  
-                                            'border': '1px solid #ccc', 
-                                            'borderRadius': '8px',  
-                                            'padding': '8px 10px',  
-                                            'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  
+                                            'position': 'absolute', 'bottom': '10px', 'left': '10px',
+                                            'zIndex': 1000, 'background': 'rgba(255,255,255,0.92)',  
+                                            'border': '1px solid #ccc', 'borderRadius': '8px',  
+                                            'padding': '8px 10px', 'boxShadow': '0 2px 6px rgba(0,0,0,0.15)',  
                                         },
                                         className='legend',
                                         hidden=True,
@@ -97,21 +127,29 @@ def create_layout():  # definir función que construye el layout
                                             html.Div("New human activity scenarios", style={'fontWeight':'bold','marginBottom':'6px'}),
                                             html.Div(
                                                 [
-                                                    html.Div(
-                                                        style={'width':'14px','height':'14px','background':"#f39c12",'border':'1px solid #888'}
-                                                    ),
+                                                    html.Div(style={'width':'14px','height':'14px','background':"#f39c12",'border':'1px solid #888'}),
                                                     html.Span("NHA Scenario 1")
                                                 ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
                                             ),
                                             html.Div(
                                                 [
-                                                    html.Div(
-                                                        style={'width':'14px','height':'14px','background':"#18BC9C",'border':'1px solid #888'}
-                                                    ),
+                                                    html.Div(style={'width':'14px','height':'14px','background':"#18BC9C",'border':'1px solid #888'}),
                                                     html.Span("NHA Scenario 2")
                                                 ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px', 'marginBottom': '4px'}
+                                            ),
+                                            
+                                            # --- NUEVO: ESPACIO DINÁMICO PARA LEYENDAS WMS/WFS ---
+                                            html.Hr(style={"margin": "8px 0"}),
+                                            html.Div(
+                                                id="dynamic-legend-items",
+                                                style={
+                                                    "maxHeight": "200px",  # Altura máxima antes de hacer scroll
+                                                    "overflowY": "auto",   # Activa la barra de scroll si es necesario
+                                                    "paddingRight": "5px"  # Para que el scrollbar no pise la imagen
+                                                },
+                                                children=[] # El callback inyectará aquí las leyendas
                                             )
-                                        ]  
+                                        ]
                                     ),
 
                                     # Fish stocks legend:
