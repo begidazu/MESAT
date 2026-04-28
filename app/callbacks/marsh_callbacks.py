@@ -175,7 +175,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key, 
                 children=[
-                    html.Legend("Which stock you want to analyse?"),
+                    html.Legend(html.B("Which small and mid-pelagic fish (SPF) stock you want to analyse?")),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
                         children=[
@@ -314,7 +314,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 id='functional-groups-div',
                                 className='d-flex flex-column',
                                 children=[
-                                    html.Legend(html.B("Assessment Area")),
+                                    html.Legend(html.B("Ecological Value Assessment (EVA) area")),
                                     dbc.Row(
                                         [
                                             dbc.Col(
@@ -595,7 +595,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
-                    html.Legend("In which study area do you wish to analyse physical accounts?"),
+                    html.Legend(html.B("In which study area do you wish to analyse Ocean Ecosystem Accouinting (OEA) physical accounts?")),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
                         children=[
@@ -614,7 +614,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 id='ec',
                                 hidden= True,
                                 children=[
-                                    html.Legend("Select Ecosystem Components to assess ecosystem condition", className='mt-4'),
+                                    html.Legend(html.B("Select Ecosystem Components to assess ecosystem condition"), className='mt-4'),
                                     dcc.Checklist(id= 'ec-dropdown', options=[], value=[], labelClassName='form-check-label', inputClassName='form-check-input', className='form-check'),
                                     html.Div(  # fila de botones
                                         style={'display':'flex','gap':'10px','alignItems':'center', 'padding-top': '1.5%'},  # estilos
@@ -731,7 +731,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
-                    html.Legend("In which study area you want to simulate the impacts based on ocean ecosystem accounting?"),
+                    html.Legend(html.B("In which study area you want to simulate the impacts based on ocean ecosystem accounting?")),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
                         children=dcc.Dropdown(
@@ -748,7 +748,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 searchable=False
                         )
                     ),
-                    html.Legend("Define the new human activity (NHA) scenarios you want to compare:", style={'display':'flex', 'marginTop':'25px'}),
+                    html.Legend(html.B("Define the new human activity (NHA) scenarios you want to compare:"), style={'display':'flex', 'marginTop':'25px'}),
                     html.Div(
                         id='activity-checklist',
                         style={'display': 'flex', 'flexDirection': 'column', 'gap': '15px', 'width': '100%'},
@@ -798,50 +798,6 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         )
                                 ]
                             ),
-
-                            # html.Div(
-                            #     id="vessel-div",
-                            #     style=row_style,
-                            #     children=[
-                            #         dbc.Checklist(
-                            #             id='vessel',
-                            #             options=[{"label": "New Vessel Route", "value": "new_vessel_route", "disabled" : True}],
-                            #             value=[], style={'margin': '0'}
-                            #         ),
-                            #         html.Button("Draw", id='vessel-draw', n_clicks=0, disabled=True,
-                            #                     className='btn btn-outline-info', style={'width': '100%'}),
-                            #         dcc.Upload(
-                            #             id='vessel-file',
-                            #             multiple=False,
-                            #             accept="",
-                            #             style={'width': '100%', 'marginLeft': '25px'},
-                            #             className="upload-as-input form-control form-control-lg",
-                            #             children=html.Div(id="vessel-file-label")                                        
-                            #         )
-                            #     ]
-                            # ),
-
-                            # html.Div(
-                            #     id="defence-div",
-                            #     style=row_style,
-                            #     children=[
-                            #         dbc.Checklist(
-                            #             id='defence',
-                            #             options=[{"label": "Defence", "value": "defence", "disabled" : True}],
-                            #             value=[], inline=True, style={'margin': '0'}
-                            #         ),
-                            #         html.Button("Draw", id='defence-draw', n_clicks=0, disabled=True,
-                            #                     className='btn btn-outline-danger', style={'width': '100%'}),
-                            #         dcc.Upload(
-                            #             id='defence-file',
-                            #             multiple=False,
-                            #             accept="",
-                            #             style={'width': '100%', 'marginLeft': '25px'},
-                            #             className="upload-as-input form-control form-control-lg",
-                            #             children=html.Div(id="defence-file-label")                                        
-                            #             )
-                            #     ]
-                            # ),
                         ]
                     ),
                     html.Div(  # fila de botones
@@ -981,7 +937,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key= key, 
                 children=[  # UI del tab
-                    html.Legend("In which study area do you wish to analyse saltmarsh evolution and accretion?"),
+                    html.Legend(html.B("In which study area do you wish to analyse saltmarsh evolution and accretion?")),
                     html.Div(  # panel de selects y botones
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
                         children=[  # hijos del panel
