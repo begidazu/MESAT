@@ -26,8 +26,8 @@ def run():
 # macnea = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\macnea.shp")
 # macnea.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\macnea.parquet')
 
-# pil8c9a = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\pil8c9a.shp")
-# pil8c9a.to_parquet(r'C:\Users\beñat.egidazu\Documents\GitHub\PhD_Web_App\results\pelagic_fish_stocks\pil8c9a.parquet')
+# pil8c9a = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\manageent_fish.shp")
+# pil8c9a.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\manageent_fish.parquet")
 
 # import rasterio
 

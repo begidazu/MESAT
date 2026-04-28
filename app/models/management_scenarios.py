@@ -583,15 +583,17 @@ from typing import Any, List, Optional, Dict
 import os
 import pandas as pd                                                
 import geopandas as gpd                                          
-from shapely.geometry import Polygon, shape                      
+from shapely.geometry import Polygon, shape, MultiPolygon                     
 from shapely.ops import unary_union, transform as shp_transform
 import numpy as np
-from pyproj import Transformer
+from pyproj import Transformer, Geod
 import rasterio
 from rasterio.mask import mask as rio_mask
 from rasterio.warp import reproject, Resampling
-from rasterio.features import shapes
+from rasterio.features import shapes, rasterize
 from pathlib import Path
+from rasterio.windows import Window, from_bounds
+
 
 # --- NUEVO: Base path dinámico para producción ---
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -1114,17 +1116,18 @@ STOCKS_CONFIG = {
 #             print(f"Error calculating fish overlap for {stock_id}: {e}")
 #             return 0.0
 
-from rasterio.features import rasterize
-from rasterio.windows import from_bounds
-from shapely.ops import transform as shp_transform
-import numpy as np
+
 
 def _get_affected_extent_km2(geom_4326, stock_id, period_key):
-    """Calcula el extent (km2) rasterizando el polígono y usando matrices Numpy ultrarrápidas."""
+    """
+    Calcula el área (km2) exacta mediante la vectorización de la intersección 
+    entre el área de interés, el stock y la presencia (SDM).
+    """
     config = STOCKS_CONFIG.get(stock_id)
-    if not config: return 0.0
+    if not config: 
+        return 0.0
     
-    # 1. Cargar el Stock y hacer un filtro Bounding Box rápido (Descarta si está lejos)
+    # 1. Validación de rutas y carga de límites del Stock (Filtro espacial rápido)
     stock_parquet_path = resolve_path(f"results/pelagic_fish_stocks/{stock_id.lower()}.parquet")
     if not stock_parquet_path or not os.path.exists(stock_parquet_path):
         return 0.0
@@ -1137,16 +1140,15 @@ def _get_affected_extent_km2(geom_4326, stock_id, period_key):
         minx, miny, maxx, maxy = geom_4326.bounds
         stock_bounds = stock_gdf.total_bounds
         
-        # Filtro de sobreposición de cajas: Si ni siquiera rozan, devolvemos 0
+        # Filtro Bounding Box: Si no hay contacto entre cajas, área es 0
         if not (minx <= stock_bounds[2] and maxx >= stock_bounds[0] and
                 miny <= stock_bounds[3] and maxy >= stock_bounds[1]):
             return 0.0
-            
     except Exception as e:
-        print(f"Error cargando los límites del stock {stock_id}: {e}")
+        print(f"Error en filtro inicial para {stock_id}: {e}")
         return 0.0
         
-    # 2. Cargar el SDM (.tif) y hacer los Numpy Arrays
+    # 2. Localización del Raster (SDM)
     res_suffix = f"_{config['res']}" if config['res'] else ""
     rel_path = f"{FISH_PRES_ABS_BASE}/{config['taxon']}/method=ensemble/threshold=max_spec_sens/{period_key}{res_suffix}.tif"
     tif_path = resolve_path(rel_path)
@@ -1155,24 +1157,24 @@ def _get_affected_extent_km2(geom_4326, stock_id, period_key):
         return 0.0
 
     with rasterio.open(tif_path) as src:
-        # Asegurar proyección correcta para la Ventana (Window)
+        # Ajuste de coordenadas si el raster no es 4326
         if src.crs and src.crs.to_string() != "EPSG:4326":
-            from pyproj import Transformer
             t = Transformer.from_crs("EPSG:4326", src.crs, always_xy=True)
             rminx, rminy = t.transform(minx, miny)
             rmaxx, rmaxy = t.transform(maxx, maxy)
             rminx, rmaxx = min(rminx, rmaxx), max(rminx, rmaxx)
             rminy, rmaxy = min(rminy, rmaxy), max(rminy, rmaxy)
-            geom_raster = shp_transform(t.transform, geom_4326)
-            stock_raster_crs = stock_gdf.to_crs(src.crs)
+            geom_raster_coord = shp_transform(t.transform, geom_4326)
+            stock_raster_coord = stock_gdf.to_crs(src.crs)
         else:
             rminx, rminy, rmaxx, rmaxy = minx, miny, maxx, maxy
-            geom_raster = geom_4326
-            stock_raster_crs = stock_gdf
+            geom_raster_coord = geom_4326
+            stock_raster_coord = stock_gdf
             
-        # Extraer SOLO el pedacito de mapa que ocupa tu dibujo (Window)
+        # Definición de la Ventana de lectura (Window)
         window = from_bounds(rminx, rminy, rmaxx, rmaxy, src.transform)
-        window = window.intersection(rasterio.windows.Window(0, 0, src.width, src.height))
+        window = window.intersection(Window(0, 0, src.width, src.height))
+        
         if window.width <= 0 or window.height <= 0:
             return 0.0
             
@@ -1181,51 +1183,45 @@ def _get_affected_extent_km2(geom_4326, stock_id, period_key):
         win_transform = src.window_transform(window)
         
         try:
-            # --- Matriz A: Rasterizar tu polígono (1=Dentro, 0=Fuera) ---
-            geoms_to_mask = [geom_raster] if geom_raster.geom_type == 'Polygon' else list(geom_raster.geoms)
-            user_mask = rasterize(
-                [(g, 1) for g in geoms_to_mask],
-                out_shape=tif_data.shape,
-                transform=win_transform,
-                fill=0,
-                dtype='uint8'
-            )
+            # --- CAPA 1: Máscara del usuario ---
+            geoms = [geom_raster_coord] if geom_raster_coord.geom_type == 'Polygon' else list(geom_raster_coord.geoms)
+            user_mask = rasterize([(g, 1) for g in geoms], out_shape=tif_data.shape, 
+                                  transform=win_transform, fill=0, dtype='uint8')
             
-            poly_pixels = user_mask.sum()
-            if poly_pixels == 0:
+            # --- CAPA 2: Máscara del Stock (Clipped) ---
+            stock_sub = stock_raster_coord.cx[rminx:rmaxx, rminy:rmaxy]
+            if stock_sub.empty: return 0.0
+            stock_mask = rasterize([(g, 1) for g in stock_sub.geometry], out_shape=tif_data.shape, 
+                                   transform=win_transform, fill=0, dtype='uint8')
+            
+            # --- CAPA 3: Intersección Final (AND lógico) ---
+            # Solo píxeles donde (User=1) AND (Stock=1) AND (Presence=1)
+            final_mask = ((user_mask == 1) & (stock_mask == 1) & (tif_data == 1)).astype('uint8')
+            
+            if not np.any(final_mask):
                 return 0.0
                 
-            # --- Matriz B: Rasterizar Stock ---
-            # Filtramos solo las partes del stock que están en la zona para no colapsar la RAM
-            stock_clipped = stock_raster_crs.cx[rminx:rmaxx, rminy:rmaxy]
-            if stock_clipped.empty:
+            # --- VECTORIZACIÓN Y CÁLCULO GEODÉSICO ---
+            # 1. Convertimos los píxeles resultantes a geometrías vectoriales
+            shapes_gen = shapes(final_mask, mask=(final_mask == 1), transform=win_transform)
+            
+            # 2. Construimos una lista de polígonos
+            polygons = [shape(s) for s, v in shapes_gen]
+            
+            if not polygons:
                 return 0.0
-                
-            stock_mask = rasterize(
-                [(g, 1) for g in stock_clipped.geometry],
-                out_shape=tif_data.shape,
-                transform=win_transform,
-                fill=0,
-                dtype='uint8'
-            )
             
-            # --- MATRICES AL PODER: (Tú polígono) AND (Zona de Stock) AND (Presencia de Pez) ---
-            presence_pixels = ((user_mask == 1) & (stock_mask == 1) & (tif_data == 1)).sum()
+            # 3. Creamos un MultiPolygon (maneja naturalmente el multipart)
+            presence_geometry = MultiPolygon(polygons)
             
-            if presence_pixels == 0:
-                return 0.0
-                
-            # Calculamos qué % de nuestro dibujo real ha chocado con peces del stock
-            ratio = presence_pixels / poly_pixels
+            # 4. Calculamos el área geodésica exacta en WGS84
+            geod = Geod(ellps="WGS84")
+            area_m2, _ = geod.geometry_area_perimeter(presence_geometry)
             
-            # Y le aplicamos ese % al área métrica europea de nuestro dibujo (en km²)
-            gdf_inter = gpd.GeoDataFrame(geometry=[geom_4326], crs="EPSG:4326")
-            area_total_km2 = float(gdf_inter.to_crs("EPSG:3035").area.sum() / 1e6)
-            
-            return area_total_km2 * ratio
+            return abs(area_m2) / 1e6 # Retorno en km2
             
         except Exception as e:
-            print(f"Error procesando matrices Numpy para {stock_id}: {e}")
+            print(f"Error en procesamiento espacial para {stock_id}: {e}")
             return 0.0
 
 def activity_fish_table(area: str, activity_children, activity_upload_children) -> pd.DataFrame:
