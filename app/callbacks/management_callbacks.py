@@ -164,15 +164,15 @@ LAYER_CONFIG = {
     ], 
 
     # --- Geology ---
-    "mgmt-geology-seabed-substrate": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-geology-seabed-substrate": {"type": "WMS", "base_url": "https://drive.emodnet-geology.eu/geoserver/gtk/wms", "layer_name": "seabed_substrate_1m", "geom": ""},
 
     # --- Geography ---
-    "mgmt-geography-coastline": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-geography-bathymetry": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-geography-coastline": {"type": "WMS", "base_url": "https://ows.emodnet-bathymetry.eu/wms", "layer_name": "coastlines", "geom": ""},
+    "mgmt-geography-bathymetry": {"type": "WMS", "base_url": "https://ows.emodnet-bathymetry.eu/wms", "layer_name": "emodnet:mean", "geom": ""},
 
-    # --- Ecology ---
-    "mgmt-ecology-speciess-richness": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-ecology-endangered-species": {"type": "", "base_url": "", "layer_name": "", "geom": ""}
+    # # --- Ecology ---
+    # "mgmt-ecology-speciess-richness": {"type": "WMS", "base_url": "", "layer_name": "", "geom": ""},
+    # "mgmt-ecology-endangered-species": {"type": "WMS", "base_url": "", "layer_name": "", "geom": ""}
 }
 
 # Style for polygons
@@ -955,7 +955,6 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-cables-info", "value", allow_duplicate=True),
         Output("mgmt-geology-info", "value", allow_duplicate=True),
         Output("mgmt-geography-info", "value", allow_duplicate=True),
-        Output("mgmt-ecology-info", "value", allow_duplicate=True),
 
         Input("mgmt-reset-button", "n_clicks"),
         State("scenario1", "options"),
@@ -985,7 +984,7 @@ def register_management_callbacks(app: dash.Dash):
             [],
 
             [], # dynamic-legend-items
-            [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
+            [], [], [], [], [], [], [], [], [], [], [], [], [], []
         )
     
 # Callback to enable run when any drawn or layer has a children:
@@ -1287,6 +1286,7 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-wind-upload", "children", allow_duplicate=True),
         Output("mgmt-aquaculture-upload", "children", allow_duplicate=True),
 
+        # --- 15 OUTPUTS DINÁMICOS (1 Leyenda + 14 Switches) ---
         Output("dynamic-legend-items", "children", allow_duplicate=True),
         Output("mgmt-wind-farm-info", "value", allow_duplicate=True),
         Output("mgmt-vessel-density-info", "value", allow_duplicate=True),
@@ -1302,7 +1302,6 @@ def register_management_callbacks(app: dash.Dash):
         Output("mgmt-cables-info", "value", allow_duplicate=True),
         Output("mgmt-geology-info", "value", allow_duplicate=True),
         Output("mgmt-geography-info", "value", allow_duplicate=True),
-        Output("mgmt-ecology-info", "value", allow_duplicate=True),
 
         Input("tabs", "value"),
         prevent_initial_call='initial_duplicate'
@@ -1311,17 +1310,14 @@ def register_management_callbacks(app: dash.Dash):
         base = "card shadow-sm position-absolute collapse"
         layer_menu_class = base
 
-        # Valores por defecto de limpieza para los 15 switches + leyenda
-        switches_clear = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
-
         # Si estamos en management
         if tab_value == "tab-management":
             layer_menu_class = f"{base} show"
-            # show legend, enable button, open panel, clear placeholders, PERO NO borramos los switches
-            return False, False, layer_menu_class, [], [], [], [], dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+            # 7 variables fijas + 15 variables 'no_update' (generados automáticamente para cuadrar los números)
+            return (False, False, layer_menu_class, [], [], [], []) + tuple([dash.no_update] * 15)
 
-        # Si cambiamos a OTRA pestaña -> Ocultamos y mandamos [] a todos los switches
-        return True, True, layer_menu_class, [], [], [], [], *switches_clear
+        # Si cambiamos a OTRA pestaña -> 7 variables fijas + 15 listas vacías
+        return (True, True, layer_menu_class, [], [], [], []) + tuple([[]] * 15)
 
     @app.callback(
         Output("layer-menu", "className"),
@@ -1423,7 +1419,9 @@ def register_management_callbacks(app: dash.Dash):
             Input("mgmt-extraction-info", "value"),
             Input("mgmt-dredging-info", "value"),
             Input("mgmt-oil-gas-info", "value"),
-            Input("mgmt-cables-info", "value")
+            Input("mgmt-cables-info", "value"),
+            Input("mgmt-geology-info", "value"),
+            Input("mgmt-geography-info", "value")
         ]
     )
     def update_map_layers(*args):

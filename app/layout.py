@@ -833,47 +833,47 @@ def create_layout():  # definir función que construye el layout
                                                             )
                                                         ]
                                                     ),
-                                                    dbc.AccordionItem(  # segundo grupo: Fishery
-                                                        title="Ecology",  # cabecera con flecha
-                                                        class_name="layers-acc-item",  # clase para márgenes del item
-                                                        children=[
-                                                            dbc.Checklist(  # switches del grupo Fishery
-                                                                id="mgmt-ecology-info",  # mantener id original para callbacks existentes
-                                                                options=[  # opciones de pesca
-                                                                    {
-                                                                        "label": html.Span(  # contenedor del label
-                                                                            [  # hijos del label
-                                                                                html.A(  # hacer el texto un enlace real
-                                                                                    "Species richness",  # texto clicable
-                                                                                    href="",  # url destino
-                                                                                    target="_blank",  # abrir en nueva pestaña
-                                                                                    rel="noopener noreferrer"
-                                                                                )
-                                                                            ],
-                                                                            style={"fontSize": "0.9rem"}  # tamaño del texto
-                                                                        ),
-                                                                        "value": "mgmt-ecology-speciess-richness"  # valor del switch
-                                                                    },
-                                                                    {
-                                                                        "label": html.Span(  # contenedor del label
-                                                                            [  # hijos del label
-                                                                                html.A(  # hacer el texto un enlace real
-                                                                                    "IUCN Red List/Endangered Species number",  # texto clicable
-                                                                                    href="",  # url destino
-                                                                                    target="_blank",  # abrir en nueva pestaña
-                                                                                    rel="noopener noreferrer"
-                                                                                )
-                                                                            ],
-                                                                            style={"fontSize": "0.9rem"}  # tamaño del texto
-                                                                        ),
-                                                                        "value": "mgmt-ecology-endangered-species"  # valor del switch
-                                                                    }
-                                                                ],
-                                                                value=[],  # sin selección por defecto
-                                                                switch=True,  # estilo interruptor
-                                                            )
-                                                        ]
-                                                    )
+                                                    # dbc.AccordionItem(  # segundo grupo: Fishery
+                                                    #     title="Ecology",  # cabecera con flecha
+                                                    #     class_name="layers-acc-item",  # clase para márgenes del item
+                                                    #     children=[
+                                                    #         dbc.Checklist(  # switches del grupo Fishery
+                                                    #             id="mgmt-ecology-info",  # mantener id original para callbacks existentes
+                                                    #             options=[  # opciones de pesca
+                                                    #                 {
+                                                    #                     "label": html.Span(  # contenedor del label
+                                                    #                         [  # hijos del label
+                                                    #                             html.A(  # hacer el texto un enlace real
+                                                    #                                 "Species richness",  # texto clicable
+                                                    #                                 href="",  # url destino
+                                                    #                                 target="_blank",  # abrir en nueva pestaña
+                                                    #                                 rel="noopener noreferrer"
+                                                    #                             )
+                                                    #                         ],
+                                                    #                         style={"fontSize": "0.9rem"}  # tamaño del texto
+                                                    #                     ),
+                                                    #                     "value": "mgmt-ecology-speciess-richness"  # valor del switch
+                                                    #                 },
+                                                    #                 {
+                                                    #                     "label": html.Span(  # contenedor del label
+                                                    #                         [  # hijos del label
+                                                    #                             html.A(  # hacer el texto un enlace real
+                                                    #                                 "IUCN Red List/Endangered Species number",  # texto clicable
+                                                    #                                 href="",  # url destino
+                                                    #                                 target="_blank",  # abrir en nueva pestaña
+                                                    #                                 rel="noopener noreferrer"
+                                                    #                             )
+                                                    #                         ],
+                                                    #                         style={"fontSize": "0.9rem"}  # tamaño del texto
+                                                    #                     ),
+                                                    #                     "value": "mgmt-ecology-endangered-species"  # valor del switch
+                                                    #                 }
+                                                    #             ],
+                                                    #             value=[],  # sin selección por defecto
+                                                    #             switch=True,  # estilo interruptor
+                                                    #         )
+                                                    #     ]
+                                                    # )
                                                 ],
                                             )
                                         ],
