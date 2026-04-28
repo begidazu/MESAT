@@ -864,6 +864,14 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             )
                         ]
                     ),
+                    html.Div(
+                                id = 'nha-time-div',
+                                style={'marginTop':'10px', 'textAlign':'center'},
+                                children = [
+                                    html.Img(src='assets/logos/warning.png', style={'width':'32px','height':'32px'}), 
+                                    html.Span(" Be patient! The computation may take several minutes!", className="form-check-label")
+                                ]
+                    ),
                     dcc.Loading(
                         id="loading'mgmt",
                         type="dot",
