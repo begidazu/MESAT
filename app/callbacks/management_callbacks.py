@@ -80,10 +80,10 @@ LAYER_CONFIG = {
     # EJEMPLO WFS COMPLETO (Puntos)
     # ------------------------------------------
     "mgmt-wf-points": {
-        "type": "WFS",
-        "base_url": "https://ows.emodnet-humanactivities.eu/wfs",
+        "type": "WMS",
+        "base_url": "https://ows.emodnet-humanactivities.eu/wms",
         "layer_name": "emodnet:windfarms",
-        "geom": "point"
+        "geom": ""
     },
     
     # ------------------------------------------
@@ -92,54 +92,64 @@ LAYER_CONFIG = {
     "mgmt-vessel-density-alltype-annualavg": {
         "type": "WMS",
         "base_url": "https://ows.emodnet-humanactivities.eu/wms",
-        "layer_name": "emodnet:2022_avg_all",
+        "layer_name": "emodnet:vesseldensity_allavg",
         "geom": "" # El WMS no necesita geometría, nos devuelve imágenes
     },
-
-    # ------------------------------------------
-    # RESTO DE CAPAS (Plantillas vacías para rellenar)
-    # ------------------------------------------
     
     # --- Human Activities: Wind Farms ---
-    "mgmt-wf-polygons": {"type": "WFS", "base_url": "https://ows.emodnet-humanactivities.eu/wfs", "layer_name": "emodnet:windfarmspoly", "geom": "polygon"},
+    "mgmt-wf-polygons": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wfs", "layer_name": "emodnet:windfarmspoly", "geom": ""},
 
     # --- Aquaculture ---
-    "mgmt-aquaculture-finfish": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-aquaculture-shellfish": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-aquaculture-finfish": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:finfish", "geom": ""},
+    "mgmt-aquaculture-shellfish": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:shellfish", "geom": ""},
 
     # --- Fishing Intensity ---
-    "mgmt-fishing-beam-trawls": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-fishing-bottom-otter": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-fishing-bottom-seines": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-fishing-dredges": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-fishing-pelagic": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-fishing-static-gears": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-fishing-beam-trawls": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:fishingbeamtrawls", "geom": ""},
+    "mgmt-fishing-bottom-otter": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:fishingbottomottertrawls", "geom": ""},
+    "mgmt-fishing-bottom-seines": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:fishingbottomseines", "geom": ""},
+    "mgmt-fishing-dredges": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:fishingdredges", "geom": ""},
+    "mgmt-fishing-pelagic": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:fishingpelagic", "geom": ""},
+    "mgmt-fishing-static-gears": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:fishingstaticgears", "geom": ""},
 
     # --- Military Areas ---
-    "mgmt-military-areas-polygons": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-military-areas-polygons": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:militaryareaspoly", "geom": ""},
 
     # --- Protected Areas ---
-    "mgmt-protected-areas-natura2000": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-protected-areas-world-database": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-protected-areas-natura2000": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:natura2000areas", "geom": ""},
+    "mgmt-protected-areas-world-database": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "wdpaareas", "geom": ""},
 
     # --- Ports ---
-    "mgmt-main-ports": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-main-ports": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:portlocations", "geom": ""},
 
     # --- Waste Disposal ---
-    "mgmt-waste-disposal-discharge": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-waste-disposal-waste": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-waste-disposal-dumped-munitions-points": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-waste-disposal-discharge": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:dischargepoints", "geom": ""},
+    "mgmt-waste-disposal-waste": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:wasteatports", "geom": ""},
+    "mgmt-waste-disposal-dumped-munitions-points": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:munitions", "geom": ""},
 
     # --- Extraction & Dredging ---
-    "mgmt-extraction-aggregate-extraction": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-dredging-dredging": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-extraction-aggregate-extraction": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:aggregateareas", "geom": ""},
+    "mgmt-dredging-dredging": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:dredging", "geom": ""},
 
     # --- Oil & Gas ---
-    "mgmt-oil-gas-offshore-installations": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-oil-gas-offshore-installations": {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:platforms", "geom": ""},
 
     # --- Cables ---
-    "mgmt-cables-power-cables": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
-    "mgmt-cables-telecomunication-cables": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
+    "mgmt-cables-power-cables": [
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:pcablesnve", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:pcablesrijks", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:pcablesshom", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:pcablesbshcontis", "geom": ""},
+    ],
+      
+    "mgmt-cables-telecomunication-cables": [
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:ukfibrecables", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:rijkscables", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:maltacables", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:sigcables", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:shomcables", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:cicacables", "geom": ""},
+        {"type": "WMS", "base_url": "https://ows.emodnet-humanactivities.eu/wms", "layer_name": "emodnet:bshcontiscables", "geom": ""},
+    ], 
 
     # --- Geology ---
     "mgmt-geology-seabed-substrate": {"type": "", "base_url": "", "layer_name": "", "geom": ""},
@@ -1356,45 +1366,87 @@ def register_management_callbacks(app: dash.Dash):
         Output("wfs-layers-container", "children"), # O wfs-layers-container, usa el ID correcto de tu layout
         [
             Input("mgmt-wind-farm-info", "value"),
-            # ... el resto de tus Inputs ...
+            Input("mgmt-vessel-density-info", "value"),
+            Input("mgmt-aquaculture-info", "value"),
+            Input("mgmt-fishing-info", "value"),
+            Input("mgmt-military-areas-info", "value"),
+            Input("mgmt-protected-areas-info", "value"),
+            Input("mgmt-main-ports-info", "value"),
+            Input("mgmt-waste-disposal-info", "value"),
+            Input("mgmt-extraction-info", "value"),
+            Input("mgmt-dredging-info", "value"),
+            Input("mgmt-oil-gas-info", "value"),
+            Input("mgmt-cables-info", "value")
+            
         ]
     )
     def update_map_layers(*args):
         selected_values = [item for sublist in args if sublist for item in sublist]
         new_layers = []
-        
+
         for val in selected_values:
             if val in LAYER_CONFIG:
-                conf = LAYER_CONFIG[val]
-                layer_id = f"layer-{val}"
+                conf_data = LAYER_CONFIG[val]
                 
-                # --- SI ES VECTORIAL (WFS) ---
-                if conf["type"] == "WFS":
-                    full_url = get_wfs_url(conf["base_url"], conf["layer_name"])
+                # TRUCO: Convertimos todo a lista para tratarlo de forma uniforme
+                configs = conf_data if isinstance(conf_data, list) else [conf_data]
+                
+                # Recorremos la lista de configuraciones para este switch
+                for i, conf in enumerate(configs):
+                    # Añadimos el índice 'i' para que cada sub-capa tenga un ID único
+                    layer_id = f"layer-{val}-{i}" 
                     
-                    # Si es polígono o línea, usamos el estilo
-                    if conf["geom"] in ["polygon", "line"]:
-                        new_layers.append(
-                            dl.GeoJSON(
-                                url=full_url,
-                                id=layer_id,
-                                options=dict(style=POLYGON_STYLE)
-                            )
-                        )
-                    # Si es punto, capa limpia sin opciones (cero JavaScript)
-                    elif conf["geom"] == "point":
-                        new_layers.append(
-                            dl.GeoJSON(
-                                url=full_url,
-                                id=layer_id
-                            )
-                        )
+                    # --- SI ES VECTORIAL (WFS) ---
+                    if conf["type"] == "WFS":
+                        full_url = get_wfs_url(conf["base_url"], conf["layer_name"])
                         
-                # --- SI ES IMAGEN (WMS) ---
-                elif conf["type"] == "WMS":
-                    new_layers.append(
-                        create_wms_layer(conf["base_url"], conf["layer_name"], layer_id)
-                    )
+                        if conf["geom"] in ["polygon", "line"]:
+                            new_layers.append(
+                                dl.GeoJSON(url=full_url, id=layer_id, options=dict(style=POLYGON_STYLE))
+                            )
+                        elif conf["geom"] == "point":
+                            new_layers.append(
+                                dl.GeoJSON(url=full_url, id=layer_id)
+                            )
+                            
+                    # --- SI ES IMAGEN (WMS) ---
+                    elif conf["type"] == "WMS":
+                        new_layers.append(
+                            create_wms_layer(conf["base_url"], conf["layer_name"], layer_id)
+                        )
+        
+        # for val in selected_values:
+        #     if val in LAYER_CONFIG:
+        #         conf = LAYER_CONFIG[val]
+        #         layer_id = f"layer-{val}"
+                
+        #         # --- SI ES VECTORIAL (WFS) ---
+        #         if conf["type"] == "WFS":
+        #             full_url = get_wfs_url(conf["base_url"], conf["layer_name"])
+                    
+        #             # Si es polígono o línea, usamos el estilo
+        #             if conf["geom"] in ["polygon", "line"]:
+        #                 new_layers.append(
+        #                     dl.GeoJSON(
+        #                         url=full_url,
+        #                         id=layer_id,
+        #                         options=dict(style=POLYGON_STYLE)
+        #                     )
+        #                 )
+        #             # Si es punto, capa limpia sin opciones (cero JavaScript)
+        #             elif conf["geom"] == "point":
+        #                 new_layers.append(
+        #                     dl.GeoJSON(
+        #                         url=full_url,
+        #                         id=layer_id
+        #                     )
+        #                 )
+                        
+        #         # --- SI ES IMAGEN (WMS) ---
+        #         elif conf["type"] == "WMS":
+        #             new_layers.append(
+        #                 create_wms_layer(conf["base_url"], conf["layer_name"], layer_id)
+        #             )
                     
         return new_layers
 
