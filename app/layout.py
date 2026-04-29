@@ -234,49 +234,17 @@ def create_layout():  # definir función que construye el layout
                                     dl.LayerGroup(id="dynamic-overlays"),
 
                                     dbc.Button(
-                                        html.I(className="bi bi-layers", style={"fontSize": "1.6rem", "lineHeight": 1}),
+                                        html.I(className="bi bi-stack stack-icon", style={"fontSize": "1.6rem", "lineHeight": 1, "color": "#0b3a6b", "display": "flex", "alignItems": "center", "justifyContent": "center"}),
                                         id="layers-btn",
                                         color="light",
                                         n_clicks=0,
                                         disabled = True,
-                                        className="shadow-sm border rounded-1 position-absolute d-flex align-items-center justify-content-center",
+                                        className="shadow-sm border rounded-1 position-absolute d-flex align-items-center justify-content-center layers-btn",
                                         style={"left": "10px", "top": "78px", "zIndex": 1000, "width": "46px", "height": "46px"},
                                     ),
-                                    # html.Div(
-                                    #     id="layer-menu",
-                                    #     className="layers-panel",
-                                    #     children=[
-                                    #         html.Div("Layers", className="lm-header"),   # título siempre visible
-                                    #         html.Div(                                   # cuerpo que se despliega al hover
-                                    #             [
-                                    #                 html.Div("Human activities", className="lm-group-title"),
-                                    #                 dcc.Checklist(
-                                    #                     id="chk-human",
-                                    #                     options=[
-                                    #                         {"label": "HA 1", "value": "mgmt-ha-1"},
-                                    #                         {"label": "HA 2", "value": "mgmt-ha-2"},
-                                    #                     ],
-                                    #                     value=[],
-                                    #                     className="lm-checklist",
-                                    #                 ),
-                                    #                 html.Div("Fishery", className="lm-group-title"),
-                                    #                 dcc.Checklist(
-                                    #                     id="chk-fish",
-                                    #                     options=[
-                                    #                         {"label": "Effort",   "value": "mgmt-fish-effort"},
-                                    #                         {"label": "Closures", "value": "mgmt-fish-closures"},
-                                    #                     ],
-                                    #                     value=[],
-                                    #                     className="lm-checklist",
-                                    #                 ),
-                                    #             ],
-                                    #             className="lm-body",
-                                    #         ),
-                                    #     ],
-                                    # )
                                     html.Div(
                                         id="layer-menu",
-                                        className="card shadow-sm position-absolute collapse",
+                                        className="card shadow-sm position-absolute collapse layers-menu",
                                         style={"left":"10px","top":"128px","zIndex":1000,"minWidth":"260px"},
                                         children=[
                                             html.Div("Additional information", className="card-header py-2 fw-bold text-uppercase"),
