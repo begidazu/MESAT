@@ -247,7 +247,7 @@ def create_layout():  # definir función que construye el layout
                                         className="card shadow-sm position-absolute collapse layers-menu",
                                         style={"left":"10px","top":"128px","zIndex":1000,"minWidth":"260px"},
                                         children=[
-                                            html.Div("Additional information", className="card-header py-2 fw-bold text-uppercase"),
+                                            html.Div("Additional information", className="card-header py-2 fw-bold text-uppercase", style={"fontSize": "1rem","color": "#0b3a6b"}),
                                             dbc.Accordion(  # crear contenedor acordeón para grupos plegables
                                                 id="layers-accordion",  # id del acordeón para CSS/depuración
                                                 always_open=True,  # permitir varios grupos abiertos a la vez
