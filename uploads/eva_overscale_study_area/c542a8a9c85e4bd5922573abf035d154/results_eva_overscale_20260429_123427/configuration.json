@@ -1,0 +1,89 @@
+{
+  "version": "v0.1.0",
+  "assessment_day": "2026_04_29",
+  "aoi": {
+    "crs": "EPSG:4326",
+    "bbox": [
+      -4.822842476853096,
+      43.229195113965005,
+      -4.207600591576176,
+      43.67581809328341
+    ]
+  },
+  "assessment_grid": {
+    "type": "h3",
+    "size": 5
+  },
+  "functional_groups": {
+    "1": {
+      "name": "Angiosperms",
+      "eez_country": "Spain",
+      "eez_grid_size": 10000,
+      "lrf": {
+        "taxon_ids": [
+          102384,
+          28128
+        ],
+        "threshold_pct": 100
+      },
+      "nrf": {
+        "taxon_ids": [
+          1
+        ],
+        "threshold_pct": 100
+      },
+      "esf_taxon_ids": [
+        1
+      ],
+      "hfsbh_taxon_ids": [
+        1
+      ],
+      "mss_taxon_ids": [
+        1
+      ],
+      "aqs": {
+        "aq1": {
+          "included_ids": [],
+          "skipped_ids": [
+            102384,
+            28128
+          ],
+          "lrf_ids": []
+        },
+        "aq5": {
+          "included_ids": [],
+          "skipped_ids": [
+            1
+          ],
+          "nrf_ids": []
+        },
+        "aq7": {
+          "included_ids": [],
+          "skipped_ids": [
+            1,
+            28128,
+            102384
+          ]
+        },
+        "aq10": {
+          "included_ids": [],
+          "skipped_ids": [
+            1
+          ]
+        },
+        "aq12": {
+          "included_ids": [],
+          "skipped_ids": [
+            1
+          ]
+        },
+        "aq14": {
+          "included_ids": [],
+          "skipped_ids": [
+            1
+          ]
+        }
+      }
+    }
+  }
+}
