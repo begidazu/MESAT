@@ -232,7 +232,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', 'padding': '20px'},  # estilos
                                     children=[  # hijos
                                         html.Button(  # botón info
-                                            [html.Img(src='./assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("SPF accounting info")],  # contenido
+                                            [html.I(className="bi bi-info-circle-fill", style={'width':'20px','height':'20px'}), html.Span(" SPF accounting info")],  # contenido
                                             id='info-button-fish',  # id
                                             className='btn btn-outline-primary',
                                             hidden=True,  # oculto al inicio
@@ -241,7 +241,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         html.Div(  # contenedor de descarga
                                             [
                                                 html.Button(  # botón de descarga
-                                                    [html.Img(src='./assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")],  # contenido
+                                                    [html.I(className="bi bi-download", style={'width':'20px','height':'20px'}), html.Span(" Download results")],  # contenido
                                                     id='fish-results',  # id
                                                     hidden=True,  # oculto al inicio
                                                     n_clicks=0,  # contador
@@ -498,9 +498,9 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
                             html.Div(
                                 id = 'eva-overscale-time-div',
-                                style={'marginTop':'10px', 'textAlign':'center'},
+                                style={'marginTop':'20px', 'textAlign':'center'},
                                 children = [
-                                    html.Img(src='assets/logos/warning.png', style={'width':'32px','height':'32px'}), 
+                                    html.I(className="bi bi-exclamation-triangle-fill me-1", style={'width':'40px','height':'40px'}), 
                                     html.Span(" Be patient! The computation may take several minutes!", className="form-check-label")
                                 ]
                             ),
@@ -536,7 +536,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     html.Button(  # botón de descarga
                                                         id='eva-overscale-results',
                                                         disabled=True,
-                                                        children=[html.Img(src='./assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download")],
+                                                        children=[html.I(className="bi bi-download", style={'width':'32px','height':'32px'}), html.Span(" Download")],
                                                         n_clicks=0,  # contador
                                                         className='btn btn-outline-primary'
                                                     ),
@@ -545,7 +545,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                 ]
                                             ),
                                             html.Button(  # botón info
-                                                [html.Img(src='./assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Info")],
+                                                [html.I(className="bi bi-info-circle-fill", style={'width':'32px','height':'32px'}), html.Span(" Info")],
                                                 id='eva-overscale-info-button',
                                                 className='btn btn-outline-primary',
                                                 n_clicks=0  # contador
@@ -652,7 +652,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', 'padding': '20px'},  # estilos
                                     children=[  # hijos
                                         html.Button(  # botón info
-                                            [html.Img(src='./assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Ocean Physycal Stock Account compilation info")],  # contenido
+                                            [html.I(className="bi bi-info-circle-fill", style={'width':'20px','height':'20px'}), html.Span(" Ocean Physycal Stock Account compilation info")],  # contenido
                                             id='info-button-opsa',  # id
                                             className='btn btn-outline-primary',
                                             hidden=True,  # oculto al inicio
@@ -661,7 +661,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         html.Div(  # contenedor de descarga
                                             [
                                                 html.Button(  # botón de descarga
-                                                    [html.Img(src='./assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")],  # contenido
+                                                    [html.I(className="bi bi-download", style={'width':'20px','height':'20px'}), html.Span(" Download results")],  # contenido
                                                     id='opsa-results',  # id
                                                     hidden=True,  # oculto al inicio
                                                     n_clicks=0,  # contador
@@ -821,12 +821,12 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                         ]
                     ),
                     html.Div(
-                                id = 'nha-time-div',
-                                style={'marginTop':'10px', 'textAlign':'center'},
-                                children = [
-                                    html.Img(src='assets/logos/warning.png', style={'width':'32px','height':'32px'}), 
-                                    html.Span(" Be patient! The computation may take several minutes!", className="form-check-label")
-                                ]
+                        id = 'enha-time-div',
+                        style={'marginTop':'20px', 'textAlign':'center'},
+                        children = [
+                            html.I(className="bi bi-exclamation-triangle-fill me-1", style={'width':'40px','height':'40px'}), 
+                            html.Span(" Be patient! The computation may take several minutes!", className="form-check-label")
+                        ]
                     ),
                     dcc.Loading(
                         id="loading'mgmt",
@@ -840,7 +840,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px', "marginTop": "20px"},
                                 children=[
                                     html.Button(  # botón info
-                                        [html.Img(src='./assets/logos/info.png', style={'width':'32px','height':'32px', }), html.Span("Activity scenarios info")],
+                                        [html.I(className="bi bi-info-circle-fill", style={'width':'32px','height':'32px'}), html.Span(" Activity scenarios info")],
                                         id='mgmt-info-button',  # id
                                         className='btn btn-outline-primary',
                                         hidden=True,  # oculto al inicio
@@ -849,7 +849,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     html.Div(  # contenedor de descarga
                                         [
                                             html.Button(  # botón de descarga
-                                                [html.Img(src='./assets/logos/download.png', style={'width':'32px','height':'32px'}), html.Span("Download results")], 
+                                                [html.I(className="bi bi-download", style={'width':'32px','height':'32px'}), html.Span(" Download results")], 
                                                 id='mgmt-results',  # id
                                                 hidden=True,  # oculto al inicio
                                                 n_clicks=0,  # contador
@@ -1020,7 +1020,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 style={'display':'flex','justifyContent':'center','alignItems':'center','verticalAlign':'middle','gap':'12px'},  # estilos
                                 children=[  # hijos
                                     html.Button(  # botón info
-                                        [html.Img(src='./assets/logos/info.png', style={'width':'20px','height':'20px'}), html.Span("Habitat and accretion info")],  # contenido
+                                        [html.I(className="bi bi-info-circle-fill", style={'width':'20px','height':'20px'}), html.Span(" Habitat and accretion info")],  # contenido
                                         id='info-button',  # id
                                         className='btn btn-outline-primary',
                                         hidden=True,  # oculto al inicio
@@ -1029,7 +1029,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                     html.Div(  # contenedor de descarga
                                         [
                                             html.Button(  # botón de descarga
-                                                [html.Img(src='./assets/logos/download.png', style={'width':'20px','height':'20px'}), html.Span("Download results")],  # contenido
+                                                [html.I(className="bi bi-download", style={'width':'20px','height':'20px'}), html.Span(" Download results")],  # contenido
                                                 id='marsh-results',  # id
                                                 hidden=True,  # oculto al inicio
                                                 n_clicks=0,  # contador
@@ -1539,8 +1539,8 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         }
         m_text, c_text = labels.get(tab, labels["tab-saltmarsh"])
         m_href, c_href = urls.get(tab, urls["tab-saltmarsh"])
-        method_children = [html.Span('📄', className="me-1 footer-icon"), m_text]
-        code_children   = [html.Img(src="./assets/logos/github-mark.png", className="me-1 footer-icon"), c_text]
+        method_children = html.Span([html.I(className="bi bi-book me-1 footer-icon"), m_text], className="text-muted")
+        code_children   = html.Span([html.I(className="bi bi-github me-1 footer-icon"), c_text], className="text-muted")
         return method_children, m_href, code_children, c_href
     
 

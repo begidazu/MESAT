@@ -914,14 +914,14 @@ def create_layout():  # definir función que construye el layout
                                     html.Div(
                                         [
                                             html.A(
-                                                [html.Span('📄', className="me-1 footer-icon"), "Access the methodology"],
+                                                [html.I(className="bi bi-book me-1 footer-icon"), "Access the methodology"],
                                                 id='method-link',
                                                 href='https://doi.org/10.1016/j.scitotenv.2024.178164',
                                                 target='_blank',
                                                 className="d-flex align-items-center text-decoration-none text-dark mb-1 footer-link"
                                             ),
                                             html.A(
-                                                [html.Img(src='/assets/logos/github-mark.png', className="me-1 footer-icon"), "Access the code"],
+                                                [html.I(className="bi bi-github me-1 footer-icon"), "Access the code"],
                                                 id='code-link',
                                                 href='https://github.com/begidazu/PhD_Web_App',
                                                 target='_blank',
