@@ -243,7 +243,7 @@ def create_layout():  # definir función que construye el layout
                                             html.Div(
                                                 id="layer-menu",
                                                 className="card shadow-sm position-absolute collapse layers-menu",
-                                                style={"left":"10px","top":"128px","zIndex":1000,"minWidth":"260px"},
+                                                style={"left":"10px","top":"128px","zIndex":1000,"minWidth":"260px", "marginBottom" : "20px"},
                                                 children=[
                                                     html.Div("Additional information", className="card-header py-2 fw-bold text-uppercase", style={"fontSize": "1rem","color": "#0b3a6b"}),
                                                     dbc.Accordion(  # crear contenedor acordeón para grupos plegables
@@ -847,7 +847,7 @@ def create_layout():  # definir función que construye el layout
                                             html.Div(
                                                 id="eva-results-accordion-container",
                                                 className="card shadow-sm position-absolute",
-                                                style={"left":"10px","top":"10px","zIndex":1000,"minWidth":"260px"},
+                                                style={"marginTop":"20px", "left":"10px", "top":"10px", "zIndex":1000, "minWidth":"260px"},
                                             ),
                                         ]
                                     ),

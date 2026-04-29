@@ -448,7 +448,7 @@ def build_results_ui(fg_configs: Dict) -> Tuple[html.Div, List[dl.LayerGroup]]:
         accordion_items or [dbc.AccordionItem("No groups found", title="Results")],
         always_open=True,
         start_collapsed=False,
-        className="p-2"
+        className="layers-accordion"
     )
 
     return accordion, layer_groups
