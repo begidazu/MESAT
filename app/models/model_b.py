@@ -29,6 +29,9 @@ def run():
 # pil8c9a = gpd.read_file(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\manageent_fish.shp")
 # pil8c9a.to_parquet(r"C:\Users\beñat.egidazu\Desktop\Tests\stocks_simplify\manageent_fish.parquet")
 
+# table =  pd.read_excel(r"C:\Users\beñat.egidazu\Desktop\NAS\PhD\Papers\Fisheries_2\Results_correct\SPF_accounts_MESIT.xlsx")
+# table.to_parquet(r"C:\Users\beñat.egidazu\Desktop\NAS\PhD\Papers\Fisheries_2\Results_correct\SPF_accounts_MESIT.parquet")
+
 # import rasterio
 
 # files = {
