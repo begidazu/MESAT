@@ -11,7 +11,8 @@ be either divided into physical and monetary accounts. Physical Stock Acounts ar
 ![SEEA-EA accounting framework. Subgroups of ecosystem accounts and the interconnections between SEEA-EA, classification systems, and condition indicators. (adapted from SEEA). (IUCN GET: IUCN Global Ecosystem Typology; WFD: Water Framework Directive; MSFD: Marine Strategy Framework Directive; BV – Biological Valuation; EVA – Ecological Value Assessment).](images/SEEAEA.png){fig-cap="SEEA-EA" width=75%}
 
 In this section you can explore the Physical Stock Accounts of three study  areas investigated by 
-[Egidazu-de la Parte *et al.* (2026)](https://doi.org/10.1016/j.indic.2026.101163). You can also download the [Ecological Value Assessment results](https://github.com/begidazu/MESIT/tree/main/results/EVA) used to compute the [Physical Accounts](https://github.com/begidazu/MESIT/tree/main/results/opsa) from the repository. 
+[Egidazu-de la Parte *et al.* (2026)](https://doi.org/10.1016/j.indic.2026.101163). You can also download the [Ecological Value Assessment results](https://github.com/begidazu/MESIT/tree/main/results/EVA) used to compute the [Physical Accounts](https://github.com/begidazu/MESIT/tree/main/results/opsa) from the repository. For a detailed step-by-step guide to compute the physical stock accounts 
+using the EVA methodology, please read the following [guide](https://github.com/begidazu/MESIT/tree/main/docs/Steps_to_Asses_Marine_Physical_Stock_Accounts.pdf)
 
 ## How to navigate OEA physical accounts?
 

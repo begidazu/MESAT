@@ -9,7 +9,7 @@ Despite their importance in human well-being, SPF are not frequently included in
 Nevertheless, assessing pelagic system accounts, together with benthic systems, fails to ecologically link the services to their source (i.e. SPF food provisioning linked to benthic habitats when SPF are accounted together with benthic fish stocks).
 Therefore, to ensure the ecological and accounting consistency in marine systems, the SPF stock accounts should be evaluated as a distinct component from the benthic systems.
 
-[Egidazu-de la Parte *et al.*. 2026, under development](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0) provide a comprehensive assessment of SPF stock physical accounts compliant with the SEEA-EA framework. 
+[Egidazu-de la Parte *et al.*. 2026, under development](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0) provides a comprehensive assessment of SPF stock physical accounts compliant with the SEEA-EA framework. 
 The methodology integrates species distribution models for extent, SEEA-Ecosystem Condition Typology compliant indicators for condition — incorporating both international management indicators, additional condition indicators and service-linked metrics —, and surplus production and landings to quantify the food provisioning service.
 
 In this tab, you can explore and download the results presented by [Egidazu-de la Parte *et al.*. 2026, under development](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0), assessing six SPF stocks extent, condition and food provisioning supply and demand during the 2000-2019 period.

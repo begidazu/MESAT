@@ -71,7 +71,7 @@ For more details about the methodology see [Franco *et al.* (2026)](add book cha
 ## How to interpret EVA overscale results?
 
 EVA Overscale results could be interpreted as a condition ranking, based on biodiversity and rareness criteria, of the desired context. It reflects the relaive biodiverity and/or rareness importance in each assessment grid based on the previous AQs, reflecting the 
-areas in the context with the highest value for Locally Rare Features (AQ1), Nationally Rare Features (AQ5), overall biodiversity (AQ7), Ecologivally Significant Features (AQ10), Habitat Forming Species and Biogenic Habitats (AQ12) and Mutualistic or Symbiotic Species (AQ14). 
+areas in the context with the highest value for Locally Rare Features (AQ1), Nationally Rare Features (AQ5), overall biodiversity (AQ7), Ecologically Significant Features (AQ10), Habitat Forming Species and Biogenic Habitats (AQ12) and Mutualistic or Symbiotic Species (AQ14). 
 It can also be used to identify areas with low condition where either policy or management interventions are needed. Moreover, for a more complete condition assessment, users can incorporate to these results other ecological characteristicts using their own data. 
 
 ## References

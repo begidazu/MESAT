@@ -5,14 +5,14 @@ title: "New human activity (NHA) scenarios"
 NHA scenarios tab gives you the option to explore the potential impact of two new human activity scenarios 
 based on Ocean Ecosystem Accounting (herein referring to the System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA) 
 applied to ocean and coastal environments). The assessments could be conducted in the study areas where the Ph.D. studies have been carried out.
-In this sense, you can select Santander Coast, North Sea, Irish Sea, Urdaibai Estuary and Cadiz Bay study areas. The impact of this proof-of-concept 
-web-based tool is based on the following studies:
+In this sense, you can select Santander Coast, North Sea, Irish Sea, Urdaibai Estuary and Cadiz Bay study areas. The Ocean Ecosystem Accounting-based impact assessment of this proof-of-concept 
+web-based tool is built on the following studies:
 
 1. [Integrated methods for marine ecosystem physical accounting](https://doi.org/10.1016/j.indic.2026.101163): OEA physical accounts
 2. [Small pelagic fish stock physical accounting: integrating pelagic systems into the SEEA-EA framework](https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0): SPF accounting
 3. [Eco-geomorphic modelling response of tidal marshes to sea level rise and changes in suspended sediment supply](https://doi.org/10.1016/j.scitotenv.2024.178164): Saltmarsh evolution
 
-Thus, it is worth noting that in some study areas you could explore the potential impact on EUNIS habitats and/or 
+Thus, it is worth noting that in some study areas you could explore the potential impact on EUNIS habitats, small and mid-pelagic fish stocks and/or 
 saltmarsh and mudflat habitats, under a set of climate change scenarios when projections were conducted. The following table is a summary
 of the available impact in each study area:
 
@@ -32,13 +32,19 @@ is a map with the location of OEA physical account and Saltmarsh evolution locat
 ## How to navigate NHA scenarios tab?
 
 1. Select the Study Area from the dropdown.
-2. TO FINISH WHEN THE TAB FUNCTIONALITY IS FINISHED
+2. Use the buttons in the top-left corner of the map to add further information and help define the areas of the scenarios.
+3. Click the checkbuttons to activate NHA scenario 1 and NHA scenario 2.
+4. Draw or upload the scenarios spatial coverage. In order to draw an additional polygon of a scenario, please click aggain in the 'Draw' button.
+5. Click the Run button to execute the Ocean Ecosystem Accounting-based new human activity impact scenario analysis.
+6. Click the Climate Change Scenarios button to execute the analysis under climate change projections (only available for saltmarsh evolution).
+7. Expore additional information and/or download the results.
+8. Reset the analysis with the Reset button.
 
 ## How to interpret impact results?
 
 The impact results are presented in table format. Each new human activity scenario potential impact is further divided into three impact 
-subdivisions -- EUNIS, fish and saltmarshes -- that represent the impact of the economic activities to the respective 
-subdivision based on the results presented by the studies described above. You can also filter the results in the tables using SQL queries.
+subdivisions -- EUNIS, Saltmarshes and Fish stocks -- which represent the maximum potential impact of the activities to the respective 
+subdivision, based on the results presented by the studies described above. You can also filter the results in the tables using SQL queries.
 
 (CHANGE FIGURE)
 
