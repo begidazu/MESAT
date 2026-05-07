@@ -16,17 +16,17 @@ book:
   navbar:
     left:
       - href: index.qmd
-        text: Introduction
+        text: 1. Introduction
       - href: management_scenarios.qmd
-        text: New human activity impact scenarios
+        text: 2. New human activity impact scenarios
       - href: physical_accounts.qmd
-        text: Physical Accounts
+        text: 3. Physical Accounts
       - href: fish.qmd
-        text: Fish Stocks
+        text: 4. Fish Stocks
       - href: saltmarsh.qmd
-        text: Saltmarsh Evolution
+        text: 5. Saltmarsh Evolution
       - href: eva_overscale.qmd
-        text: EVA Overscale
+        text: 6. EVA Overscale
 
 
 format:

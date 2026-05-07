@@ -175,7 +175,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key, 
                 children=[
-                    html.Legend(html.B("Which small and mid-pelagic fish (SPF) stock you want to analyse?")),
+                    html.Legend(html.B("Select the Fish Stock you would like to analyse:")),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
                         children=[
@@ -247,6 +247,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     n_clicks=0,  # contador
                                                     className='btn btn-outline-primary'
                                                 ),
+                                                dbc.Tooltip(
+                                                    "Click here to download your results in CSV format",
+                                                    target="fish-results", # This connects it to the button's ID
+                                                    placement="top" # Puts the hover info above the button
+                                                ),
                                                 dcc.Download(id='fish-download')  # componente de descarga
                                             ]
                                         )
@@ -287,7 +292,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                         html.P(
                                             [
                                                 "In this application, SPF accounts are composed of ecosystem extent, ecosystem condition and food provisioning ecosystem services supply, demand and balance. In this tab we present the physical account compilation for the six studied stocks assessed in Chapter 2 of the Ph.D. SPF stock extents are computed from species distribution models, and SPF condition scores are computed from fisheries management, biophysical, and ecological indicators. Furthermore, SPF food provisioning supply equals the surplus production of the stock, and SPF food provisioning demand equals the landings. For detailed information of the methodology and additional results, please go to: ",
-                                                html.A("Small and mid-pelagic physical accounting", href='https://docs.google.com/document/d/1UD0k6_jr48X6berBKhTpq2o8N7_TC3oTDW3cty7i6Go/edit?tab=t.0')
+                                                html.A("Small and mid-pelagic physical accounting, under development", href='')
                                             ],
                                             className="mb-2", style={"textAlign": "justify"}
                                         )
@@ -544,6 +549,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     dcc.Download(id='eva-overscale-download')  # componente de descarga
                                                 ]
                                             ),
+                                            dbc.Tooltip(
+                                                "Click here to download your results and EVA configuration in PARQUET and JSON format",
+                                                target="eva-overscale-results", # This connects it to the button's ID
+                                                placement="top" # Puts the hover info above the button
+                                            ),
                                             html.Button(  # botón info
                                                 [html.I(className="bi bi-info-circle-fill", style={'width':'32px','height':'32px'}), html.Span(" Info")],
                                                 id='eva-overscale-info-button',
@@ -568,7 +578,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                             [
                                                 # 1) Texto introductorio
                                                 html.P([
-                                                    "The Ecological Value Assessment (EVA) methodology is a recent adaptation of the Biological Valuation methodology described by ", html.A("Derous et al. (2007a)", href='https://www.scopus.com/pages/publications/34047178405'), " and ", html.A("Derous (2007b)", href='https://bibliotekanauki.pl/articles/48603'), ", which encopasses not only biological traits but also habitats. The methodology facilitates the spatial evaluation of ecosystem properties and allows for the comparative analysis of ecological value (EV) among subzones within the study area and can be applied from intertidal to deep-sea areas. The methodology identifies ecosystem components as functional groups that cluster species and/or habitats that share taxonomic groups, ecosystem functions, and/ or spatial characteristics. The EV of the ecosystem components is estimated as the combination of a set of metrics (calculated from available data using defined algorithms to answer multiple assessment questions, AQs) that estimate the presence of ecological processes and biodiversity structure in an area. For more detailed information about the methodology and its application in Ocean Ecosystem Accounting, please go to: ", html.A("Egidazu-de la Parte et al. (2026)", href='https://doi.org/10.1016/j.indic.2026.101163')
+                                                    "The Ecological Value Assessment (EVA) methodology is a recent adaptation of the Biological Valuation methodology described by ", html.A("Derous et al. (2007a)", href='https://www.scopus.com/pages/publications/34047178405'), " and ", html.A("Derous (2007b)", href='https://bibliotekanauki.pl/articles/48603'), ", which encopasses not only biological traits but also habitats. The methodology facilitates the spatial evaluation of ecosystem properties and allows for the comparative analysis of ecological value (EV) among subzones within the area and can be applied from intertidal to deep-sea areas. The methodology identifies ecosystem components as functional groups that cluster species and/or habitats that share taxonomic groups, ecosystem functions, and/ or spatial characteristics. The EV of the ecosystem components is estimated as the combination of a set of metrics (calculated from available data using defined algorithms to answer multiple assessment questions, AQs) that estimate the presence of ecological processes and biodiversity structure in an area. For more detailed information about the methodology and its application in Ocean Ecosystem Accounting, please go to: ", html.A("Egidazu-de la Parte et al. (2026)", href='https://doi.org/10.1016/j.indic.2026.101163')
                                                 ], className="mb-3", style={"textAlign": "justify"}),
 
                                                 html.P(
@@ -595,7 +605,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
-                    html.Legend(html.B("In which study area do you wish to analyse Ocean Ecosystem Accouinting (OEA) physical accounts?")),
+                    html.Legend(html.B("Select the area where you would like to analyse Ocean Ecosystem Accounting (OEA) physical accounts?")),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},
                         children=[
@@ -614,13 +624,13 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 id='ec',
                                 hidden= True,
                                 children=[
-                                    html.Legend(html.B("Select Ecosystem Components to assess ecosystem condition"), className='mt-4'),
+                                    html.Legend(html.B("Select the Ecosystem Components for assessing condition"), className='mt-4'),
                                     dcc.Checklist(id= 'ec-dropdown', options=[], value=[], labelClassName='form-check-label', inputClassName='form-check-input', className='form-check'),
                                     html.Div(  # fila de botones
                                         style={'display':'flex','gap':'10px','alignItems':'center', 'padding-top': '1.5%'},  # estilos
                                         children=[  # hijos
                                             html.Button(  # botón Run
-                                                html.Span("Run OPSA"),  # texto
+                                                html.Span("Run"),  # texto
                                                 id="run-eva-button",  # id
                                                 n_clicks=0,  # contador
                                                 disabled=True,  # deshabilitado al inicio
@@ -667,6 +677,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                     n_clicks=0,  # contador
                                                     className='btn btn-outline-primary'
                                                 ),
+                                                dbc.Tooltip(
+                                                    "Click here to download your results in GEOJSON and CSV format",
+                                                    target="opsa-results", # This connects it to the button's ID
+                                                    placement="top" # Puts the hover info above the button
+                                                ),
                                                 dcc.Download(id='opsa-download')  # componente de descarga
                                             ]
                                         )
@@ -706,7 +721,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
 
                                         # 3) Texto posterior (y lo que necesites debajo)
                                         html.P(
-                                            ("Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the three study areas assessed by ",  html.A("Egidazu-de la Parte et al., (2026)", href='https://doi.org/10.1016/j.indic.2026.101163'), "according to the EUNIS habitat (version 2012) classification. It is important to highlight that for OPSA condition assessment user must include all ecosystem components for complete condition indicators. However, if you want to see OPSA assessment taking into account particular ecosystem components, you can select them in the checklist"),
+                                            ("Physical stock accounts are composed of ecosystem extent and ecosystem condition. In this tab we present the Ocean Physical Stock Accounts (OPSA) compilation for the three areas assessed by ",  html.A("Egidazu-de la Parte et al., (2026)", href='https://doi.org/10.1016/j.indic.2026.101163'), "according to the EUNIS habitat (version 2012) classification. It is important to highlight that for OPSA condition assessment user must include all ecosystem components for complete condition indicators. However, if you want to see OPSA assessment taking into account particular ecosystem components, you can select them in the checklist"),
                                             className="mb-2", style={"textAlign": "justify"}
                                         ), 
                                         html.P(
@@ -731,7 +746,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key=key,
                 children=[
-                    html.Legend(html.B("In which study area you want to simulate the impacts based on ocean ecosystem accounting?")),
+                    html.Legend(html.B("Select the area where you would like to run the NHA impact simulation based on ocean ecosystem accounting:")),
                     html.Div(
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
                         children=dcc.Dropdown(
@@ -748,7 +763,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                 searchable=False
                         )
                     ),
-                    html.Legend(html.B("Define the new human activity (NHA) scenarios you want to compare:"), style={'display':'flex', 'marginTop':'25px'}),
+                    html.Legend(html.B("Draw the new human activity (NHA) scenario areas you want to compare:"), style={'display':'flex', 'marginTop':'25px'}),
                     html.Div(
                         id='activity-checklist',
                         style={'display': 'flex', 'flexDirection': 'column', 'gap': '15px', 'width': '100%'},
@@ -855,6 +870,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                 n_clicks=0,  # contador
                                                 className='btn btn-outline-primary'
                                             ),
+                                            dbc.Tooltip(
+                                                "Click here to download your results in CSV format",
+                                                target="mgmt-results", # This connects it to the button's ID
+                                                placement="top" # Puts the hover info above the button
+                                            ),
                                             dcc.Download(id='mgmt-download')  # componente de descarga
                                         ]
                                     ),
@@ -937,7 +957,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             return html.Div(
                 key= key, 
                 children=[  # UI del tab
-                    html.Legend(html.B("In which study area do you wish to analyse saltmarsh evolution and accretion?")),
+                    html.Legend(html.B("Select the area where you would like to analyse saltmarsh evolution and accretion rates:")),
                     html.Div(  # panel de selects y botones
                         style={'display':'flex','flexDirection':'column','gap':'15px','width':'100%'},  # estilos
                         children=[  # hijos del panel
@@ -1034,6 +1054,11 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                                                 hidden=True,  # oculto al inicio
                                                 n_clicks=0,  # contador
                                                 className='btn btn-outline-primary'
+                                            ),
+                                            dbc.Tooltip(
+                                                "Click here to download your results in TIF format",
+                                                target="marsh-results", # This connects it to the button's ID
+                                                placement="top" # Puts the hover info above the button
                                             ),
                                             dcc.Download(id='saltmarsh-download')  # componente de descarga
                                         ]
@@ -1520,7 +1545,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         labels = {
             "tab-saltmarsh":  ("Access the methodology", "Access the code"),
             "tab-physical":   ("Access the methodology", "Access the code"),
-            "tab-fishstock":  ("Fish Stocks docs", "Fish Stocks code"),
+            "tab-fishstock":  ("Fish Stocks docs, in prep.", "Fish Stocks code"),
             "tab-management": ("Access the documentation", "Access the code"),
             "tab-eva-overscale": ("Access the methodology", "Access the code")
         }
@@ -1529,7 +1554,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
                             "https://github.com/begidazu/MESIT/tree/main/app/saltmarsh_evolution"),
             "tab-physical":   ("https://doi.org/10.1016/j.indic.2026.101163",
                             "https://github.com/begidazu/PhD_Web_App/blob/physical_accounts/app/models/opsa.py"),
-            "tab-fishstock":  ("https://docs.google.com/document/d/1ZN8tYWCwRVDPAVdRLo3Cx7ugnGhPgeUfBRQtZ1HTKYk/edit?usp=sharing",
+            "tab-fishstock":  ("",
                                "https://github.com/begidazu/MESIT/tree/main/app/models/fish_stocks"),
             "tab-management": ("https://begidazu.github.io/MESIT/management_scenarios.html", 
                                "https://github.com/begidazu/MESIT/blob/main/app/callbacks/management_callbacks.py"),

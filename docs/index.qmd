@@ -9,7 +9,7 @@ title-block-style: default
 
 # Introduction to the application
 
-The Marine Ecosystem & Services Impact Tool (MESIT), is a tool operationalising new human activity impact scenario analysis based on Ocean Ecosystem Accounting (OEA) - herein referring to the System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA) 
+The [Marine Ecosystem & Services Impact Tool (MESIT)](https://mesit.integratedmodelling.org/) [Egidazu - de la Parte, B., & Moitra, A. (2026)](https://doi.org/10.5281/zenodo.20051851), is a tool operationalising new human activity impact scenario analysis based on Ocean Ecosystem Accounting (OEA) - herein referring to the System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA) 
 applied to ocean and coastal environments -. This proof-of-concept tool was developed based on the OEA-MSP context, with the ambition of grounding the foundations for OEA-based planning operationalisation, fostering future OEA-based MSP implementations and demonstrating the use of OEA for 
 long-term ecosystem-based management scenario analysis. It has been developed under the Ph.D. titled 'Towards climate-ready Marine Spatial Plans: using the System of Environmental-Economic Accounting - Ecosystem Accounting framework to link modelling, natural capital, ecosystem services and decision support systems' (MODIFY WHEN THE FINAL TITLE IS DECIDED) of the Doctoral Programme in Marine Environment and Resources from the University of the Basque Country, and under the grant PRE2022-102042 funded by MICIU/AEI/ 10.13039/501100011033 and by the María de Maeztu Unit of Excellence 
 2023-2027 Ref. CEX2021-001201-M, funded by MCIN/AEI /10 .13039/501100011033; and by the Basque Government through the BERC 2022-2025 programme. 

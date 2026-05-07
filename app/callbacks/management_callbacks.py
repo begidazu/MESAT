@@ -1128,7 +1128,7 @@ def register_management_callbacks(app: dash.Dash):
             # ... (tu código actual EUNIS) ...
             try:
                 df_eu = activity_eunis_table(area, mgmt_w, mgmt_wu, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario 1.")
+                eunis_div = render_table(df_eu, "No EUNIS habitats would be affected by NHA Scenario 1.")
             except Exception:
                 import traceback; traceback.print_exc()
                 eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -1140,7 +1140,7 @@ def register_management_callbacks(app: dash.Dash):
             # ... (tu código actual SALTMARSH) ...
             try:
                 df_sm = activity_saltmarsh_table(area, mgmt_w, mgmt_wu)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario 1.")
+                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats would be affected by NHA Scenario 1.")
             except Exception:
                 import traceback; traceback.print_exc()
                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -1150,7 +1150,7 @@ def register_management_callbacks(app: dash.Dash):
         # --- FISH STOCKS (AÑADIDO) ---
         try:
             df_fish = activity_fish_table(area, mgmt_w, mgmt_wu)
-            fish_div = render_table(df_fish, "No pelagic fish stocks affected by Scenario 1.")
+            fish_div = render_table(df_fish, "No pelagic fish stocks would be affected by NHA Scenario 1.")
         except Exception:
             import traceback; traceback.print_exc()
             fish_div = html.Div("Couldn't build fish stocks table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -1190,7 +1190,7 @@ def register_management_callbacks(app: dash.Dash):
         if eunis_available(area):
             try:
                 df_eu = activity_eunis_table(area, mgmt_a, mgmt_au, label_col="AllcombD")
-                eunis_div = render_table(df_eu, "No EUNIS habitats affected by Scenario2.")
+                eunis_div = render_table(df_eu, "No EUNIS habitats would be affected by NHA Scenario 2.")
             except Exception:
                 import traceback; traceback.print_exc()
                 eunis_div = html.Div("Couldn't build EUNIS table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -1201,7 +1201,7 @@ def register_management_callbacks(app: dash.Dash):
         if saltmarsh_available(area):
             try:
                 df_sm = activity_saltmarsh_table(area, mgmt_a, mgmt_au)
-                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats affected by Scenario2.")
+                saltmarsh_div = render_table(df_sm, "No saltmarshes and mudflats would be affected by NHA Scenario 2.")
             except Exception:
                 import traceback; traceback.print_exc()
                 saltmarsh_div = html.Div("Couldn't build saltmarsh table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
@@ -1212,7 +1212,7 @@ def register_management_callbacks(app: dash.Dash):
         try:
             from app.models.management_scenarios import activity_fish_table
             df_fish = activity_fish_table(area, mgmt_a, mgmt_au)
-            fish_div = render_table(df_fish, "No pelagic fish stocks affected by Scenario2.")
+            fish_div = render_table(df_fish, "No pelagic fish stocks would be affected by NHA Scenario 2.")
         except Exception:
             import traceback; traceback.print_exc()
             fish_div = html.Div("Couldn't build fish stocks table.", style={"color":"crimson","whiteSpace":"pre-wrap"})
