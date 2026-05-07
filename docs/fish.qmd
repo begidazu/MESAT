@@ -9,10 +9,10 @@ Despite their importance in human well-being, SPF are not frequently included in
 Nevertheless, assessing pelagic system accounts, together with benthic systems, fails to ecologically link the services to their source (i.e. SPF food provisioning linked to benthic habitats when SPF are accounted together with benthic fish stocks).
 Therefore, to ensure the ecological and accounting consistency in marine systems, the SPF stock accounts should be evaluated as a distinct component from the benthic systems.
 
-[Egidazu-de la Parte *et al.*. 2026, under development]() provides a comprehensive assessment of SPF stock physical accounts compliant with the SEEA-EA framework. 
+Egidazu-de la Parte *et al.*. (2026, in prep.) provides a comprehensive assessment of SPF stock physical accounts compliant with the SEEA-EA framework. 
 The methodology integrates species distribution models for extent, SEEA-Ecosystem Condition Typology compliant indicators for condition — incorporating both international management indicators, additional condition indicators and service-linked metrics —, and surplus production and landings to quantify the food provisioning service.
 
-In this tab, you can explore and download the results presented by [Egidazu-de la Parte *et al.*. 2026, under development](), assessing six SPF stocks extent, condition and food provisioning supply and demand during the 2000-2019 period.
+In this tab, you can explore and download the results presented by Egidazu-de la Parte *et al.*. (2026, in prep.), assessing six SPF stocks extent, condition and food provisioning supply and demand during the 2000-2019 period.
 
 ## How to navigate SPF accounting tab?
 
@@ -24,10 +24,10 @@ In this tab, you can explore and download the results presented by [Egidazu-de l
 
 ## How to interpret the results?
 
-Extent results should be interpreted as predicted stock extents under the assumptions detailed by [Egidazu-de la Parte *et al.*. 2026, under development](), 
+Extent results should be interpreted as predicted stock extents under the assumptions detailed by Egidazu-de la Parte *et al.*. (2026, in prep.), 
 where species distribution model suitability maps have been converted to binary presence/absence values using the maximising the sum of sensitivity and specificity (maxSSS) metric. 
 Additionally, stock condition (from 0 - worst - to 1 - best -) should be interpreted as an overall condition indicator condensing structural, functional and abiotic indicators of the stock. Low overall condition values (below 0.5)
-do not necessarily represent low food provisioning service, rather than an overall condition below the reference point. For detailed information on specific condition indicators, please read  [Egidazu-de la Parte *et al.*. 2026, under development]().
+do not necessarily represent low food provisioning service, rather than an overall condition below the reference point. For detailed information on specific condition indicators, please read  Egidazu-de la Parte *et al.*. (2026, in prep.).
 Finally, food provisioning supply should be interpreted as the surplus production of the stock in a specific year, and the food provisioning demand as the commercial landings in a specific year.
 
 ## SPF stock acronyms:

@@ -9,7 +9,7 @@ In this sense, you can select Santander Coast, North Sea, Irish Sea, Urdaibai Es
 web-based tool is built on the following studies:
 
 1. [Integrated methods for marine ecosystem physical accounting](https://doi.org/10.1016/j.indic.2026.101163): OEA physical accounts
-2. [Small pelagic fish stock physical accounting: integrating pelagic systems into the SEEA-EA framework, under development](): SPF accounting
+2. Small pelagic fish stock physical accounting: integrating pelagic systems into the SEEA-EA framework, in prep.: SPF accounting
 3. [Eco-geomorphic modelling response of tidal marshes to sea level rise and changes in suspended sediment supply](https://doi.org/10.1016/j.scitotenv.2024.178164): Saltmarsh evolution
 
 Thus, it is worth noting that in some study areas you could explore the potential impact on EUNIS habitats, small and mid-pelagic fish stocks and/or 
