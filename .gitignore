@@ -55,6 +55,18 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+#cache
+*.db
+*.db-shm
+*.db-wal
+
+#results
+*.zip
+*.json
+
+#uploads
+uploads/
+
 # Test / coverage
 htmlcov/
 .coverage

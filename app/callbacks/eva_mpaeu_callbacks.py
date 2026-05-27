@@ -1032,6 +1032,7 @@ def register_eva_mpaeu_callbacks(app: dash.Dash):
             State("eva-overscale-draw", "children"),
             State("eva-overscale-upload", "children"),
             State("session-id", "data"),
+            background=True,
             prevent_initial_call=True,
         )
         def run_eva_overscale(n_clicks, fg_params, ag_store, sa_draw_children, sa_upload_children, session_id):

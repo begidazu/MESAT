@@ -36,6 +36,7 @@ decorator==5.1.1
 Deprecated==1.2.18
 dill==0.3.9
 distributed==2025.3.0
+diskcache
 elapid==1.0.2
 executing==2.1.0
 fasteners==0.19
@@ -73,6 +74,7 @@ matplotlib==3.9.2
 matplotlib-inline==0.1.7
 mercantile==1.2.1
 msgpack==1.1.0
+multiprocess
 narwhals==1.32.0
 nest-asyncio==1.6.0
 numcodecs==0.15.1

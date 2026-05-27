@@ -28,6 +28,7 @@ dash-leaflet==1.0.15
 dask==2025.3.0
 dask-geopandas==0.4.3
 distributed==2025.3.0
+diskcache
 locket==1.0.0
 partd==1.4.2
 fsspec==2025.3.0
@@ -60,6 +61,7 @@ lxml==5.3.1
 #matplotlib==3.9.2
 mercantile==1.2.1
 msgpack==1.1.0
+multiprocess
 nest-asyncio==1.6.0
 #numcodecs==0.15.1
 numpy==1.26.4

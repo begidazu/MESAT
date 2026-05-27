@@ -33,3 +33,10 @@ build/
 # Cachés
 .cache/
 .pytest_cache/
+
+#cache
+*.db
+*.db-shm
+*.db-wal
+
+
