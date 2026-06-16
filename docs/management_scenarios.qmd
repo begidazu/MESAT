@@ -34,7 +34,7 @@ is a map with the location of OEA physical account and Saltmarsh evolution locat
 1. Select the Study Area from the dropdown.
 2. Use the buttons in the top-left corner of the map to add further information and help define the areas of the scenarios.
 3. Click the checkbuttons to activate NHA scenario 1 and NHA scenario 2.
-4. Draw or upload the scenarios spatial coverage. In order to draw an additional polygon of a scenario, please click aggain in the 'Draw' button.
+4. Draw or upload the scenarios spatial coverage. In order to draw an additional polygon of a scenario, please click again in the 'Draw' button.
 5. Click the Run button to execute the Ocean Ecosystem Accounting-based new human activity impact scenario analysis.
 6. Click the Climate Change Scenarios button to execute the analysis under climate change projections (only available for saltmarsh evolution).
 7. Expore additional information and/or download the results.
@@ -55,10 +55,10 @@ the **condition** of the affected portion of the habitat. The **condition** metr
 underlaying status of the habitat and scores vary from 0 (very low condition) to 5 (very high condition). For more detailed information see [OEA physical accounts section](physical_accounts.qmd) and 
 [Egidazu-de la Parte *et al.* (2026)](https://doi.org/10.1016/j.indic.2026.101163). 
 - Saltmarshes: *Saltmarshes* tab includes the **extent** (ha) of *saltmarsh*, *mudflat*, *upland areas* and 
-*channel* affected by the corresponding activity scenario, as well as the **expected accretion** (main driver of carbon sequestration in intertidal ecosystems), under a set of climate change scenarios, 
-in those areas that the activities will be located. For more detailed information on the modelling process see [Saltmarsh evolution section](saltmarsh.qmd) and [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816). 
+*channel* affected by the corresponding activity scenario, as well as the **expected accretion** (main driver of carbon sequestration in intertidal ecosystems) under a set of climate change scenarios, 
+in those areas that the activities will be located. For more detailed information on the modelling process and detailed results see [Saltmarsh evolution section](saltmarsh.qmd) and [Egidazu-de la Parte *et al.* (2025)](https://doi.org/10.1016/j.scitotenv.2024.17816). 
 - Fish: *Fish* tab includes the **extent (km^2^)**, **overall condition**, **food provisioning supply (tons)**, **food provisioning demand (tons)** and **food provisioning balance (tons)** of the fish stock affected by each activity scenario corresponding to the 2000-2019 period (retrospective).
-The impact in the food provisioning service is assessed assuming that the service is constant in the entire spatial coverage where the species is present. For detailed information on the modelling process see [Small pelagic fish stock physical accounting: integrating pelagic systems into the SEEA-EA framework]().
+The impact in the food provisioning service is assessed assuming that the service is constant in the entire spatial coverage where the species is present. For detailed information on the modelling process see [SPF accounting section](fish.qmd) and [Small pelagic fish stock physical accounting: integrating pelagic systems into the SEEA-EA framework]().
 
 ***Note***: the results have to be interpreted as the maximum potential impact (under the model and scenarios assumptions and limitations) of the human activity scenarios, as they assume that all the selected space is covered by the activity and will entirely 
 affect the extent, condition and ecosystem service delivery.

@@ -12,7 +12,7 @@ be either divided into physical and monetary accounts. Physical Stock Acounts ar
 
 In this section you can explore the Physical Stock Accounts of three study  areas investigated by 
 [Egidazu-de la Parte *et al.* (2026)](https://doi.org/10.1016/j.indic.2026.101163). You can also download the [Ecological Value Assessment results](https://github.com/begidazu/MESIT/tree/main/results/EVA) used to compute the [Physical Accounts](https://github.com/begidazu/MESIT/tree/main/results/opsa) from the repository. For a detailed step-by-step guide to compute the physical stock accounts 
-using the EVA methodology, please read the following [guide](https://github.com/begidazu/MESIT/tree/main/docs/Steps_to_Asses_Marine_Physical_Stock_Accounts.pdf)
+using the EVA methodology, please read the following [example](https://github.com/begidazu/MESIT/tree/main/docs/Steps_to_Asses_Marine_Physical_Stock_Accounts.pdf)
 
 ## How to navigate OEA physical accounts?
 

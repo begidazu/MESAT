@@ -46,7 +46,7 @@ The overscaling methodology follows the subsequent steps:
         4. Selects the Nationally Rare Features based on the EEZ and grid configuration (if presence < threshold → Nationally Rare).
         5. Computes the score using those TaxonIDs identified as Nationally Rare Features.
     3. **AQ7**
-        1. Parses the Locally Rare Feature TaxonIDs configured by the user.
+        1. Parses all TaxonIDs configured by the user.
         2. Gets the predicted suitability maps for each TaxonID from the [Amazon S3 bucket](https://radiantearth.github.io/stac-browser/#/external/obis-maps.s3.us-east-1.amazonaws.com/sdm/stac/catalog.json).
         3. Converts the suitability maps into binary presence/absence using percentile 10 as threshold.
         4. Computes the score using all TaxonIDs passed in the other AQs.

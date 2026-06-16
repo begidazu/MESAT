@@ -9,14 +9,14 @@ title-block-style: default
 
 # Introduction to the application
 
-The [Marine Ecosystem & Services Impact Tool (MESIT)](https://mesit.integratedmodelling.org/) [Egidazu - de la Parte, B., & Moitra, A. (2026)](https://doi.org/10.5281/zenodo.20051851), is a tool operationalising new human activity impact scenario analysis based on Ocean Ecosystem Accounting (OEA) - herein referring to the System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA) 
+The [Marine Ecosystem & Services Impact Tool (MESIT)](https://mesit.integratedmodelling.org/) [(Egidazu - de la Parte & Moitra, 2026)](https://doi.org/10.5281/zenodo.20051851), is a tool operationalising new human activity impact scenario analysis based on Ocean Ecosystem Accounting (OEA) - herein referring to the System of Environmental-Economic Accounting - Ecosystem Accounting (SEEA-EA) 
 applied to ocean and coastal environments -. This proof-of-concept tool was developed based on the OEA-MSP context, with the ambition of grounding the foundations for OEA-based planning operationalisation, fostering future OEA-based MSP implementations and demonstrating the use of OEA for 
-long-term ecosystem-based management scenario analysis. It has been developed under the Ph.D. titled 'Towards climate-ready Marine Spatial Plans: using the System of Environmental-Economic Accounting - Ecosystem Accounting framework to link modelling, natural capital, ecosystem services and decision support systems' (MODIFY WHEN THE FINAL TITLE IS DECIDED) of the Doctoral Programme in Marine Environment and Resources from the University of the Basque Country, and under the grant PRE2022-102042 funded by MICIU/AEI/ 10.13039/501100011033 and by the María de Maeztu Unit of Excellence 
+long-term ecosystem-based management scenario analysis. It has been developed under the Ph.D. titled 'Ocean Ecosystem Accounting-based planning: linking modelling, natural capital and human well-being for long-term ecosystem-based management in Maritime Spatial Planning ' of the Doctoral Programme in Marine Environment and Resources from the University of the Basque Country, and under the grant PRE2022-102042 funded by MICIU/AEI/ 10.13039/501100011033 and by the María de Maeztu Unit of Excellence 
 2023-2027 Ref. CEX2021-001201-M, funded by MCIN/AEI /10 .13039/501100011033; and by the Basque Government through the BERC 2022-2025 programme. 
 
 The MESIT tool enables new human activity scenario analysis and integrates climate change into OEA to support long-term ecosystem-based management, operationalising the analysis of existing conditions, evaluating 
 alternative management plans through OEA and integrating climate change into the MSP scenario evaluation process. Moreover, the use of OEA physical accounts as the core framework for scenario analysis establishes the necessary preconditions 
-to link human activity potential impacts to the society and the economy. For more informaton about OEA-based planning and the OEA-MSP context, please read: [Towards climate-ready Marine Spatial Plans: using the System of Environmental-Economic Accounting - Ecosystem Accounting framework to link modelling, natural capital, ecosystem services and decision support systems]()
+to link human activity potential impacts to the society and the economy. For more informaton about OEA-based planning and the OEA-MSP context, please read: [Ocean Ecosystem Accounting-based planning: linking modelling, natural capital and human well-being for long-term ecosystem-based management in Maritime Spatial Planning]()
 
 The MESIT application is divided into five main sections: 
 
@@ -26,12 +26,12 @@ The MESIT application is divided into five main sections:
 4. Saltmarsh evolution
 5. Ecological Value Assessment (EVA) overscale
 
-These sections are detailed in their corresponding sections and the model codes used to obtain the results of the MESIT app are available in this [GitHub repository](https://github.com/begidazu/PhD_Web_App/tree/main/app/models). Note that some results have not been obtained through coding. In those cases, read the corresponding articles to see the used methodology.
+These sections are detailed in their corresponding sections, and the model codes used to obtain the results of the MESIT app are available in this [GitHub repository](https://github.com/begidazu/PhD_Web_App/tree/main/app/models). Note that some results have not been obtained through coding. In those cases, read the corresponding articles to see the used methodology.
 
 ## About this Documentation
 
 Transparency and reproducibility are an integral part of the research. Thus, here you will find all the details 
 of the approaches and decisions taken in this work. This is a complement to the available scientific articles, [`thesis`]() 
-and [`software`](https://github.com/begidazu/MESIT). Public data sources and/or data gathered in the thesis are available at [`data`](https://github.com/begidazu/MESIT/tree/main/data) and 
+and [`software`](https://doi.org/10.5281/zenodo.20051851). Public data sources and/or data gathered in the thesis are available at [`data`](https://github.com/begidazu/MESIT/tree/main/data) and 
 results could be found in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results). In case some results you may need are not available in [`results`](https://github.com/begidazu/PhD_Web_App/tree/main/results), please contact <benat.egidazu@bc3research.org>. 
 Moreover, due to privacy and data ownership, some source data may not be available in the MESIT application. In those cases, please also contact <benat.egidazu@bc3research.org>. However, data sources also include other author contributions and you may need to contact those authors for specific datasets. 
