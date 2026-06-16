@@ -1,5 +1,4 @@
-import os, glob  # manejar rutas y buscar archivos
-import io  # buffers en memoria
+import os
 from zipfile import ZipFile  # crear ZIPs
 import dash_leaflet as dl  # componentes Leaflet
 import rasterio  # lectura ráster

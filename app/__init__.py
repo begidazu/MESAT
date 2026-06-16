@@ -1,6 +1,5 @@
 from dash import Dash
 from .layout import create_layout
-from .callbacks.models_callbacks import register_model_callbacks
 from .callbacks.draw_callbacks import register_draw_callbacks
 from .callbacks.marsh_callbacks import register_tab_callbacks
 from .callbacks.opsa_callbacks import register_opsa_tab_callbacks
@@ -25,7 +24,6 @@ def create_app():
         title = "Marine Ecosystem & Services Impact Tool (MESIT)"
         )
     app.layout = create_layout()
-    register_model_callbacks(app)
     register_draw_callbacks(app)
     register_tab_callbacks(app)
     register_opsa_tab_callbacks(app)

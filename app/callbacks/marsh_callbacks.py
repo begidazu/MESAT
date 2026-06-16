@@ -1553,7 +1553,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
             "tab-saltmarsh":  ("https://doi.org/10.1016/j.scitotenv.2024.178164",
                             "https://github.com/begidazu/MESIT/tree/main/app/saltmarsh_evolution"),
             "tab-physical":   ("https://doi.org/10.1016/j.indic.2026.101163",
-                            "https://github.com/begidazu/PhD_Web_App/blob/physical_accounts/app/models/opsa.py"),
+                            "https://github.com/begidazu/MESIT/blob/main/app/models/opsa.py"),
             "tab-fishstock":  ("",
                                "https://github.com/begidazu/MESIT/tree/main/app/models/fish_stocks"),
             "tab-management": ("https://begidazu.github.io/MESIT/management_scenarios.html", 
