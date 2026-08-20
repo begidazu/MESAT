@@ -44,15 +44,15 @@ graph_stocks(excel_file=r"C:\Users\beñat.egidazu\Desktop\NAS\PhD\Papers\Fisheri
                  "MACNEA": "F"
              },
              x="Year",
-             x_label="Year",
-            #  y=["OverallCondition"],
-             y=["ReproductiveCapacity", "RecruitmentRatio", "SustainableFoodProvisioning", "SustainableExploitation", "AbioticStatus"],
-             y_label= "Condition indicator scores",
-            #  color_sheet = ['#0764E6', "#07E6D9", "#366663", "#E57A06", "#664F36", "#364A66"],
-             color_y = ["#DD0000", "#00A59DFF", "#2AB126", "#F9FD04", "#7641DA"],
+             x_label="Urtea",
+             y=["OverallCondition"],
+            #  y=["ReproductiveCapacity", "RecruitmentRatio", "SustainableFoodProvisioning", "SustainableExploitation", "AbioticStatus"],
+             y_label= "Egoera orokorraren puntuazioak",
+             color_sheet = ['#0764E6', "#07E6D9", "#366663", "#E57A06", "#664F36", "#364A66"],
+            #  color_y = ["#DD0000", "#00A59DFF", "#2AB126", "#F9FD04", "#7641DA"],
              year_column="Year",
              year_range=(2000,2019),
-             title="Stock Condition Indicators",
+             title="Stock Egoera Orokorra",
              figsize=(12, 6),
              show_plot=False,
              combine_sheets=True,
@@ -64,8 +64,8 @@ graph_stocks(excel_file=r"C:\Users\beñat.egidazu\Desktop\NAS\PhD\Papers\Fisheri
                  "SustainableExploitation": "SE",
                  "AbioticStatus": "AS"
              },
-             show_legend=True,
-             save_path=os.path.join(r"C:\Users\beñat.egidazu\Desktop\NAS\PhD\Papers\Fisheries_2\Results_correct\Graphs", "stock_condition_indicators_subplots_acronyms.png")
+             show_legend=False,
+             save_path=os.path.join(r"C:\Users\beñat.egidazu\Desktop\NAS\PhD\Tesina", "2_6irudia.png")
             )
 
 # TAXON_CONFIG = {

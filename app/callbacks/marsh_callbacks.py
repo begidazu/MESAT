@@ -1551,7 +1551,7 @@ def register_tab_callbacks(app: dash.Dash):  # registrar callbacks
         }
         urls = {
             "tab-saltmarsh":  ("https://doi.org/10.1016/j.scitotenv.2024.178164",
-                            "https://github.com/begidazu/MESIT/tree/main/app/saltmarsh_evolution"),
+                            "https://github.com/begidazu/MESIT/tree/main/app/models/saltmarsh_evolution"),
             "tab-physical":   ("https://doi.org/10.1016/j.indic.2026.101163",
                             "https://github.com/begidazu/MESIT/blob/main/app/models/opsa.py"),
             "tab-fishstock":  ("",
